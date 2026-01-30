@@ -1,0 +1,62 @@
+#pragma once
+#include <Register_File/Register_File.h>
+#include <stdexcept>
+namespace OoOVis
+{
+	namespace Core
+	{
+		std::unordered_map<reg_id_t, Physical_Register_File_Entry> Register_File::_physical_register_file = {};
+		std::unordered_map<reg_id_t, reg_id_t> Register_File::_register_alias_table = {};
+
+		void Register_File::init() {
+			for (reg_id_t i = 0; i < PHYSICAL_REGISTER_FILE_SIZE; i++) {
+				_physical_register_file.emplace(i, Physical_Register_File_Entry());
+			}
+			for (reg_id_t j = 0; j < REGISTER_ALIAS_TABLE_SIZE; j++) {
+				_register_alias_table.emplace(j, j);
+			}
+		}
+
+		bool Register_File::full() {
+			for (auto const& [key, entry] : _physical_register_file) {
+				if (!entry.allocated) return true;
+			}
+			return false;
+		}
+
+		void Register_File::dealloacte(reg_id_t physical_register_id) {
+			if (physical_register_id == INVALID_REGISTER_ID)
+				throw std::runtime_error("Tried to deallocate invalid register.");
+			if(!_physical_register_file[physical_register_id].allocated)
+				throw std::runtime_error("Tried to deallocate an already deallocated register.");
+			_physical_register_file[physical_register_id].allocated = false;
+		}
+
+		void Register_File::write(reg_id_t physical_register_id, data_t data) {
+			if(physical_register_id == INVALID_REGISTER_ID)
+				throw std::runtime_error("Tried to write to an invalid register.");
+			_physical_register_file[physical_register_id].data = data;
+			_physical_register_file[physical_register_id].producer_tag = 0;
+		}
+
+		reg_id_t Register_File::physical_register_allocate_for(reg_id_t architectural_register_id,u32 producer_tag) {
+			for (auto& [key, entry] : _physical_register_file) {
+				if (!entry.allocated) {
+					_register_alias_table[architectural_register_id] = key;
+					entry.allocated = true;
+					entry.producer_tag = producer_tag;
+					return key;
+				}
+			}
+			return INVALID_REGISTER_ID;
+		}
+
+		Physical_Register_File_Entry Register_File::read(reg_id_t architectural_register_id) {
+			if (architectural_register_id == INVALID_REGISTER_ID) {
+				throw std::runtime_error("Tried to read invalid register.");
+			}
+			return _physical_register_file[_register_alias_table[architectural_register_id]];
+		}
+
+	}
+}
