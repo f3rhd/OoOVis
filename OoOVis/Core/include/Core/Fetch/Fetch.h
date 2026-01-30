@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include <Parser/Instruction.h>
+#include <Frontend/Parser/Instruction.h>
 
 namespace OoOVis
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include <Types/Types.h>
+#include <Core/Types/Types.h>
 namespace OoOVis {
 	namespace Frontend {
 		auto constexpr NO_LABEL = 0;

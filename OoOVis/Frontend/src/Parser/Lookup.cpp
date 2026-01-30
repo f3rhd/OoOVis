@@ -1,4 +1,4 @@
-#include <Parser/Lookup.h>
+#include <Frontend/Parser/Lookup.h>
 
 namespace OoOVis {
     namespace Frontend {

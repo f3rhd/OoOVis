@@ -5,8 +5,8 @@
 #include <memory>
 #include <unordered_map>
 
-#include <Parser/Instruction.h>
-#include <Parser/Token.h>
+#include <Frontend/Parser/Instruction.h>
+#include <FrontEnd/Parser/Token.h>
 
 namespace OoOVis {
     namespace Frontend {

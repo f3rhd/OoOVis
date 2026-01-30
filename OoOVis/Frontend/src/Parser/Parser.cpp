@@ -1,5 +1,5 @@
-#include <Parser/Parser.h>
-#include <Parser/Lookup.h>
+#include <Frontend/Parser/Parser.h>
+#include <Frontend/Parser/Lookup.h>
 #include <fstream>
 #include <iostream>
 namespace OoOVis {
