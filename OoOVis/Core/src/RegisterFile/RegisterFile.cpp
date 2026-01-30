@@ -14,6 +14,7 @@ namespace OoOVis
 			}
 			for (reg_id_t j = 0; j < REGISTER_ALIAS_TABLE_SIZE; j++) {
 				_register_alias_table.emplace(j, j);
+				_old_register_aliases.emplace(j, j);
 			}
 		}
 
@@ -36,10 +37,10 @@ namespace OoOVis
 			if(physical_register_id == INVALID_REGISTER_ID)
 				throw std::runtime_error("Tried to write to an invalid register.");
 			_physical_register_file[physical_register_id].data = data;
-			_physical_register_file[physical_register_id].producer_tag = 0;
+			_physical_register_file[physical_register_id].producer_tag = NO_PRODUCER_TAG;
 		}
 
-		reg_id_t Register_File::physical_register_allocate_for(reg_id_t architectural_register_id,u32 producer_tag) {
+		reg_id_t Register_File::allocate_physical_register_for(reg_id_t architectural_register_id, u32 producer_tag) {
 			for (auto& [key, entry] : _physical_register_file) {
 				if (!entry.allocated) {
 					_register_alias_table[architectural_register_id] = key;
@@ -51,11 +52,16 @@ namespace OoOVis
 			return INVALID_REGISTER_ID;
 		}
 
-		Physical_Register_File_Entry Register_File::read(reg_id_t architectural_register_id) {
+		reg_id_t Register_File::aliasof(reg_id_t architectural_register_id)
+		{
 			if (architectural_register_id == INVALID_REGISTER_ID) {
 				throw std::runtime_error("Tried to read invalid register.");
 			}
-			return _physical_register_file[_register_alias_table[architectural_register_id]];
+			return _register_alias_table[architectural_register_id];
+		}
+
+		Physical_Register_File_Entry Register_File::read(reg_id_t architectural_register_id) {
+			return _physical_register_file[aliasof(architectural_register_id)];
 		}
 
 	}

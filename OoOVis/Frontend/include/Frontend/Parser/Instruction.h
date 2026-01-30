@@ -126,12 +126,16 @@ namespace OoOVis {
 					_src2.src2_reg = (reg_id_t)src2_val;
 
 			}
-			FLOW_TYPE flow_type() const const override {
+			FLOW_TYPE flow_type() const override {
 				return FLOW_TYPE::REGISTER;
 			};
 			REGISTER_INSTRUCTION_TYPE register_instruction_type() const {
 				return _type;
 			}
+			bool uses_immval() const { return _is_imm; }
+			reg_id_t dest_reg() const { return _dest_reg; }
+			reg_id_t src1_reg() const { return _src1_reg; }
+			_src2_   src2() const { return _src2; }
 		private:
 			_src2_ _src2;
 			reg_id_t _dest_reg;

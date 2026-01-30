@@ -1,0 +1,57 @@
+#pragma once
+#include <Core/Types/Types.h>
+namespace OoOVis 
+{
+    namespace Core
+    {
+		enum class RESERVATION_STATION_ID : u32 {
+			ADD_SUB,
+			LOGICAL,
+			SET_LESS,
+			MULTIPLIER,
+			DIVIDER,
+			LOAD_STORE,
+			BRANCH,
+			UNKNOWN
+		};
+		enum class EXECUTION_UNIT_MODE {
+			BRANCH_CONDITIONAL,
+			BRANCH_UNCONDITIONAL,
+			LOAD_STORE_LOAD,
+			LOAD_STORE_STORE,
+			ADD_SUB_UNIT_ADD,
+			ADD_SUB_UNIT_SUB,
+			ADD_SUB_UNIT_LOAD_UPPER,
+			ADD_SUB_UNIT_AUIPC,
+			DIVIDER_DIVIDE_SIGNED,
+			DIVIDER_DIVIDE_UNSIGNED,
+			DIVIDER_REMAINDER_SIGNED,
+			DIVIDER_REMAINDER_UNSIGNED,
+			MULTIPLIER_MULTIPLY_SIGNED,
+			MULTIPLIER_MULTIPLY_HIGH,
+			MULTIPLIER_MULTIPLY_HIGH_SIGNED_UNSIGNED,
+			MULTIPLIER_MULTIPLY_HIGH_UNSIGNED,
+			LOGICAL_AND,
+			LOGICAL_OR,
+			LOGICAL_XOR,
+			LOGICAL_SHIFT_LEFT_LOGICAL,
+			LOGICAL_SHIFT_RIGHT_LOGICAL,
+			LOGICAL_SHIFT_RIGHT_ARITHMETIC,
+			SET_LESS_THAN,
+			UNKNOWN
+		};
+
+		struct Reservation_Station_Entry {
+			EXECUTION_UNIT_MODE mode;
+			data_t src1;
+			data_t src2;
+			data_t dest;
+			u32    tag1;
+			u32    tag2;
+			u32    self_tag;
+			bool   ready = false;
+			bool   busy = false;
+		};
+
+    }
+}
