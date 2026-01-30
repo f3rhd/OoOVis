@@ -103,3 +103,4 @@ vendor/glfw/lib/**/*
 
 !CMakeLists.txt
 *.ini
+*.slnx
