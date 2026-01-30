@@ -14,7 +14,6 @@ namespace OoOVis
 			}
 			for (reg_id_t j = 0; j < REGISTER_ALIAS_TABLE_SIZE; j++) {
 				_register_alias_table.emplace(j, j);
-				_old_register_aliases.emplace(j, j);
 			}
 		}
 
