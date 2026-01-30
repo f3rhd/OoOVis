@@ -25,7 +25,7 @@ namespace OoOVis
 			static Physical_Register_File_Entry read(reg_id_t architectural_register_id);
 		private:
 			static std::unordered_map<reg_id_t, Physical_Register_File_Entry> _physical_register_file;
-			static std::unordered_map<reg_id_t, reg_id_t>					  _latest_register_alias_table;
+			static std::unordered_map<reg_id_t, reg_id_t>					  _register_alias_table;
 		};
 
 	} // namespace Core

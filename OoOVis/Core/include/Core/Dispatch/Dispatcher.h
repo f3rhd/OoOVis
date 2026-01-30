@@ -2,7 +2,6 @@
 
 #include <Frontend/Parser/Instruction.h>
 #include <Core/ReservationStation/ReservationStation.h>
-#include <Core/Commit/ReorderBuffer.h>
 #include <memory>
 namespace OoOVis
 {

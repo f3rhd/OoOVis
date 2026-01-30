@@ -101,7 +101,7 @@ namespace OoOVis
                 copy_reservation_station_entry.tag1 = entry.producer_tag;
                 copy_reservation_station_entry.tag2 = NO_PRODUCER_TAG;
                 copy_reservation_station_entry.src1 = entry.data;
-                Reorder_Buffer::allocate({ Register_File::aliasof(instr->dest_reg(),false });
+                Reorder_Buffer::allocate({ Register_File::aliasof(instr->dest_reg()),false });
                 Reservation_Station_Entry& allocated_reservation_station_entry = station.allocate_entry(); // We do the fullness checking before calling this function
                 reg_id_t allocated_physical_register_id = Register_File::allocate_physical_register_for(instr->dest_reg(), allocated_reservation_station_entry.self_tag);
                 if (allocated_physical_register_id == INVALID_REGISTER_ID) {
