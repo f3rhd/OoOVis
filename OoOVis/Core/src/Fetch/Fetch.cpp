@@ -5,9 +5,9 @@ namespace OoOVis
     namespace Core
     {
         Fetch_Group Fetch_Unit::fetch() {
-            std::unique_ptr<Frontend::Instruction>* first = nullptr;
-            std::unique_ptr<Frontend::Instruction>* second = nullptr;
-            std::unique_ptr<Frontend::Instruction>* third = nullptr;
+            std::unique_ptr<FrontEnd::Instruction>* first = nullptr;
+            std::unique_ptr<FrontEnd::Instruction>* second = nullptr;
+            std::unique_ptr<FrontEnd::Instruction>* third = nullptr;
             if (_program_counter >= _instruction_cache.size() && !_stalled) {
                 _stalled = true;
                 return { first,second,third };

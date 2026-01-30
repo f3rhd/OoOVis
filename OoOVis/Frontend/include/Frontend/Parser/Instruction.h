@@ -1,7 +1,7 @@
 #pragma once
 #include <Core/Types/Types.h>
 namespace OoOVis {
-	namespace Frontend {
+	namespace FrontEnd {
 		auto constexpr NO_LABEL = 0;
 		auto constexpr FORWARD_LABEL = 1;
 		enum class FLOW_TYPE {
@@ -13,10 +13,10 @@ namespace OoOVis {
 			UNKNOWN
 		};
 		struct Instruction {
-			virtual label_id_t target_label() { return NO_LABEL; }
-			virtual bool is_label_instruction() { return false; }
+			virtual label_id_t target_label() const { return NO_LABEL; }
+			virtual bool is_label_instruction() const { return false; }
 			virtual ~Instruction() = default;
-			virtual FLOW_TYPE flow_type() = 0;
+			virtual FLOW_TYPE flow_type() const = 0;
 		};
 		struct Memory_Instruction : Instruction {
 			Memory_Instruction(
@@ -51,7 +51,7 @@ namespace OoOVis {
 			) :
 				Memory_Instruction(dest_reg_, base_reg_, offset_), _type(type_) {
 			}
-			FLOW_TYPE flow_type() override {
+			FLOW_TYPE flow_type() const override {
 				return FLOW_TYPE::LOAD;
 			};
 		private:
@@ -73,7 +73,7 @@ namespace OoOVis {
 			) :
 				Memory_Instruction(dest_reg_, base_reg_, offset_), _type(type_) {
 			}
-			FLOW_TYPE flow_type() override {
+			FLOW_TYPE flow_type() const override {
 				return FLOW_TYPE::STORE;
 			};
 		private:
@@ -126,9 +126,12 @@ namespace OoOVis {
 					_src2.src2_reg = (reg_id_t)src2_val;
 
 			}
-			FLOW_TYPE flow_type() override {
+			FLOW_TYPE flow_type() const const override {
 				return FLOW_TYPE::REGISTER;
 			};
+			REGISTER_INSTRUCTION_TYPE register_instruction_type() const {
+				return _type;
+			}
 		private:
 			_src2_ _src2;
 			reg_id_t _dest_reg;
@@ -161,9 +164,9 @@ namespace OoOVis {
 				_id(branch_id)
 			{
 			}
-			label_id_t target_label() override { return _target_label_id; }
+			label_id_t target_label() const override { return _target_label_id; }
 			void set_target_label(label_id_t label_id) { _target_label_id = label_id; };
-			FLOW_TYPE flow_type() override {
+			FLOW_TYPE flow_type() const override {
 				return FLOW_TYPE::BRANCH_CONDITIONAL;
 			}
 
@@ -180,7 +183,7 @@ namespace OoOVis {
 				JAL,
 				UNKNOWN
 			} _type;
-			label_id_t target_label() override { return _target_label_id; }
+			label_id_t target_label() const override { return _target_label_id; }
 			void set_target_label(label_id_t label_id) { _target_label_id = label_id; };
 			Jump_Instruction(
 				JUMP_INSTRUCTION_TYPE type_,
@@ -194,7 +197,7 @@ namespace OoOVis {
 				_target_label_id(label_id_),
 				_imm(imm_) {
 			}
-			FLOW_TYPE flow_type() {
+			FLOW_TYPE flow_type() const {
 				return FLOW_TYPE::BRANCH_UNCONDITIONAL;
 			}
 		private:
@@ -205,9 +208,9 @@ namespace OoOVis {
 		};
 		struct Label_Instruction : Instruction {
 			Label_Instruction(label_id_t label_) : _label_id(label_) {}
-			label_id_t target_label() override { return _label_id; }
-			bool is_label_instruction() override { return true; }
-			FLOW_TYPE flow_type() override { return FLOW_TYPE::UNKNOWN; }
+			label_id_t target_label() const override { return _label_id; }
+			bool is_label_instruction() const override { return true; }
+			FLOW_TYPE flow_type() const override { return FLOW_TYPE::UNKNOWN; }
 		private:
 			label_id_t _label_id;
 		};

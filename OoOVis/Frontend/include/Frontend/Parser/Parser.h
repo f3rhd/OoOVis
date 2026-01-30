@@ -9,7 +9,7 @@
 #include <FrontEnd/Parser/Token.h>
 
 namespace OoOVis {
-    namespace Frontend {
+    namespace FrontEnd {
 
         auto constexpr INVALID_REG_ID = 255;
         //struct cli_args_t {

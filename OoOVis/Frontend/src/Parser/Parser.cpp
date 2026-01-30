@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iostream>
 namespace OoOVis {
-    namespace Frontend
+    namespace FrontEnd
     {
         #define EXPECT(EXPECTED_TOKEN_TYPE)                   \
             if (_current_token->type != EXPECTED_TOKEN_TYPE)   \

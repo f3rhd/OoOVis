@@ -7,7 +7,7 @@
 #include <FrontEnd/Parser/instruction.h>
 
 namespace OoOVis {
-    namespace Frontend {
+    namespace FrontEnd {
 
 		class Lookup {
 

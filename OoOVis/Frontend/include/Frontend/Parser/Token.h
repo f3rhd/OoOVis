@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 namespace OoOVis {
-	namespace Frontend {
+	namespace FrontEnd {
 		enum class TOKEN_TYPE {
 			LOAD_OPERATION,
 			STORE_OPERATION,
