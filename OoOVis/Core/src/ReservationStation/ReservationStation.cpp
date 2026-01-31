@@ -10,7 +10,7 @@ namespace OoOVis
                 _station.back().self_tag = i * static_cast<u32>(id) +1;
             }
         }
-        Reservation_Station_Entry* Reservation_Station::allocate_entry(const Reservation_Station_Entry& entry) {
+        Reservation_Station_Entry* Reservation_Station::allocate_entry() {
             for (auto& entry : _station) {
                 if (!entry.busy) {
                     entry.busy = true;

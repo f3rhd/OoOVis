@@ -9,7 +9,6 @@ namespace OoOVis
 		int32_t  _signed;
 	};
 	using u64 = uint64_t;
-	using i64 = int64_t;
 	using u32 = uint32_t;
 	using i32 = int32_t;
 	using memory_addr_t = uint32_t;

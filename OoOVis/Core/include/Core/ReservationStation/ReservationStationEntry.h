@@ -52,10 +52,10 @@ namespace OoOVis
 			EXECUTION_UNIT_MODE mode = EXECUTION_UNIT_MODE::UNKNOWN;
 			data_t src1 = {};
 			data_t src2 = {};
-			u32    producer_tag1 = 0;
-			u32    producer_tag2 = 0;
-			u32    self_tag = 0;
-			u32	   reorder_buffer_entry_index = 0;
+			u32    producer_tag1 = NO_PRODUCER_TAG;
+			u32    producer_tag2 = NO_PRODUCER_TAG;
+			u32    self_tag = NO_PRODUCER_TAG;
+			u64	   reorder_buffer_entry_index = 0;
 			u32    store_id = NO_STORE;
 			bool   ready = false;
 			bool   busy = false;

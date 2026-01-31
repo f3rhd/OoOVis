@@ -1,5 +1,6 @@
 #include <Core/Commit/ReorderBufferEntry.h>
 #include <queue>
+#include <memory>
 namespace OoOVis 
 {
 	namespace Core 
@@ -7,10 +8,10 @@ namespace OoOVis
 		class Reorder_Buffer {
 
 		public:
-			static void allocate(const Reorder_Buffer_Entry& entry);
+			static size_t allocate(std::unique_ptr<Reorder_Buffer_Entry>&& entry);
 			static bool full();
 		private:
-			static std::queue<Reorder_Buffer_Entry> _buffer;
+			static std::queue<std::unique_ptr<Reorder_Buffer_Entry>> _buffer;
 		};
 	}
 }

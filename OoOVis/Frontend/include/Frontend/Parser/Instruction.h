@@ -114,13 +114,13 @@ namespace OoOVis {
 			};
 			union _src2_ {
 				reg_id_t src2_reg;
-				int64_t imm_val;
+				int32_t imm_val;
 			};
 			Register_Instruction(
 				REGISTER_INSTRUCTION_TYPE type_,
 				const reg_id_t dest_reg_,
 				const reg_id_t src1_reg_,
-				int64_t src2_val,
+				int32_t src2_val,
 				bool is_imm_
 			) :
 				_dest_reg(dest_reg_),
@@ -134,12 +134,8 @@ namespace OoOVis {
 					_src2.src2_reg = (reg_id_t)src2_val;
 
 			}
-			FLOW_TYPE flow() const override {
-				return FLOW_TYPE::REGISTER;
-			};
-			REGISTER_INSTRUCTION_TYPE instruction_type() const {
-				return _type;
-			}
+			FLOW_TYPE flow() const override { return FLOW_TYPE::REGISTER; }
+			REGISTER_INSTRUCTION_TYPE instruction_type() const { return _type; }
 			bool uses_immval() const { return _is_imm; }
 			reg_id_t dest_reg() const { return _dest_reg; }
 			reg_id_t src1_reg() const { return _src1_reg; }
@@ -195,28 +191,38 @@ namespace OoOVis {
 				JAL,
 				UNKNOWN
 			} _type;
-			label_id_t target_label() const override { return _target_label_id; }
-			void set_target_label(label_id_t label_id) { _target_label_id = label_id; };
 			Jump_Instruction(
 				JUMP_INSTRUCTION_TYPE type_,
 				reg_id_t dest_reg_,
 				reg_id_t src1_,
 				label_id_t label_id_,
-				int64_t imm_
+				i32 imm_
 			) : _type(type_),
 				_dest_reg(dest_reg_),
 				_src1(src1_),
 				_target_label_id(label_id_),
 				_imm(imm_) {
 			}
-			FLOW_TYPE flow() const {
+			label_id_t target_label() const override { 
+				return _target_label_id; 
+			}
+			void set_target_label(label_id_t label_id) {
+				_target_label_id = label_id; 
+			};
+			FLOW_TYPE flow() const override {
 				return FLOW_TYPE::BRANCH_UNCONDITIONAL;
 			}
+			JUMP_INSTRUCTION_TYPE kind() const {
+				return _type;
+			}
+			reg_id_t src1() const { return _src1; }
+			i32		 offset() const { return _imm; }
+			reg_id_t dest_reg() const { return _dest_reg; }
 		private:
 			reg_id_t _dest_reg;
 			label_id_t _target_label_id; // jal uses this
 			reg_id_t _src1;// jalr uses this
-			int64_t _imm;  // jalr uses this
+			int32_t _imm;  // jalr uses this
 		};
 		struct Label_Instruction : Instruction {
 			Label_Instruction(label_id_t label_) : _label_id(label_) {}

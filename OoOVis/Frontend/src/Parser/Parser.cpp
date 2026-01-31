@@ -152,7 +152,7 @@ namespace OoOVis {
 
             // we should be imm
             EXPECT(TOKEN_TYPE::IMMEDIATE);
-            offset_t offset = std::stoll(_current_token->word);
+            offset_t offset = std::stoi(_current_token->word);
 
             advance();
             // we should be left paranthesis
@@ -201,16 +201,16 @@ namespace OoOVis {
             advance();
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
-            int64_t src2_val;
+            i32 src2_val;
             // if our operation was imm
             if (Lookup::alui_type(tmp.word) != Register_Instruction::REGISTER_INSTRUCTION_TYPE::UNKNOWN) {
                 type = Lookup::alui_type(tmp.word);
                 EXPECT(TOKEN_TYPE::IMMEDIATE);
                 is_imm = true;
                 if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
-                    src2_val = std::stoll(_current_token->word, nullptr, 16);
+                    src2_val = std::stoi(_current_token->word, nullptr, 16);
                 else
-                    src2_val = std::stoll(_current_token->word);
+                    src2_val = std::stoi(_current_token->word);
             }
             else if (Lookup::alur_type(tmp.word) != Register_Instruction::REGISTER_INSTRUCTION_TYPE::UNKNOWN) {
                 type = Lookup::alur_type(tmp.word);
@@ -301,11 +301,11 @@ namespace OoOVis {
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
             EXPECT(TOKEN_TYPE::IMMEDIATE);
-            int64_t imm;
+            i32 imm;
             if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
-                imm = std::stoll(_current_token->word, nullptr, 16);
+                imm = std::stoi(_current_token->word, nullptr, 16);
             else
-                imm = std::stoll(_current_token->word);
+                imm = std::stoi(_current_token->word);
             // here we dont care about the label_id field
             _program.emplace_back(
                 std::make_unique<Jump_Instruction>(
@@ -327,12 +327,12 @@ namespace OoOVis {
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
             EXPECT(TOKEN_TYPE::IMMEDIATE);
-            int64_t imm;
+            int32_t imm{};
             if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
 
-                imm = std::stoll(_current_token->word, nullptr, 16);
+                imm = std::stoi(_current_token->word, nullptr, 16);
             else
-                imm = std::stoll(_current_token->word);
+                imm = std::stoi(_current_token->word);
             if (tmp.word == "lui")
                 _program.emplace_back(std::make_unique<Register_Instruction>(
                     Register_Instruction::REGISTER_INSTRUCTION_TYPE::LOAD_UPPER,
@@ -542,9 +542,9 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::IMMEDIATE);
 
-                int64_t imm_val = std::stoll(_current_token->word);
+                int32_t imm_val = std::stoi(_current_token->word);
 
-                int32_t low = static_cast<int32_t>(imm_val << 52 >> 52);
+                int32_t low = (imm_val << 20) >> 20;
                 int32_t high = static_cast<int32_t>(imm_val - low);
 
                 if (-2048 <= imm_val && (imm_val) <= 2047) {
@@ -553,7 +553,7 @@ namespace OoOVis {
                             Register_Instruction::REGISTER_INSTRUCTION_TYPE::ADD,
                             dest_reg,
                             0,
-                            static_cast<int64_t>(low),
+                            (low),
                             true
                         )
                     );
