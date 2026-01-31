@@ -253,7 +253,8 @@ namespace OoOVis {
                 src1_id,
                 src2_id,
                 label_id,
-                unique_branch_id()
+                unique_branch_id(),
+                static_cast<u32>(_program.size())
             );
             auto branch_instruction_ptr = branch_instruction.get();
             _program.push_back(std::move(branch_instruction));
@@ -739,7 +740,8 @@ namespace OoOVis {
                         src1,
                         0,
                         target_label_id,
-                        branch_id
+                        branch_id,
+                        static_cast<u32>(_program.size())
                     );
                 // bnez rs1, label ->  bne   rs1, x0,  label
                 else if (op[1] == 'n')
@@ -748,7 +750,8 @@ namespace OoOVis {
                         src1,
                         0,
                         target_label_id,
-                        branch_id
+                        branch_id,
+                        static_cast<u32>(_program.size())
                     );
                 //   blez rs1, label -> bge   x0,  rs1, label
                 else if (op[1] == 'l' && op[2] == 'e')
@@ -757,7 +760,8 @@ namespace OoOVis {
                         0,
                         src1,
                         target_label_id,
-                        branch_id
+                        branch_id,
+                        static_cast<u32>(_program.size())
                     );
 
                 // bgez rs1, label -> bge   rs1, x0,  label
@@ -767,7 +771,8 @@ namespace OoOVis {
                         src1,
                         0,
                         target_label_id,
-                        branch_id
+                        branch_id,
+                        static_cast<u32>(_program.size())
                     );
                 // bltz rs1, labe ->  blt   rs1, x0,  label
                 else if (op[1] == 'l' && op[2] == 't')
@@ -776,7 +781,8 @@ namespace OoOVis {
                         src1,
                         0,
                         target_label_id,
-                        branch_id
+                        branch_id,
+                        static_cast<u32>(_program.size())
                     );
                 // bgtz rs1, label ->  blt   x0,  rs1, label
                 else if (op[1] == 'g' && op[2] == 't')
@@ -785,7 +791,8 @@ namespace OoOVis {
                         0,
                         src1,
                         target_label_id,
-                        branch_id
+                        branch_id,
+                        static_cast<u32>(_program.size())
                     );
                 branch_instruction_ptr = branch_instruction.get();
                 if (target_label_id == FORWARD_LABEL)
@@ -832,28 +839,28 @@ namespace OoOVis {
                 if (op == "ble")
                     branch_instruction = std::make_unique<Branch_Instruction>(
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BGE,
-                        src2, src1, target_label_id, branch_id
+                        src2, src1, target_label_id, branch_id,static_cast<u32>(_program.size())
                     );
 
                 // bgt rs1, rs2, label  ->  blt rs2, rs1, label (if rs2 < rs1, then rs1 > rs2)
                 else if (op == "bgt")
                     branch_instruction = std::make_unique<Branch_Instruction>(
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BLT,
-                        src2, src1, target_label_id, branch_id
+                        src2, src1, target_label_id, branch_id,static_cast<u32>(_program.size())
                     );
 
                 // bleu rs1, rs2, label ->  bgeu rs2, rs1, label
                 else if (op == "bleu")
                     branch_instruction = std::make_unique<Branch_Instruction>(
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BGEU,
-                        src2, src1, target_label_id, branch_id
+                        src2, src1, target_label_id, branch_id,static_cast<u32>(_program.size())
                     );
 
                 // bgtu rs1, rs2, label ->  bltu rs2, rs1, label
                 else if (op == "bgtu")
                     branch_instruction = std::make_unique<Branch_Instruction>(
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BLTU,
-                        src2, src1, target_label_id, branch_id
+                        src2, src1, target_label_id, branch_id,static_cast<u32>(_program.size())
                     );
 
                 Branch_Instruction* branch_instruction_ptr = branch_instruction.get();

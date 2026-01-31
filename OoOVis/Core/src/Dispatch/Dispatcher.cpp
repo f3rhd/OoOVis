@@ -195,7 +195,6 @@ namespace OoOVis
                 temp_reservation_station_entry.store_id = store_id; // this id will be passed down to the entry in the store buffer
                 store_id++;
                 *allocated_reservation_station = temp_reservation_station_entry;
-                // store instruction   
             }
             else {
                 std::cout << "Dynamic cast of Instruction -> Store_Instruction failed\n";
@@ -203,6 +202,40 @@ namespace OoOVis
             }
         }
         void Dispatcher::dispatch_branch_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
+            if (const auto* branch_instruction = dynamic_cast<FrontEnd::Branch_Instruction*>(instruction.get())) {
+
+                Reservation_Station_Entry* allocated_reservation_station_entry = station.allocate_entry();
+                Reservation_Station_Entry temp_reservation_station_entry;
+                temp_reservation_station_entry.busy = true;
+                temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
+                temp_reservation_station_entry.reorder_buffer_entry_index = Reorder_Buffer::allocate(
+                    std::make_unique<Branch_Conditional_Reorder_Buffer_Entry>(
+                        branch_instruction->flow()
+                    )
+                );
+                try {
+					Physical_Register_File_Entry entry1(Register_File::read(branch_instruction->src1()));
+					Physical_Register_File_Entry entry2(Register_File::read(branch_instruction->src2()));
+					temp_reservation_station_entry.producer_tag1 = entry1.producer_tag;
+                    temp_reservation_station_entry.producer_tag2 = entry2.producer_tag;
+					temp_reservation_station_entry.src1 = entry1.data;
+                    temp_reservation_station_entry.src2 = entry2.data;
+					temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
+                    // execution stage will need these for branch instruction
+                    temp_reservation_station_entry.branch_id = branch_instruction->id();
+                    temp_reservation_station_entry.branch_target = branch_instruction->target_label();
+                    temp_reservation_station_entry.fallthrough = branch_instruction->fallthrough();
+
+                }
+                catch (std::runtime_error& err) {
+                    std::cout << err.what();
+					exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+                }
+            }
+            else {
+                std::cout << "Dynamic cast of Instruction -> Branch_Instruction failed\n";
+                exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+            }
 
         }
         void Dispatcher::dispatch_jump_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {

@@ -163,22 +163,26 @@ namespace OoOVis {
 				reg_id_t src1_,
 				reg_id_t src2_,
 				label_id_t label_,
-				branch_instruction_id_t branch_id
+				branch_instruction_id_t branch_id,
+				memory_addr_t next_instruction_
 			) :
 				_src1_reg(src1_),
 				_src2_reg(src2_),
 				_target_label_id(label_),
 				_type(type_),
-				_id(branch_id)
+				_id(branch_id),
+				_next_instruction_addr(next_instruction_)
 			{
 			}
 			label_id_t target_label() const override { return _target_label_id; }
 			void set_target_label(label_id_t label_id) { _target_label_id = label_id; };
-			FLOW_TYPE flow() const override {
-				return FLOW_TYPE::BRANCH_CONDITIONAL;
-			}
-
+			FLOW_TYPE flow() const override { return FLOW_TYPE::BRANCH_CONDITIONAL; }
+			reg_id_t src1() const { return _src1_reg; }
+			reg_id_t src2() const { return _src2_reg; }
+			branch_instruction_id_t id() const { return _id; }
+			memory_addr_t			fallthrough() const { return _next_instruction_addr; }
 		private:
+			memory_addr_t _next_instruction_addr;
 			branch_instruction_id_t _id;
 			reg_id_t _src1_reg;
 			reg_id_t _src2_reg;

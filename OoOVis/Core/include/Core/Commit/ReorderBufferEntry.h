@@ -21,8 +21,10 @@ namespace OoOVis
 			u32 id;
 			Store_Reorder_Buffer_Entry(FrontEnd::FLOW_TYPE flow, u32 id_) : id(id_), Reorder_Buffer_Entry(flow) {}
 		};
-		struct Branch_Conditional_Reorder_Buffer_Entry {
+		struct Branch_Conditional_Reorder_Buffer_Entry : Reorder_Buffer_Entry {
 
+			bool mispredicted = false;
+			Branch_Conditional_Reorder_Buffer_Entry(FrontEnd::FLOW_TYPE flow) : Reorder_Buffer_Entry(flow) {}
 		};
 		struct Branch_Unconditional_Reorder_Buffer_Entry : Reorder_Buffer_Entry {
 

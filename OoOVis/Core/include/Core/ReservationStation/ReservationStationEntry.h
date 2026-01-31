@@ -18,6 +18,12 @@ namespace OoOVis
 		enum class EXECUTION_UNIT_MODE {
 			BRANCH_CONDITIONAL,
 			BRANCH_UNCONDITIONAL,
+			BRANCH_CONDITIONAL_EQUAL,
+			BRANCH_CONDITIONAL_NOT_EQUAL,
+			BRANCH_CONDITIONAL_LESS_THAN,
+			BRANCH_CONDITIONAL_GREATER_THAN,
+			BRANCH_CONDITIONAL_LESS_THAN_UNSIGNED,
+			BRANCH_CONDITIONAL_GREATER_THAN_UNSIGNED,
 			LOAD_STORE_LOAD_WORD,
 			LOAD_STORE_LOAD_BYTE,
 			LOAD_STORE_LOAD_HALF,
@@ -56,9 +62,12 @@ namespace OoOVis
 			u32    producer_tag2 = NO_PRODUCER_TAG;
 			u32    self_tag = NO_PRODUCER_TAG;
 			u64	   reorder_buffer_entry_index = 0;
-			u32    store_id = NO_STORE;
 			bool   ready = false;
 			bool   busy = false;
+			u32    store_id = NO_STORE;
+			label_id_t target = 0;
+			memory_addr_t fallthrough = 0;
+			branch_instruction_id_t branch_id = 0;
 		};
 
     }
