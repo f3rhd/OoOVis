@@ -225,6 +225,7 @@ namespace OoOVis
                     temp_reservation_station_entry.branch_id = branch_instruction->id();
                     temp_reservation_station_entry.branch_target = branch_instruction->target_label();
                     temp_reservation_station_entry.fallthrough = branch_instruction->fallthrough();
+                    *allocated_reservation_station_entry = temp_reservation_station_entry;
 
                 }
                 catch (std::runtime_error& err) {
