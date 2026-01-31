@@ -65,7 +65,7 @@ namespace OoOVis
 			bool   ready = false;
 			bool   busy = false;
 			u32    store_id = NO_STORE;
-			label_id_t target = 0;
+			label_id_t branch_target = 0;
 			memory_addr_t fallthrough = 0;
 			branch_instruction_id_t branch_id = 0;
 		};
