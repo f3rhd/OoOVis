@@ -9,7 +9,6 @@ namespace OoOVis
 {
     namespace Core
     {
-        auto constexpr FETCH_WIDTH = 3;
         struct Fetch_Group {
             const std::unique_ptr<FrontEnd::Instruction>* first = nullptr;
             const std::unique_ptr<FrontEnd::Instruction>* second = nullptr;

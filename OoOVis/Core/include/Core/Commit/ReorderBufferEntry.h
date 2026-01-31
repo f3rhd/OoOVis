@@ -5,8 +5,10 @@ namespace OoOVis
 {
 	namespace Core {
 		struct Reorder_Buffer_Entry {
-			reg_id_t old_alias = 0;
+			bool ready = false;
 			bool speculative = false;
+			reg_id_t old_alias = 0;
+			u32  store_id = NO_STORE;
 		};
 	}
 }

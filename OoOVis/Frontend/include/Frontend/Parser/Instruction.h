@@ -16,7 +16,7 @@ namespace OoOVis {
 			virtual label_id_t target_label() const { return NO_LABEL; }
 			virtual bool is_label_instruction() const { return false; }
 			virtual ~Instruction() = default;
-			virtual FLOW_TYPE flow_type() const = 0;
+			virtual FLOW_TYPE flow() const = 0;
 		};
 		struct Memory_Instruction : Instruction {
 			Memory_Instruction(
@@ -51,9 +51,13 @@ namespace OoOVis {
 			) :
 				Memory_Instruction(dest_reg_, base_reg_, offset_), _type(type_) {
 			}
-			FLOW_TYPE flow_type() const override {
+			FLOW_TYPE flow() const override {
 				return FLOW_TYPE::LOAD;
 			};
+			LOAD_INSTRUCTION_TYPE kind() const { return _type; }
+			offset_t offset() const { return _offset; }
+			reg_id_t base_reg() const { return _base_reg; };
+			reg_id_t dest_reg() const { return _dest_src_reg; }
 		private:
 			LOAD_INSTRUCTION_TYPE _type;
 		};
@@ -73,9 +77,13 @@ namespace OoOVis {
 			) :
 				Memory_Instruction(dest_reg_, base_reg_, offset_), _type(type_) {
 			}
-			FLOW_TYPE flow_type() const override {
+			FLOW_TYPE flow() const override {
 				return FLOW_TYPE::STORE;
 			};
+			offset_t offset() const { return _offset; }
+			reg_id_t src1() const { return _base_reg; };
+			reg_id_t src2() const { return _dest_src_reg; }
+			STORE_INSTRUCTION_TYPE kind() const { return _type; };
 		private:
 			STORE_INSTRUCTION_TYPE _type;
 		};
@@ -126,10 +134,10 @@ namespace OoOVis {
 					_src2.src2_reg = (reg_id_t)src2_val;
 
 			}
-			FLOW_TYPE flow_type() const override {
+			FLOW_TYPE flow() const override {
 				return FLOW_TYPE::REGISTER;
 			};
-			REGISTER_INSTRUCTION_TYPE register_instruction_type() const {
+			REGISTER_INSTRUCTION_TYPE instruction_type() const {
 				return _type;
 			}
 			bool uses_immval() const { return _is_imm; }
@@ -170,7 +178,7 @@ namespace OoOVis {
 			}
 			label_id_t target_label() const override { return _target_label_id; }
 			void set_target_label(label_id_t label_id) { _target_label_id = label_id; };
-			FLOW_TYPE flow_type() const override {
+			FLOW_TYPE flow() const override {
 				return FLOW_TYPE::BRANCH_CONDITIONAL;
 			}
 
@@ -201,7 +209,7 @@ namespace OoOVis {
 				_target_label_id(label_id_),
 				_imm(imm_) {
 			}
-			FLOW_TYPE flow_type() const {
+			FLOW_TYPE flow() const {
 				return FLOW_TYPE::BRANCH_UNCONDITIONAL;
 			}
 		private:
@@ -214,7 +222,7 @@ namespace OoOVis {
 			Label_Instruction(label_id_t label_) : _label_id(label_) {}
 			label_id_t target_label() const override { return _label_id; }
 			bool is_label_instruction() const override { return true; }
-			FLOW_TYPE flow_type() const override { return FLOW_TYPE::UNKNOWN; }
+			FLOW_TYPE flow() const override { return FLOW_TYPE::UNKNOWN; }
 		private:
 			label_id_t _label_id;
 		};

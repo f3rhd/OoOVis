@@ -1,5 +1,6 @@
 #pragma once
 #include <Core/Types/Types.h>
+#include <Core/Constants/Constants.h>
 namespace OoOVis 
 {
     namespace Core
@@ -17,8 +18,14 @@ namespace OoOVis
 		enum class EXECUTION_UNIT_MODE {
 			BRANCH_CONDITIONAL,
 			BRANCH_UNCONDITIONAL,
-			LOAD_STORE_LOAD,
-			LOAD_STORE_STORE,
+			LOAD_STORE_LOAD_WORD,
+			LOAD_STORE_LOAD_BYTE,
+			LOAD_STORE_LOAD_HALF,
+			LOAD_STORE_LOAD_BYTE_UNSIGNED,
+			LOAD_STORE_LOAD_HALF_UNSIGNED,
+			LOAD_STORE_STORE_WORD,
+			LOAD_STORE_STORE_BYTE,
+			LOAD_STORE_STORE_HALF,
 			ADD_SUB_UNIT_ADD,
 			ADD_SUB_UNIT_SUB,
 			ADD_SUB_UNIT_LOAD_UPPER,
@@ -42,13 +49,14 @@ namespace OoOVis
 		};
 
 		struct Reservation_Station_Entry {
-			EXECUTION_UNIT_MODE mode;
-			data_t src1;
-			data_t src2;
-			data_t dest;
-			u32    tag1;
-			u32    tag2;
-			u32    self_tag;
+			EXECUTION_UNIT_MODE mode = EXECUTION_UNIT_MODE::UNKNOWN;
+			data_t src1 = {};
+			data_t src2 = {};
+			u32    producer_tag1 = 0;
+			u32    producer_tag2 = 0;
+			u32    self_tag = 0;
+			u32	   reorder_buffer_entry_index = 0;
+			u32    store_id = NO_STORE;
 			bool   ready = false;
 			bool   busy = false;
 		};

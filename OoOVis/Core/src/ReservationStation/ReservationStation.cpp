@@ -10,15 +10,15 @@ namespace OoOVis
                 _station.back().self_tag = i * static_cast<u32>(id) +1;
             }
         }
-        Reservation_Station_Entry& Reservation_Station::allocate_entry() {
+        Reservation_Station_Entry* Reservation_Station::allocate_entry(const Reservation_Station_Entry& entry) {
             for (auto& entry : _station) {
                 if (!entry.busy) {
                     entry.busy = true;
-                    return entry;
+                    return &entry;
                 }
             }
-            // This is to shut the compiler before dispatching the instructions we shall check whether station is full or not
-            return _station[0];
+            // before dispatching the instructions we shall check whether station is full or not
+            return nullptr;
         }
         
 		bool Reservation_Station::full() {
