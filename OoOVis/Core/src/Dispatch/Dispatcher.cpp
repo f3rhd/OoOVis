@@ -33,14 +33,14 @@ namespace OoOVis
             }
         }
 		void Dispatcher::dispatch_register_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
-            if (const auto* register_instruction = dynamic_cast<FrontEnd::Register_Instruction*>(instruction.get())) {
+            if (const auto* register_instruction{ dynamic_cast<FrontEnd::Register_Instruction*>(instruction.get()) }) {
                 auto info = get_reservation_station_id_and_execution_mode_for(instruction);
                 Reservation_Station_Entry temp_reservation_station_entry;
                 temp_reservation_station_entry.mode = info.second;
                 Physical_Register_File_Entry entry;
                 try {
 
-					entry = Register_File::read(register_instruction->src1_reg());
+					entry = Register_File::read_with_alias(register_instruction->src1_reg());
                 }
                 catch (const std::runtime_error& err) {
                     std::cout << err.what();
@@ -51,25 +51,26 @@ namespace OoOVis
                 temp_reservation_station_entry.producer_tag2 = NO_PRODUCER_TAG;
                 temp_reservation_station_entry.src1 = entry.data;
                 // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
-                auto target_reorder_buffer_entry_index = Reorder_Buffer::allocate(
+                auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
                     std::make_unique<Register_Reorder_Buffer_Entry>(
                         register_instruction->flow(),
                         Register_File::aliasof(register_instruction->dest_reg())
                     )
-                );
-                Reservation_Station_Entry* allocated_reservation_station_entry = station.allocate_entry(); // We do the fullness checking before calling this function
+                ) };
+                Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() }; // We do the fullness checking before calling this function
                 // store the old alias before renaming
-                Register_File::allocate_physical_register_for(register_instruction->dest_reg(), allocated_reservation_station_entry->self_tag); // we do the fulness checking before calling this, so we good
+                reg_id_t destination_physical_register_id{ Register_File::allocate_physical_register_for(register_instruction->dest_reg(), allocated_reservation_station_entry->self_tag) }; // we do the fulness checking before calling this, so we good
                 if (register_instruction->uses_immval()) {
-                    temp_reservation_station_entry.src2 ._signed = register_instruction->src2().imm_val;
+                    temp_reservation_station_entry.src2.signed_ = register_instruction->src2().imm_val;
                 }
                 else {
-                    temp_reservation_station_entry.src2 = Register_File::read(register_instruction->src2().src2_reg).data;
+                    temp_reservation_station_entry.src2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).data;
                 }
                 temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
+                temp_reservation_station_entry.destination_id = destination_physical_register_id;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
             }
             // again shouldnt happen but...
@@ -80,7 +81,7 @@ namespace OoOVis
             }
         }
         void Dispatcher::dispatch_load_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
-            if (const auto* load_instruction = dynamic_cast<FrontEnd::Load_Instruction*>(instruction.get())) {
+            if (const auto* load_instruction{ dynamic_cast<FrontEnd::Load_Instruction*>(instruction.get()) }) {
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (load_instruction->kind()) {
                 case FrontEnd::Load_Instruction::LOAD_INSTRUCTION_TYPE::LB:
@@ -108,7 +109,7 @@ namespace OoOVis
                 }
                 Physical_Register_File_Entry entry;
                 try {
-                    entry = Register_File::read(load_instruction->base_reg());
+                    entry = Register_File::read_with_alias(load_instruction->base_reg());
                 }
                 catch (const std::runtime_error& err) {
                     std::cout << err.what();
@@ -116,22 +117,24 @@ namespace OoOVis
                 }
                 temp_reservation_station_entry.src1 = entry.data;
                 temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
-                temp_reservation_station_entry.src2._signed = { load_instruction->offset() }; 
+                temp_reservation_station_entry.src2.signed_ = { load_instruction->offset() }; 
                 temp_reservation_station_entry.producer_tag2 = NO_PRODUCER_TAG;
                 temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
 
                 // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
-                auto target_reorder_buffer_entry_index = Reorder_Buffer::allocate(
+                auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
                     std::make_unique<Register_Reorder_Buffer_Entry>(
                         load_instruction->flow(),
                         Register_File::aliasof(load_instruction->dest_reg())
                     )
-                );
-                Reservation_Station_Entry* allocated_reservation_station_entry = station.allocate_entry();
-			    Register_File::allocate_physical_register_for(load_instruction->dest_reg(),allocated_reservation_station_entry->self_tag);
+                )
+                };
+                Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() };
+			    reg_id_t destination_physical_register_id = Register_File::allocate_physical_register_for(load_instruction->dest_reg(),allocated_reservation_station_entry->self_tag);
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
+                temp_reservation_station_entry.destination_id = destination_physical_register_id;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
 
             }
@@ -146,7 +149,7 @@ namespace OoOVis
         }
         void Dispatcher::dispatch_store_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
             if (const auto* store_instruction = dynamic_cast<FrontEnd::Store_Instruction*>(instruction.get())) {
-                static u32 store_id = 0;
+                static u32 store_id(0);
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (store_instruction->kind()) {
                 case FrontEnd::Store_Instruction::STORE_INSTRUCTION_TYPE::SB:
@@ -169,14 +172,14 @@ namespace OoOVis
                 Physical_Register_File_Entry src1_entry;
                 Physical_Register_File_Entry src2_entry;
                 try {
-                    src1_entry = Register_File::read(store_instruction->src1());
-                    src2_entry = Register_File::read(store_instruction->src2());
+                    src1_entry = Register_File::read_with_alias(store_instruction->src1());
+                    src2_entry = Register_File::read_with_alias(store_instruction->src2());
                 }
                 catch (std::runtime_error& err) {
                     std::cout << err.what();
 					exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
                 }
-                Reservation_Station_Entry* allocated_reservation_station = station.allocate_entry();
+                Reservation_Station_Entry* allocated_reservation_station(station.allocate_entry());
                 temp_reservation_station_entry.producer_tag1 = src1_entry.producer_tag;
                 temp_reservation_station_entry.producer_tag2 = src2_entry.producer_tag;
                 temp_reservation_station_entry.src1 = src1_entry.data;
@@ -202,9 +205,9 @@ namespace OoOVis
             }
         }
         void Dispatcher::dispatch_branch_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
-            if (const auto* branch_instruction = dynamic_cast<FrontEnd::Branch_Instruction*>(instruction.get())) {
+            if (const auto* branch_instruction{ dynamic_cast<FrontEnd::Branch_Instruction*>(instruction.get()) }) {
 
-                Reservation_Station_Entry* allocated_reservation_station_entry = station.allocate_entry();
+                Reservation_Station_Entry* allocated_reservation_station_entry ( station.allocate_entry());
                 Reservation_Station_Entry temp_reservation_station_entry;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
@@ -214,8 +217,8 @@ namespace OoOVis
                     )
                 );
                 try {
-					Physical_Register_File_Entry entry1(Register_File::read(branch_instruction->src1()));
-					Physical_Register_File_Entry entry2(Register_File::read(branch_instruction->src2()));
+					Physical_Register_File_Entry entry1(Register_File::read_with_alias(branch_instruction->src1()));
+					Physical_Register_File_Entry entry2(Register_File::read_with_alias(branch_instruction->src2()));
 					temp_reservation_station_entry.producer_tag1 = entry1.producer_tag;
                     temp_reservation_station_entry.producer_tag2 = entry2.producer_tag;
 					temp_reservation_station_entry.src1 = entry1.data;
@@ -243,7 +246,7 @@ namespace OoOVis
 
             if (const auto* jump_instruction = dynamic_cast<FrontEnd::Jump_Instruction*>(instruction.get())) {
 
-                Reservation_Station_Entry* allocated_reservation_station_entry = station.allocate_entry();
+                Reservation_Station_Entry* allocated_reservation_station_entry(station.allocate_entry());
                 Reservation_Station_Entry temp_reservation_station_entry;
                 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL;
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
@@ -254,7 +257,7 @@ namespace OoOVis
                 switch (jump_instruction->kind()) {
                 case FrontEnd::Jump_Instruction::JUMP_INSTRUCTION_TYPE::JALR:
                     try {
-                        entry = Register_File::read(jump_instruction->src1());
+                        entry = Register_File::read_with_alias(jump_instruction->src1());
                     }
                     catch (std::runtime_error& err) {
                         std::cout << err.what();
@@ -263,7 +266,7 @@ namespace OoOVis
                     temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
                     temp_reservation_station_entry.src1 = entry.data;
                     temp_reservation_station_entry.producer_tag2 = NO_PRODUCER_TAG;
-                    temp_reservation_station_entry.src2._signed = jump_instruction->offset();
+                    temp_reservation_station_entry.src2.signed_ = jump_instruction->offset();
                     temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG;
 					target_reorder_buffer_entry_index = Reorder_Buffer::allocate(
 						std::make_unique<Branch_Unconditional_Reorder_Buffer_Entry>(
@@ -282,7 +285,7 @@ namespace OoOVis
 						)
 					);
                     temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
-                    temp_reservation_station_entry.src1._unsigned = jump_instruction->target_label();
+                    temp_reservation_station_entry.src1.unsigned_ = jump_instruction->target_label();
                     break;
                 default:
 					std::cout << "Faced with unknown jump instruction type while dispatching.\n";
@@ -337,17 +340,17 @@ namespace OoOVis
                         case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MULHU:
                             return { RESERVATION_STATION_ID::DIVIDER,EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_UNSIGNED };
                         case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::AND:
-                            return { RESERVATION_STATION_ID::LOGICAL,EXECUTION_UNIT_MODE::LOGICAL_AND };
+                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::BITWISE_AND };
                         case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::OR:
-                            return { RESERVATION_STATION_ID::LOGICAL,EXECUTION_UNIT_MODE::LOGICAL_OR };
+                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::BITWISE_XOR };
                         case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::XOR:
-                            return { RESERVATION_STATION_ID::LOGICAL,EXECUTION_UNIT_MODE::LOGICAL_XOR };
+                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::LOGICAL_XOR };
                         case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLL:
-                            return { RESERVATION_STATION_ID::LOGICAL,EXECUTION_UNIT_MODE::LOGICAL_SHIFT_LEFT_LOGICAL };
+                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::BITWISE_SHIFT_LEFT_LOGICAL };
                         case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SRL:
-                            return { RESERVATION_STATION_ID::LOGICAL,EXECUTION_UNIT_MODE::LOGICAL_SHIFT_RIGHT_LOGICAL };
+                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::BITWISE_SHIFT_RIGHT_LOGICAL };
                         case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SRA:
-                            return { RESERVATION_STATION_ID::LOGICAL,EXECUTION_UNIT_MODE::LOGICAL_SHIFT_RIGHT_ARITHMETIC };
+                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::BITWISE_SHIFT_RIGHT_ARITHMETIC };
                         case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLT:
                             return { RESERVATION_STATION_ID::SET_LESS,EXECUTION_UNIT_MODE::SET_LESS_THAN };
                         default: // shouldn't happen

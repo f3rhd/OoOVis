@@ -7,7 +7,7 @@ namespace OoOVis
     {
 		enum class RESERVATION_STATION_ID : u32 {
 			ADD_SUB,
-			LOGICAL,
+			BITWISE,
 			SET_LESS,
 			MULTIPLIER,
 			DIVIDER,
@@ -44,12 +44,12 @@ namespace OoOVis
 			MULTIPLIER_MULTIPLY_HIGH,
 			MULTIPLIER_MULTIPLY_HIGH_SIGNED_UNSIGNED,
 			MULTIPLIER_MULTIPLY_HIGH_UNSIGNED,
-			LOGICAL_AND,
-			LOGICAL_OR,
+			BITWISE_AND,
+			BITWISE_XOR,
 			LOGICAL_XOR,
-			LOGICAL_SHIFT_LEFT_LOGICAL,
-			LOGICAL_SHIFT_RIGHT_LOGICAL,
-			LOGICAL_SHIFT_RIGHT_ARITHMETIC,
+			BITWISE_SHIFT_LEFT_LOGICAL,
+			BITWISE_SHIFT_RIGHT_LOGICAL,
+			BITWISE_SHIFT_RIGHT_ARITHMETIC,
 			SET_LESS_THAN,
 			UNKNOWN
 		};
@@ -61,6 +61,7 @@ namespace OoOVis
 			u32    producer_tag1 = NO_PRODUCER_TAG;
 			u32    producer_tag2 = NO_PRODUCER_TAG;
 			u32    self_tag = NO_PRODUCER_TAG;
+			reg_id_t destination_id = INVALID_REGISTER_ID;
 			u64	   reorder_buffer_entry_index = 0;
 			bool   ready = false;
 			bool   busy = false;

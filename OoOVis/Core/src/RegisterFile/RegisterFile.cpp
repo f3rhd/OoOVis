@@ -2,12 +2,13 @@
 #include <Core/RegisterFile/RegisterFile.h>
 #include <Core/Constants/Constants.h>
 #include <stdexcept>
+#include <iostream>
 namespace OoOVis
 {
 	namespace Core
 	{
-		std::unordered_map<reg_id_t, Physical_Register_File_Entry> Register_File::_physical_register_file = {};
-		std::unordered_map<reg_id_t, reg_id_t> Register_File::_register_alias_table = {};
+		std::unordered_map<reg_id_t, Physical_Register_File_Entry> Register_File::_physical_register_file{};
+		std::unordered_map<reg_id_t, reg_id_t> Register_File::_register_alias_table{};
 
 		void Register_File::init() {
 			for (reg_id_t i = 0; i < PHYSICAL_REGISTER_FILE_SIZE; i++) {
@@ -40,15 +41,16 @@ namespace OoOVis
 			_physical_register_file[physical_register_id].producer_tag = NO_PRODUCER_TAG;
 		}
 
-		void Register_File::allocate_physical_register_for(reg_id_t architectural_register_id, u32 producer_tag) {
+		reg_id_t Register_File::allocate_physical_register_for(reg_id_t architectural_register_id, u32 producer_tag) {
 			for (auto& [key, entry] : _physical_register_file) {
 				if (!entry.allocated) {
 					_register_alias_table[architectural_register_id] = key;
 					entry.allocated = true;
 					entry.producer_tag = producer_tag;
-					return;
+					return key;
 				}
 			}
+			return INVALID_REGISTER_ID;
 		}
 
 		reg_id_t Register_File::aliasof(reg_id_t architectural_register_id)
@@ -59,9 +61,8 @@ namespace OoOVis
 			return _register_alias_table[architectural_register_id];
 		}
 
-		Physical_Register_File_Entry Register_File::read(reg_id_t architectural_register_id) {
+		Physical_Register_File_Entry Register_File::read_with_alias(reg_id_t architectural_register_id) {
 			return _physical_register_file[aliasof(architectural_register_id)];
 		}
-
 	}
 }

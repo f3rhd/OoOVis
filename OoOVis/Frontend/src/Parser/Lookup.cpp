@@ -3,7 +3,7 @@
 namespace OoOVis {
     namespace FrontEnd {
 		const std::unordered_map<std::string,reg_id_t> 
-		Lookup::_str_to_id_registers = {
+		Lookup::_str_to_id_registers {
 			{"zero",0},{"ra",1},{"sp",2},{"gp",3},
 			{"tp",4},{"t0",5},{"t1",6},{"t2",7},
 			{"s0",8},{"s1",9},{"a0",10},
@@ -22,7 +22,7 @@ namespace OoOVis {
 			{"x27",27},{"x28",28}, {"x29",29}, {"x30",30},{"x31",31}
 		};
 		const std::unordered_map<reg_id_t, std::string>
-		Lookup::_id_to_str_registers = {
+		Lookup::_id_to_str_registers {
 			{0, "zero"}, {1, "ra"}, {2, "sp"}, {3, "gp"}, {4, "tp"},
 			{5, "t0"}, {6, "t1"}, {7, "t2"}, {8, "s0"}, {9, "s1"},
 			{10, "a0"}, {11, "a1"}, {12, "a2"}, {13, "a3"}, {14, "a4"},
@@ -33,7 +33,7 @@ namespace OoOVis {
 
 		};
 		const std::unordered_map<std::string, Load_Instruction::LOAD_INSTRUCTION_TYPE>
-		Lookup::_load_instructions = {
+		Lookup::_load_instructions {
 			{"lw", Load_Instruction::LOAD_INSTRUCTION_TYPE::LW},
 			{"lhu", Load_Instruction::LOAD_INSTRUCTION_TYPE::LHU},
 			{"lh", Load_Instruction::LOAD_INSTRUCTION_TYPE::LH},
@@ -41,13 +41,13 @@ namespace OoOVis {
 			{"lb", Load_Instruction::LOAD_INSTRUCTION_TYPE::LB}
 		};
 		const std::unordered_map<std::string,Store_Instruction::STORE_INSTRUCTION_TYPE>     
-		Lookup::_store_instructions = {
+		Lookup::_store_instructions {
 			{"sb", Store_Instruction::STORE_INSTRUCTION_TYPE::SB},
 			{"sw", Store_Instruction::STORE_INSTRUCTION_TYPE::SW},
 			{"sh", Store_Instruction::STORE_INSTRUCTION_TYPE::SH}
 		};
 		const std::unordered_map<std::string, Register_Instruction::REGISTER_INSTRUCTION_TYPE>
-		Lookup::_alui_instructions = {
+		Lookup::_alui_instructions  {
 			{"addi", Register_Instruction::REGISTER_INSTRUCTION_TYPE::ADD},
 			{"slli", Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLL},
 			{"slti", Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLT},
@@ -60,7 +60,7 @@ namespace OoOVis {
 		};
 
 		const std::unordered_map<std::string,Register_Instruction::REGISTER_INSTRUCTION_TYPE>         
-		Lookup::_alur_instructions = {
+		Lookup::_alur_instructions  {
 			{"add", Register_Instruction::REGISTER_INSTRUCTION_TYPE::ADD},
 			{"sll", Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLL},
 			{"slt", Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLT},
@@ -79,7 +79,7 @@ namespace OoOVis {
 			{"remu",Register_Instruction::REGISTER_INSTRUCTION_TYPE::REMU}
 		};
 		const std::unordered_map<std::string,Branch_Instruction::BRANCH_INSTRUCTION_TYPE>   
-		Lookup::_branch_instructions = {
+		Lookup::_branch_instructions {
 			{"beq",Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BEQ},
 			{"bne",Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BNE},
 			{"blt",Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BLT},
@@ -88,7 +88,7 @@ namespace OoOVis {
 			{"bgeu",Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BGEU}
 		};
 		const std::unordered_map<std::string,Jump_Instruction::JUMP_INSTRUCTION_TYPE>       
-		Lookup::_jump_instructions = {
+		Lookup::_jump_instructions  {
 			{"jalr",Jump_Instruction::JUMP_INSTRUCTION_TYPE::JALR},
 			{"jal",Jump_Instruction::JUMP_INSTRUCTION_TYPE::JAL}
 		};
@@ -105,7 +105,7 @@ namespace OoOVis {
 		}
 
 		const std::unordered_set<std::string>
-		Lookup::_pseudo_ops = {
+		Lookup::_pseudo_ops  {
 			"nop","li","mv","not","neg",
 			"seqz","snez","sltz","sgtz","beqz",
 			"bnez","blez","bgez","bltz","bgtz",
@@ -168,7 +168,7 @@ namespace OoOVis {
 				return true;
 			}
 			// Decimal: optional leading '-' and digits
-			size_t i = 0;
+			size_t i{0};
 			if (s[0] == '-') i = 1;
 			if (i == str_size) return false;
 			for (; i < str_size; ++i) {

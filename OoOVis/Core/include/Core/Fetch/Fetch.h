@@ -22,13 +22,15 @@ namespace OoOVis
         class Fetch_Unit {
 
         public:
-            Fetch_Unit(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions) : _instruction_cache(std::move(instructions)) {}
-            Fetch_Group fetch();
-            void        stall();
+            static void                init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions);
+            static Fetch_Group         fetch();
+            static void                stall();
+            static void                set_program_counter(memory_addr_t next_pc);
+            static memory_addr_t       get_program_counter();
         private:
-            std::vector<std::unique_ptr<FrontEnd::Instruction>> _instruction_cache;
-            uint64_t _program_counter = 0;
-            bool _stalled = false;
+            static std::vector<std::unique_ptr<FrontEnd::Instruction>> _instruction_cache;
+            static memory_addr_t _program_counter;
+            static bool _stalled;
         };
         
     } // namespace Core

@@ -12,18 +12,15 @@ namespace OoOVis {
     namespace FrontEnd {
 
         auto constexpr INVALID_REG_ID = 255;
-        //struct cli_args_t {
-        //    std::string input_file;
-        //    CPU::PREDICTOR_TYPE predictor;
-        //    std::string log_dest;
-        //    bool enable_gui;
-        //    bool valid;
-        //};
+        struct cli_args_t {
+            std::string input_file;
+            bool enable_gui;
+        };
         class Parser {
         public:
             Parser() = default;
             std::pair<std::vector<std::unique_ptr<Instruction>>,std::vector<std::string>>  parse_instructions(const std::string& src);
-            //cli_args_t  parse_cli(int argc, char** argv);
+            cli_args_t  parse_cli(int argc, char** argv);
         private:
             void        parse_instruction();
             void        parse_pseudo_instruction();

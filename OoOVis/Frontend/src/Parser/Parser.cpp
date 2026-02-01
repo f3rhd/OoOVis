@@ -15,7 +15,7 @@ namespace OoOVis {
         std::pair<std::vector<std::unique_ptr<Instruction>>, std::vector<std::string>>
         Parser::parse_instructions(const std::string & src) {
             std::ifstream file(src);
-            std::vector<std::string> instruction_strs;
+            std::vector<std::string> instruction_strs{};
             if (!src.ends_with(".s")) {
                 std::cout << "\033[31m" << "Error: \033[0m" << "File name should end with *.s.\n";
                 exit(EXIT_FAILURE);
@@ -24,7 +24,7 @@ namespace OoOVis {
                 std::cout << "\033[31m" << "Error: \033[0m" << "File path " << src << " doesn't exist.\n";
                 exit(EXIT_FAILURE);
             }
-            std::string line_raw;
+            std::string line_raw{};
             while (std::getline(file, line_raw)) {
                 _line_number++;
                 std::string line_better = tokenize_line_text(line_raw);
@@ -56,53 +56,29 @@ namespace OoOVis {
             return { std::move(_program),std::move(instruction_strs) };
         }
 
-        //cli_args_t Parser::parse_cli(int argc, char** argv) {
-        //    std::string input_file;
-        //    std::string log_destination = "none"; 
-        //    CPU::PREDICTOR_TYPE predictor_type = CPU::PREDICTOR_TYPE::GSHARE; 
-        //    bool enable_gui = true; // new GUI flag
-        //    bool valid = true;
+        cli_args_t Parser::parse_cli(int argc, char** argv) {
+            std::string input_file{};
+            std::string log_destination("none"); 
+            bool valid = true;
 
-        //    for (int i = 1; i < argc; ++i) {
-        //        std::string arg = argv[i];
+            for (int i = 1; i < argc; ++i) {
+                std::string arg(argv[i]);
 
-        //        if (arg == "--log") {
-        //            if (i + 1 < argc) {
-        //                log_destination = argv[i + 1];
-        //                i++; 
-        //            } else {
-        //                std::cerr << "Error: --log requires a destination (cout or a filename).\n";
-        //                valid = false;
-        //            }
-        //        } else if (arg == "--gshare") {
-        //            predictor_type = CPU::PREDICTOR_TYPE::GSHARE;
-        //        } else if (arg == "--GAg") {
-        //            predictor_type = CPU::PREDICTOR_TYPE::GAg;
-        //        } else if (arg == "--PAg") {
-        //            predictor_type = CPU::PREDICTOR_TYPE::PAg;
-        //        } else if (arg == "--simple") {
-        //            predictor_type = CPU::PREDICTOR_TYPE::SIMPLE;
-        //        } else if (arg == "--nogui") { // new flag
-        //            enable_gui = false;
-        //        } else if (arg.rfind("--", 0) == 0) {
-        //            std::cerr << "Warning: Unknown option: " << arg << ". Ignoring.\n";
-        //        } else {
-        //            if (input_file.empty()) {
-        //                input_file = arg;
-        //            } else {
-        //                std::cerr << "Warning: Multiple input files found. Using first one: " << input_file << ".\n";
-        //            }
-        //        }
-        //    }
+				if (input_file.empty()) {
+					input_file = arg;
+				} else {
+					std::cerr << "Warning: Multiple input files found. Using first one: " << input_file << ".\n";
+				}
+            }
 
-        //    if (input_file.empty()) {
-        //        std::cerr << "Usage: " << argv[0] 
-        //                << " <input.s> [--log cout | --log <filename>] [--gshare | --GAg | --PAg | --simple] [--nogui]\n";
-        //        valid = false;
-        //    }
+            if (input_file.empty()) {
+                std::cerr << "Usage: " << argv[0] 
+                        << " <input.s> \n";
+                valid = false;
+            }
 
-        //    return { std::move(input_file), predictor_type, std::move(log_destination), enable_gui, valid };
-        //}
+            return { std::move(input_file), valid };
+        }
 
 
 
@@ -139,11 +115,11 @@ namespace OoOVis {
 
         // @call : current token is load or memory instruction
         void Parser::parse_mem_instruction() {
-            Token tmp = *_current_token;
+            Token tmp(*_current_token);
             advance();
             // we should be register token
             EXPECT(TOKEN_TYPE::REGISTER);
-            reg_id_t dest_reg_id = Lookup::reg_id(_current_token->word);
+            reg_id_t dest_reg_id{ Lookup::reg_id(_current_token->word) };
             advance();
             // we should be comma
             EXPECT(TOKEN_TYPE::COMMA);
@@ -152,7 +128,7 @@ namespace OoOVis {
 
             // we should be imm
             EXPECT(TOKEN_TYPE::IMMEDIATE);
-            offset_t offset = std::stoi(_current_token->word);
+            offset_t offset{ std::stoi(_current_token->word) };
 
             advance();
             // we should be left paranthesis
@@ -161,10 +137,10 @@ namespace OoOVis {
             advance();
             // we should be register
             EXPECT(TOKEN_TYPE::REGISTER);
-            reg_id_t base_reg_id = Lookup::reg_id(_current_token->word);
+            reg_id_t base_reg_id{ Lookup::reg_id(_current_token->word) };
 
             if (tmp.type == TOKEN_TYPE::LOAD_OPERATION) {
-                Load_Instruction::LOAD_INSTRUCTION_TYPE type = Lookup::load_type(tmp.word);
+                Load_Instruction::LOAD_INSTRUCTION_TYPE type{ Lookup::load_type(tmp.word) };
                 _program.emplace_back(std::make_unique<Load_Instruction>(
                     type,
                     dest_reg_id,
@@ -173,7 +149,7 @@ namespace OoOVis {
                 ));
             }
             else if (tmp.type == TOKEN_TYPE::STORE_OPERATION) {
-                Store_Instruction::STORE_INSTRUCTION_TYPE type = Lookup::store_type(tmp.word);
+                Store_Instruction::STORE_INSTRUCTION_TYPE type{ Lookup::store_type(tmp.word) };
                 _program.emplace_back(std::make_unique<Store_Instruction>(
                     type,
                     dest_reg_id,
@@ -189,19 +165,19 @@ namespace OoOVis {
         void Parser::parse_alu_instruction() {
             Token tmp = *_current_token;
             bool is_imm = false;
-            Register_Instruction::REGISTER_INSTRUCTION_TYPE type;
+            Register_Instruction::REGISTER_INSTRUCTION_TYPE type{};
             advance();
             EXPECT(TOKEN_TYPE::REGISTER);
-            reg_id_t dest_reg_id = Lookup::reg_id(_current_token->word);
+            reg_id_t dest_reg_id{ Lookup::reg_id(_current_token->word) };
             advance();
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
             EXPECT(TOKEN_TYPE::REGISTER);
-            reg_id_t src1_reg_id = Lookup::reg_id(_current_token->word);
+            reg_id_t src1_reg_id{ Lookup::reg_id(_current_token->word) };
             advance();
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
-            i32 src2_val;
+            i32 src2_val{};
             // if our operation was imm
             if (Lookup::alui_type(tmp.word) != Register_Instruction::REGISTER_INSTRUCTION_TYPE::UNKNOWN) {
                 type = Lookup::alui_type(tmp.word);
@@ -231,32 +207,33 @@ namespace OoOVis {
 
         // @call : current token is branch instruction
         void Parser::parse_branch_instruction() {
-            Branch_Instruction::BRANCH_INSTRUCTION_TYPE type = Lookup::branch_type(_current_token->word);
+            Branch_Instruction::BRANCH_INSTRUCTION_TYPE type{ Lookup::branch_type(_current_token->word) };
             advance();
             EXPECT(TOKEN_TYPE::REGISTER);
-            reg_id_t src1_id = Lookup::reg_id(_current_token->word);
+            reg_id_t src1_id  {Lookup::reg_id(_current_token->word)};
             advance();
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
             EXPECT(TOKEN_TYPE::REGISTER);
-            reg_id_t src2_id = Lookup::reg_id(_current_token->word);
+            reg_id_t src2_id  {Lookup::reg_id(_current_token->word)};
             advance();
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
             EXPECT(TOKEN_TYPE::IDENTIFIER);
-            label_id_t label_id = FORWARD_LABEL;
+            label_id_t label_id  {FORWARD_LABEL};
             if (_label_map.find(_current_token->word) != _label_map.end()) {
                 label_id = _label_map.at(_current_token->word);
             }
-            auto branch_instruction = std::make_unique<Branch_Instruction>(
+            auto branch_instruction (std::make_unique<Branch_Instruction>(
                 type,
                 src1_id,
                 src2_id,
                 label_id,
                 unique_branch_id(),
                 static_cast<u32>(_program.size())
-            );
-            auto branch_instruction_ptr = branch_instruction.get();
+            )
+			);
+            auto branch_instruction_ptr(branch_instruction.get());
             _program.push_back(std::move(branch_instruction));
             // couldnt find the label identifier save it for later
             if (label_id == FORWARD_LABEL) {
@@ -265,12 +242,12 @@ namespace OoOVis {
         }
         // @call : current token is jump instruction
         void Parser::parse_jump_instruction() {
-            label_id_t label_id = FORWARD_LABEL;
-            Jump_Instruction::JUMP_INSTRUCTION_TYPE type = Lookup::jump_type(_current_token->word);
+            label_id_t label_id{ FORWARD_LABEL };
+            Jump_Instruction::JUMP_INSTRUCTION_TYPE type{ Lookup::jump_type(_current_token->word) };
             advance();
             EXPECT(TOKEN_TYPE::REGISTER);
-            reg_id_t dest_reg = Lookup::reg_id(_current_token->word);
-            reg_id_t src1 = INVALID_REG_ID;
+            reg_id_t dest_reg{ Lookup::reg_id(_current_token->word) };
+            reg_id_t src1{ INVALID_REG_ID };
             advance();
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
@@ -280,14 +257,15 @@ namespace OoOVis {
                     label_id = _label_map.at(_current_token->word);
                 }
                 // src1 and imm fields can be garbage values in this case
-                auto jump_instruction = std::make_unique<Jump_Instruction>(
+                auto jump_instruction{ std::make_unique<Jump_Instruction>(
                     type,
                     dest_reg,
                     src1,
                     label_id,
                     0
-                );
-                auto jump_instruction_ptr = jump_instruction.get();
+                )
+                };
+                auto jump_instruction_ptr( jump_instruction.get());
                 _program.push_back(
                     std::move(jump_instruction)
                 );
@@ -302,7 +280,7 @@ namespace OoOVis {
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
             EXPECT(TOKEN_TYPE::IMMEDIATE);
-            i32 imm;
+            i32 imm{};
             if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
                 imm = std::stoi(_current_token->word, nullptr, 16);
             else
@@ -320,10 +298,10 @@ namespace OoOVis {
 
         // @call : current token is lui or auipc
         void Parser::parse_upperimm_instruction() {
-            Token tmp = *_current_token;
+            Token tmp(*_current_token);
             advance();
             EXPECT(TOKEN_TYPE::REGISTER);
-            reg_id_t dest_reg = Lookup::reg_id(_current_token->word);
+            reg_id_t dest_reg{ Lookup::reg_id(_current_token->word) };
             advance();
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
@@ -334,6 +312,10 @@ namespace OoOVis {
                 imm = std::stoi(_current_token->word, nullptr, 16);
             else
                 imm = std::stoi(_current_token->word);
+            if (!(imm >= -524288 && imm < 524277)) {
+                std::cout << "\033[31m" << "Error(" << _current_token->row << "," << _current_token->column << ")\033[0m: " << "Token " << "'" << _current_token->word << "should live in 20 bit range." << "\n";               \
+				exit(EXIT_FAILURE);
+            }
             if (tmp.word == "lui")
                 _program.emplace_back(std::make_unique<Register_Instruction>(
                     Register_Instruction::REGISTER_INSTRUCTION_TYPE::LOAD_UPPER,
@@ -356,19 +338,19 @@ namespace OoOVis {
 
         // @call : current token is label
         void Parser::parse_label() {
-            label_id_t unique_id = unique_label_id();
-            std::unique_ptr<Label_Instruction> label_instr = std::make_unique<Label_Instruction>(unique_id);
+            label_id_t unique_id{ unique_label_id() };
+            std::unique_ptr<Label_Instruction> label_instr  {std::make_unique<Label_Instruction>(unique_id)};
             // insert new entry to the label map
             _label_map.emplace(_current_token->word, unique_id);
             _program.push_back(std::move(label_instr));
             advance();
         }
         label_id_t Parser::unique_label_id() {
-            static label_id_t unique_id = FORWARD_LABEL + 1;
+            static label_id_t unique_id  {FORWARD_LABEL + 1};
             return unique_id++;
         }
         branch_instruction_id_t Parser::unique_branch_id() {
-            static label_id_t unique_id = 0;
+            static label_id_t unique_id  {0};
             return unique_id++;
         }
         void Parser::advance() {
@@ -382,16 +364,16 @@ namespace OoOVis {
         std::string Parser::tokenize_line_text(const std::string& line_raw) {
             _line_tokens.clear();
             _column = 0;
-            size_t comment_pos = line_raw.find('#');
-            std::string line = (comment_pos != std::string::npos) ? line_raw.substr(0, comment_pos) : line_raw;
+            size_t comment_pos{ line_raw.find('#') };
+            std::string line((comment_pos != std::string::npos) ? line_raw.substr(0, comment_pos) : line_raw);
             if (line == line_raw) {
                 comment_pos = line_raw.find(';');
                 line = (comment_pos != std::string::npos) ? line_raw.substr(0, comment_pos) : line_raw;
             }
-            size_t i = 0;
+            size_t i{ 0 };
             while (i < line.size()) {
                 _column++;
-                char ch = line[i];
+                char ch{ line[i] };
 
                 // Skip whitespace
                 if (std::isspace(static_cast<unsigned char>(ch))) {
@@ -401,7 +383,7 @@ namespace OoOVis {
 
                 // Handle single-char _line_tokens
                 if (ch == ',' || ch == '(' || ch == ')') {
-                    TOKEN_TYPE type;
+                    TOKEN_TYPE type{};
                     if (ch == ',') type = TOKEN_TYPE::COMMA;
                     else if (ch == '(') type = TOKEN_TYPE::LPAREN;
                     else type = TOKEN_TYPE::RPAREN;
@@ -412,7 +394,7 @@ namespace OoOVis {
                 }
 
                 // Match [a-zA-Z0-9_.:-]+
-                size_t start = i;
+                size_t start{ i };
                 while (i < line.size() && (std::isalnum(static_cast<unsigned char>(line[i])) || line[i] == '_' || line[i] == '.' || line[i] == '-' || line[i] == ':')) {
                     ++i;
                 }
@@ -420,7 +402,7 @@ namespace OoOVis {
                 if (start == i)
                     continue;
 
-                std::string token = line.substr(start, i - start);
+                std::string token(line.substr(start, i - start));
 
                 // Handle label: `label:`
                 if (!token.empty() && token.back() == ':') {
@@ -512,18 +494,19 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::IDENTIFIER);
 
-                label_id_t target_label_id = FORWARD_LABEL;
+                label_id_t target_label_id{ FORWARD_LABEL };
                 if (_label_map.find(_current_token->word) != _label_map.end())
                     target_label_id = _label_map[_current_token->word];
 
-                std::unique_ptr<Jump_Instruction> jump_instruction = std::make_unique<Jump_Instruction>(
+                std::unique_ptr<Jump_Instruction> jump_instruction{ std::make_unique<Jump_Instruction>(
                     Jump_Instruction::JUMP_INSTRUCTION_TYPE::JAL,
                     Lookup::reg_id("ra"),
                     0,
                     target_label_id,
                     0 // noimm
-                );
-                auto jump_instruction_ptr = jump_instruction.get();
+                )
+                };
+                auto jump_instruction_ptr(jump_instruction.get());
                 if (target_label_id == FORWARD_LABEL)
                     _unresolved_jump_instructions.emplace_back(jump_instruction_ptr, _current_token->word);
 
@@ -535,7 +518,7 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::REGISTER);
 
-                reg_id_t dest_reg = Lookup::reg_id(_current_token->word);
+                reg_id_t dest_reg{ Lookup::reg_id(_current_token->word) };
 
                 advance();
                 EXPECT(TOKEN_TYPE::COMMA);
@@ -543,10 +526,10 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::IMMEDIATE);
 
-                int32_t imm_val = std::stoi(_current_token->word);
+                int32_t imm_val { std::stoi(_current_token->word)};
 
-                int32_t low = (imm_val << 20) >> 20;
-                int32_t high = static_cast<int32_t>(imm_val - low);
+                int32_t low { (imm_val << 20) >> 20};
+                int32_t high { static_cast<int32_t>(imm_val - low)};
 
                 if (-2048 <= imm_val && (imm_val) <= 2047) {
                     _program.emplace_back(
@@ -591,11 +574,11 @@ namespace OoOVis {
                     _current_token->word == "sltz" ||
                     _current_token->word == "sgtz"
                     ) {
-                std::string op = _current_token->word;
+                std::string op{ _current_token->word };
                 advance();
                 EXPECT(TOKEN_TYPE::REGISTER);
 
-                reg_id_t dest_reg = Lookup::reg_id(_current_token->word);
+                reg_id_t dest_reg { Lookup::reg_id(_current_token->word)};
 
                 advance();
                 EXPECT(TOKEN_TYPE::COMMA);
@@ -604,7 +587,7 @@ namespace OoOVis {
 
                 EXPECT(TOKEN_TYPE::REGISTER);
 
-                reg_id_t src_reg = Lookup::reg_id(_current_token->word);
+                reg_id_t src_reg { Lookup::reg_id(_current_token->word)};
 
                 //  mv   rd,  rs1 -> addi  rd,  rs1, 0
                 if (op[0] == 'm') {
@@ -712,12 +695,12 @@ namespace OoOVis {
                     _current_token->word == "bgtz"
                     )
             {
-                std::string op = _current_token->word;
+                std::string op{ _current_token->word };
 
                 advance();
                 EXPECT(TOKEN_TYPE::REGISTER);
 
-                reg_id_t src1 = Lookup::reg_id(_current_token->word);
+                reg_id_t src1 { Lookup::reg_id(_current_token->word)};
 
                 advance();
                 EXPECT(TOKEN_TYPE::COMMA);
@@ -725,11 +708,10 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::IDENTIFIER);
 
-                label_id_t target_label_id = FORWARD_LABEL;
-                branch_instruction_id_t branch_id = unique_branch_id();
+                label_id_t target_label_id{ FORWARD_LABEL };
+                branch_instruction_id_t branch_id{ unique_branch_id() };
                 std::unique_ptr<Branch_Instruction> branch_instruction;
-                Branch_Instruction* branch_instruction_ptr = nullptr;
-
+                Branch_Instruction* branch_instruction_ptr{ nullptr };
                 if (_label_map.find(_current_token->word) != _label_map.end())
                     target_label_id = _label_map[_current_token->word];
 
@@ -809,18 +791,18 @@ namespace OoOVis {
                     )
             {
 
-                std::string op = _current_token->word;
+                std::string op{ _current_token->word };
 
                 advance();
                 EXPECT(TOKEN_TYPE::REGISTER);
-                reg_id_t src1 = Lookup::reg_id(_current_token->word);
+                reg_id_t src1 { Lookup::reg_id(_current_token->word)};
 
                 advance();
                 EXPECT(TOKEN_TYPE::COMMA);
 
                 advance();
                 EXPECT(TOKEN_TYPE::REGISTER);
-                reg_id_t src2 = Lookup::reg_id(_current_token->word);
+                reg_id_t src2 { Lookup::reg_id(_current_token->word)};
 
                 advance();
                 EXPECT(TOKEN_TYPE::COMMA);
@@ -828,8 +810,8 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::IDENTIFIER);
 
-                label_id_t target_label_id = FORWARD_LABEL;
-                branch_instruction_id_t branch_id = unique_branch_id();
+                label_id_t target_label_id{ FORWARD_LABEL };
+                branch_instruction_id_t branch_id { unique_branch_id()};
                 std::unique_ptr<Branch_Instruction> branch_instruction;
 
                 if (_label_map.find(_current_token->word) != _label_map.end())
@@ -872,11 +854,11 @@ namespace OoOVis {
             }
 
             if (_current_token->word == "j" || _current_token->word == "jal") {
-                std::string op = _current_token->word;
+                std::string op{ _current_token->word };
                 advance();
                 EXPECT(TOKEN_TYPE::IDENTIFIER);
 
-                label_id_t target_label_id = FORWARD_LABEL;
+                label_id_t target_label_id { FORWARD_LABEL};
                 if (_label_map.find(_current_token->word) != _label_map.end())
                     target_label_id = _label_map[_current_token->word];
 
@@ -908,12 +890,12 @@ namespace OoOVis {
                 return;
             }
             if (_current_token->word == "jr" || _current_token->word == "jalr") {
-                std::string op = _current_token->word;
+                std::string op{ _current_token->word };
 
                 advance();
 
                 EXPECT(TOKEN_TYPE::REGISTER);
-                reg_id_t src1 = Lookup::reg_id(_current_token->word);
+                reg_id_t src1 { Lookup::reg_id(_current_token->word)};
 
                 advance();
                 EXPECT(TOKEN_TYPE::NEW_LINE);

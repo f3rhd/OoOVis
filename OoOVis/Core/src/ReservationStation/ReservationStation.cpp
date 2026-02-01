@@ -4,8 +4,8 @@ namespace OoOVis
 {
     namespace Core
     {
-        Reservation_Station::Reservation_Station(RESERVATION_STATION_ID id, u32 size) {
-            for (u32 i(0);i < size;i++) {
+        Reservation_Station::Reservation_Station(RESERVATION_STATION_ID id) {
+            for (u32 i(0);i < RESERVATION_STATION_SIZE;i++) {
                 _station.emplace_back();
                 _station.back().self_tag = i * static_cast<u32>(id) +1;
             }
@@ -18,6 +18,14 @@ namespace OoOVis
                 }
             }
             // before dispatching the instructions we shall check whether station is full or not
+            return nullptr;
+        }
+
+        const Reservation_Station_Entry* Reservation_Station::issue() {
+            for (const auto& entry : _station) {
+                if (entry.ready)
+                    return &entry;
+            }
             return nullptr;
         }
         

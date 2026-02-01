@@ -11,8 +11,8 @@ namespace OoOVis
 
         public:
             Dispatcher() = default;
-        private:
             void                                                   dispatch_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, std::unordered_map<u32,Reservation_Station>& station_pool);
+        private:
             void                                                   dispatch_register_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station);
             void                                                   dispatch_load_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station);
             void                                                   dispatch_store_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station);
