@@ -3,7 +3,7 @@
 namespace OoOVis {
 	namespace FrontEnd {
 		auto constexpr NO_LABEL = 0;
-		auto constexpr FORWARD_LABEL = 1;
+		auto constexpr FORWARD_ADDR = 0xFFFFFFFFu;
 		enum class FLOW_TYPE {
 			REGISTER,
 			LOAD,
@@ -13,7 +13,7 @@ namespace OoOVis {
 			UNKNOWN
 		};
 		struct Instruction {
-			virtual label_id_t target_label() const { return NO_LABEL; }
+			virtual memory_addr_t target_addr() const { return NO_LABEL; }
 			virtual bool is_label_instruction() const { return false; }
 			virtual ~Instruction() = default;
 			virtual FLOW_TYPE flow() const = 0;
@@ -162,31 +162,31 @@ namespace OoOVis {
 				BRANCH_INSTRUCTION_TYPE type_,
 				reg_id_t src1_,
 				reg_id_t src2_,
-				label_id_t label_,
-				branch_instruction_id_t branch_id,
-				memory_addr_t next_instruction_
+				memory_addr_t target_addr_
+				//branch_instruction_id_t branch_id,
+				//memory_addr_t next_instruction_
 			) :
 				_src1_reg(src1_),
 				_src2_reg(src2_),
-				_target_label_id(label_),
-				_type(type_),
-				_id(branch_id),
-				_next_instruction_addr(next_instruction_)
+				_target_addr(target_addr_),
+				_type(type_)
+				//_id(branch_id),
+				//_next_instruction_addr(next_instruction_)
 			{
 			}
-			label_id_t target_label() const override { return _target_label_id; }
-			void set_target_label(label_id_t label_id) { _target_label_id = label_id; };
+			memory_addr_t target_addr() const override { return _target_addr; }
+			void set_target_addr(memory_addr_t label_id) { _target_addr = label_id; };
 			FLOW_TYPE flow() const override { return FLOW_TYPE::BRANCH_CONDITIONAL; }
 			reg_id_t src1() const { return _src1_reg; }
 			reg_id_t src2() const { return _src2_reg; }
-			branch_instruction_id_t id() const { return _id; }
-			memory_addr_t			fallthrough() const { return _next_instruction_addr; }
+			//branch_instruction_id_t id() const { return _id; }
+			//memory_addr_t			fallthrough() const { return _next_instruction_addr; }
 		private:
 			memory_addr_t _next_instruction_addr;
-			branch_instruction_id_t _id;
+			//branch_instruction_id_t _id;
 			reg_id_t _src1_reg;
 			reg_id_t _src2_reg;
-			label_id_t _target_label_id;
+			memory_addr_t _target_addr;
 		};
 		struct Jump_Instruction : Instruction {
 			enum class JUMP_INSTRUCTION_TYPE
@@ -199,19 +199,19 @@ namespace OoOVis {
 				JUMP_INSTRUCTION_TYPE type_,
 				reg_id_t dest_reg_,
 				reg_id_t src1_,
-				label_id_t label_id_,
+				memory_addr_t target_addr,
 				i32 imm_
 			) : _type(type_),
 				_dest_reg(dest_reg_),
 				_src1(src1_),
-				_target_label_id(label_id_),
+				_target_addr(target_addr),
 				_imm(imm_) {
 			}
-			label_id_t target_label() const override { 
-				return _target_label_id; 
+			memory_addr_t target_addr() const override { 
+				return _target_addr; 
 			}
-			void set_target_label(label_id_t label_id) {
-				_target_label_id = label_id; 
+			void set_target_addr(memory_addr_t target_addr) {
+				_target_addr = target_addr; 
 			};
 			FLOW_TYPE flow() const override {
 				return FLOW_TYPE::BRANCH_UNCONDITIONAL;
@@ -224,18 +224,20 @@ namespace OoOVis {
 			reg_id_t dest_reg() const { return _dest_reg; }
 		private:
 			reg_id_t _dest_reg;
-			label_id_t _target_label_id; // jal uses this
+			memory_addr_t _target_addr; // jal uses this
 			reg_id_t _src1;// jalr uses this
 			int32_t _imm;  // jalr uses this
 		};
-		struct Label_Instruction : Instruction {
-			Label_Instruction(label_id_t label_) : _label_id(label_) {}
-			label_id_t target_label() const override { return _label_id; }
-			bool is_label_instruction() const override { return true; }
-			FLOW_TYPE flow() const override { return FLOW_TYPE::UNKNOWN; }
-		private:
-			label_id_t _label_id;
-		};
+		//struct Label_Instruction : Instruction {
+		//	Label_Instruction(label_id_t label_) : _label_id(label_) {}
+		//	label_id_t target_label() const override { return _label_id; }
+		//	memory_addr_t physical_addr() { return _physical_addr; }
+		//	bool is_label_instruction() const override { return true; }
+		//	FLOW_TYPE flow() const override { return FLOW_TYPE::UNKNOWN; }
+		//private:
+		//	memory_addr_t _physical_addr;
+		//	label_id_t _label_id;
+		//};
 
 	} // namespace Instruction
 } //namespace OoOVis

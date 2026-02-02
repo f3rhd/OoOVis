@@ -8,22 +8,22 @@ namespace OoOVis
 {
     namespace Core
     {
-		void Dispatcher::dispatch_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, std::unordered_map<u32,Reservation_Station>& station_pool) {
+		void Dispatcher::dispatch_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, const memory_addr_t instruction_id, std::unordered_map<u32,Reservation_Station>& station_pool) {
             switch (instruction->flow()) {
             case FrontEnd::FLOW_TYPE::REGISTER:
-                dispatch_register_instruction(instruction, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::ADD_SUB)));
+                dispatch_register_instruction(instruction, instruction_id, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::ADD_SUB)));
                 break;
             case FrontEnd::FLOW_TYPE::LOAD:
-                dispatch_load_instruction(instruction, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::LOAD_STORE)));
+                dispatch_load_instruction(instruction, instruction_id, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::LOAD_STORE)));
                 break;
             case FrontEnd::FLOW_TYPE::STORE:
-                dispatch_store_instruction(instruction, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::LOAD_STORE)));
+                dispatch_store_instruction(instruction, instruction_id, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::LOAD_STORE)));
                 break;
             case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
-                dispatch_branch_instruction(instruction,station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::BRANCH)));
+                dispatch_branch_instruction(instruction, instruction_id,station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::BRANCH)));
                 break;
             case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL:
-                dispatch_jump_instruction(instruction, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::BRANCH)));
+                dispatch_jump_instruction(instruction, instruction_id, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::BRANCH)));
                 break;
             case FrontEnd::FLOW_TYPE::UNKNOWN: // @HandleThis
             default:
@@ -32,8 +32,10 @@ namespace OoOVis
                 return ; // @HandleThis
             }
         }
-		void Dispatcher::dispatch_register_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
+		void Dispatcher::dispatch_register_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, const memory_addr_t instruction_id, Reservation_Station& station) {
             if (const auto* register_instruction{ dynamic_cast<FrontEnd::Register_Instruction*>(instruction.get()) }) {
+                if (register_instruction->dest_reg() == 0)
+                    return;
                 auto info = get_reservation_station_id_and_execution_mode_for(instruction);
                 Reservation_Station_Entry temp_reservation_station_entry;
                 temp_reservation_station_entry.mode = info.second;
@@ -47,9 +49,9 @@ namespace OoOVis
 					exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
                     return;
                 }
-                temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
-                temp_reservation_station_entry.producer_tag2 = NO_PRODUCER_TAG;
-                temp_reservation_station_entry.src1 = entry.data;
+
+				temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
+				temp_reservation_station_entry.src1 = entry.data;
                 // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
                 auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
                     std::make_unique<Register_Reorder_Buffer_Entry>(
@@ -64,13 +66,14 @@ namespace OoOVis
                     temp_reservation_station_entry.src2.signed_ = register_instruction->src2().imm_val;
                 }
                 else {
-                    temp_reservation_station_entry.src2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).data;
+					temp_reservation_station_entry.src2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).data;
                 }
                 temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
                 temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
+                temp_reservation_station_entry.instruction_id = instruction_id;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
             }
             // again shouldnt happen but...
@@ -80,8 +83,10 @@ namespace OoOVis
 				exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
             }
         }
-        void Dispatcher::dispatch_load_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
+        void Dispatcher::dispatch_load_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, const memory_addr_t instruction_id, Reservation_Station& station) {
             if (const auto* load_instruction{ dynamic_cast<FrontEnd::Load_Instruction*>(instruction.get()) }) {
+                if (load_instruction->dest_reg() == 0)
+                    return;
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (load_instruction->kind()) {
                 case FrontEnd::Load_Instruction::LOAD_INSTRUCTION_TYPE::LB:
@@ -135,6 +140,7 @@ namespace OoOVis
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
                 temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
+                temp_reservation_station_entry.instruction_id = instruction_id;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
 
             }
@@ -147,8 +153,7 @@ namespace OoOVis
             }
 
         }
-        void Dispatcher::dispatch_store_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
-			static u32 store_id(0);
+        void Dispatcher::dispatch_store_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, const memory_addr_t instruction_id, Reservation_Station& station) {
             if (const auto* store_instruction = dynamic_cast<FrontEnd::Store_Instruction*>(instruction.get())) {
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (store_instruction->kind()) {
@@ -193,12 +198,11 @@ namespace OoOVis
                 temp_reservation_station_entry.reorder_buffer_entry_index = static_cast<u32>(Reorder_Buffer::allocate(
 						std::make_unique<Store_Reorder_Buffer_Entry>(
 							store_instruction->flow(),
-							store_id
+                            instruction_id
 						)
 					)
                 );
-                temp_reservation_station_entry.store_id = store_id; // this id will be passed down to the entry in the store buffer
-                store_id++;
+                temp_reservation_station_entry.instruction_id = instruction_id; // this id will be passed down to the entry in the store buffer
                 *allocated_reservation_station = temp_reservation_station_entry;
             }
             else {
@@ -206,7 +210,7 @@ namespace OoOVis
                 exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
             }
         }
-        void Dispatcher::dispatch_branch_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
+        void Dispatcher::dispatch_branch_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, const memory_addr_t instruction_id, Reservation_Station& station) {
             if (const auto* branch_instruction{ dynamic_cast<FrontEnd::Branch_Instruction*>(instruction.get()) }) {
 
                 Reservation_Station_Entry* allocated_reservation_station_entry ( station.allocate_entry());
@@ -227,9 +231,10 @@ namespace OoOVis
                     temp_reservation_station_entry.src2 = entry2.data;
 					temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
                     // execution stage will need these for branch instruction
-                    temp_reservation_station_entry.branch_id = branch_instruction->id();
-                    temp_reservation_station_entry.branch_target = branch_instruction->target_label();
-                    temp_reservation_station_entry.fallthrough = branch_instruction->fallthrough();
+                    //temp_reservation_station_entry.branch_id = branch_instruction->id();
+                    temp_reservation_station_entry.branch_target = branch_instruction->target_addr();
+                    //temp_reservation_station_entry.fallthrough = branch_instruction->fallthrough();
+                    temp_reservation_station_entry.instruction_id = instruction_id;
                     *allocated_reservation_station_entry = temp_reservation_station_entry;
 
                 }
@@ -244,7 +249,7 @@ namespace OoOVis
             }
 
         }
-        void Dispatcher::dispatch_jump_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
+        void Dispatcher::dispatch_jump_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, const memory_addr_t instruction_id, Reservation_Station& station) {
 
             if (const auto* jump_instruction = dynamic_cast<FrontEnd::Jump_Instruction*>(instruction.get())) {
 
@@ -253,7 +258,8 @@ namespace OoOVis
                 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL;
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.busy = true;
-				Register_File::allocate_physical_register_for(jump_instruction->dest_reg(), allocated_reservation_station_entry->self_tag);
+                reg_id_t old_alias = Register_File::aliasof(jump_instruction->dest_reg());
+				reg_id_t destination_pysical_register_id = Register_File::allocate_physical_register_for(jump_instruction->dest_reg(), allocated_reservation_station_entry->self_tag);
                 Physical_Register_File_Entry entry;
                 u64 target_reorder_buffer_entry_index{};
                 switch (jump_instruction->kind()) {
@@ -270,10 +276,11 @@ namespace OoOVis
                     temp_reservation_station_entry.producer_tag2 = NO_PRODUCER_TAG;
                     temp_reservation_station_entry.src2.signed_ = jump_instruction->offset();
                     temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG;
+                    temp_reservation_station_entry.destination_register_id = destination_pysical_register_id;
 					target_reorder_buffer_entry_index = Reorder_Buffer::allocate(
 						std::make_unique<Branch_Unconditional_Reorder_Buffer_Entry>(
 							jump_instruction->flow(),
-                            true
+                            old_alias
 						)
 					);
 					temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
@@ -283,17 +290,18 @@ namespace OoOVis
 					target_reorder_buffer_entry_index = Reorder_Buffer::allocate(
 						std::make_unique<Branch_Unconditional_Reorder_Buffer_Entry>(
 							jump_instruction->flow(),
-                            false
+                            old_alias
 						)
 					);
                     temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
-                    temp_reservation_station_entry.src1.unsigned_ = jump_instruction->target_label();
+                    temp_reservation_station_entry.src1.unsigned_ = jump_instruction->target_addr();
                     break;
                 default:
 					std::cout << "Faced with unknown jump instruction type while dispatching.\n";
 					exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
                     break;
                 }
+                temp_reservation_station_entry.instruction_id = instruction_id;
 				*allocated_reservation_station_entry = temp_reservation_station_entry;
             }
             else {

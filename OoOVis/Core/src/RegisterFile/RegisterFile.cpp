@@ -62,6 +62,9 @@ namespace OoOVis
 		}
 
 		Physical_Register_File_Entry Register_File::read_with_alias(reg_id_t architectural_register_id) {
+			if (architectural_register_id == 0) {
+				return {};
+			}
 			return _physical_register_file[aliasof(architectural_register_id)];
 		}
 	}

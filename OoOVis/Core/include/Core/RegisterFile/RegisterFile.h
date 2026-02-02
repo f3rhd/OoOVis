@@ -10,7 +10,6 @@ namespace OoOVis
 			data_t data = { 0 };
 			u32 producer_tag = NO_PRODUCER_TAG;
 			bool allocated = false;
-			Physical_Register_File_Entry() = default;
 		};
 		struct Register_File {
 			static void							init();

@@ -7,11 +7,11 @@ namespace OoOVis
 	namespace Core {
 		struct Reorder_Buffer_Entry {
 			virtual ~Reorder_Buffer_Entry() = default;
-			Reorder_Buffer_Entry(FrontEnd::FLOW_TYPE flow) : flow_type(flow), busy(true) {}
+			Reorder_Buffer_Entry(FrontEnd::FLOW_TYPE flow) : flow_type(flow) {}
 			virtual FrontEnd::FLOW_TYPE flow() { return FrontEnd::FLOW_TYPE::UNKNOWN; }
 		public:
 			bool ready = false;
-			bool busy;
+			bool busy = true;
 			FrontEnd::FLOW_TYPE flow_type = FrontEnd::FLOW_TYPE::UNKNOWN;
 		};
 		struct Register_Reorder_Buffer_Entry : Reorder_Buffer_Entry { // load dispatching will also create this type of entry
@@ -29,9 +29,8 @@ namespace OoOVis
 		};
 		struct Branch_Unconditional_Reorder_Buffer_Entry : Reorder_Buffer_Entry {
 
-			bool is_jalr;
-			label_id_t target = 0;
-			Branch_Unconditional_Reorder_Buffer_Entry(FrontEnd::FLOW_TYPE flow, bool jalr) : is_jalr(jalr), Reorder_Buffer_Entry(flow) {}
+			reg_id_t old_alias;
+			Branch_Unconditional_Reorder_Buffer_Entry(FrontEnd::FLOW_TYPE flow, reg_id_t old_alias_) : old_alias(old_alias_), Reorder_Buffer_Entry(flow) {}
 		};
 	}
 }

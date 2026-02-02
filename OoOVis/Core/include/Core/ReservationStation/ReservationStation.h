@@ -11,9 +11,10 @@ namespace OoOVis
 			Reservation_Station(RESERVATION_STATION_ID id);
 			Reservation_Station_Entry* allocate_entry();
 			const Reservation_Station_Entry* issue();
+			std::vector<Reservation_Station_Entry>& get();
 			bool full();
 		private:
-			std::vector<Reservation_Station_Entry> _station; 
+			std::vector<Reservation_Station_Entry> _buffer; 
 		};
 
 	}

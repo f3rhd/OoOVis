@@ -23,6 +23,23 @@ namespace OoOVis
 			_buffer[target_entry_index]->ready = true;
 		}
 
+		void Reorder_Buffer::set_branch_evaluation(u64 target_entry_index, bool mispredicted)
+		{
+			if (target_entry_index >= REORDER_BUFFER_SIZE) {
+				std::cout << "Tried to access non-existing reorder buffer entry.\n";
+				exit(EXIT_FAILURE);
+			}
+			_buffer[target_entry_index]->ready = true;
+			if (auto* branch_entry = dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(_buffer[target_entry_index].get())) {
+				branch_entry->mispredicted = mispredicted;
+			}
+			else {
+				std::cout << "Tried to access branch reorder buffer with wrong index.\n";
+				exit(EXIT_FAILURE);
+			}
+
+		}
+
 		bool Reorder_Buffer::full() {
 			return (_tail + 1) % REORDER_BUFFER_SIZE == _head;
 		}

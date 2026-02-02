@@ -37,7 +37,7 @@ namespace OoOVis {
             // resolve the unresolved instructions
             for (auto& branch_instruction_data : _unresolved_branch_instructions) {
                 if (_label_map.find(branch_instruction_data.second) != _label_map.end()) {
-                    branch_instruction_data.first->set_target_label(_label_map.at(branch_instruction_data.second));
+                    branch_instruction_data.first->set_target_addr(_label_map.at(branch_instruction_data.second));
                 }
                 else {
                     std::cout << "\033[31m" << "Error\033: Unknown label identifier was found(Cause : " << branch_instruction_data.second << ")";
@@ -45,7 +45,7 @@ namespace OoOVis {
             }
             for (auto& jump_instruction_data : _unresolved_jump_instructions) {
                 if (_label_map.find(jump_instruction_data.second) != _label_map.end()) {
-                    jump_instruction_data.first->set_target_label(_label_map.at(jump_instruction_data.second));
+                    jump_instruction_data.first->set_target_addr(_label_map.at(jump_instruction_data.second));
                 }
                 else {
                     std::cout << "\033[31m" << "Error\033: Unknown label identifier was found(Cause : " << jump_instruction_data.second << ")";
@@ -220,29 +220,29 @@ namespace OoOVis {
             EXPECT(TOKEN_TYPE::COMMA);
             advance();
             EXPECT(TOKEN_TYPE::IDENTIFIER);
-            label_id_t label_id  {FORWARD_LABEL};
+            memory_addr_t memory_addr  {FORWARD_ADDR};
             if (_label_map.find(_current_token->word) != _label_map.end()) {
-                label_id = _label_map.at(_current_token->word);
+                memory_addr = _label_map.at(_current_token->word);
             }
             auto branch_instruction (std::make_unique<Branch_Instruction>(
                 type,
                 src1_id,
                 src2_id,
-                label_id,
-                unique_branch_id(),
-                static_cast<u32>(_program.size())
+                memory_addr
+                //unique_branch_id(),
+                //static_cast<u32>(_program.size())
             )
 			);
             auto branch_instruction_ptr(branch_instruction.get());
             _program.push_back(std::move(branch_instruction));
             // couldnt find the label identifier save it for later
-            if (label_id == FORWARD_LABEL) {
+            if (memory_addr == FORWARD_ADDR) {
                 _unresolved_branch_instructions.emplace_back(branch_instruction_ptr, _current_token->word);
             }
         }
         // @call : current token is jump instruction
         void Parser::parse_jump_instruction() {
-            label_id_t label_id{ FORWARD_LABEL };
+            memory_addr_t target_addr{ FORWARD_ADDR };
             Jump_Instruction::JUMP_INSTRUCTION_TYPE type{ Lookup::jump_type(_current_token->word) };
             advance();
             EXPECT(TOKEN_TYPE::REGISTER);
@@ -254,14 +254,14 @@ namespace OoOVis {
             if (type == Jump_Instruction::JUMP_INSTRUCTION_TYPE::JAL) {
                 EXPECT(TOKEN_TYPE::IDENTIFIER);
                 if (_label_map.find(_current_token->word) != _label_map.end()) {
-                    label_id = _label_map.at(_current_token->word);
+                    target_addr = _label_map.at(_current_token->word);
                 }
                 // src1 and imm fields can be garbage values in this case
                 auto jump_instruction{ std::make_unique<Jump_Instruction>(
                     type,
                     dest_reg,
                     src1,
-                    label_id,
+                    target_addr,
                     0
                 )
                 };
@@ -270,7 +270,7 @@ namespace OoOVis {
                     std::move(jump_instruction)
                 );
                 // we werent able to find the label maybe we will next time
-                if (label_id == FORWARD_LABEL)
+                if (target_addr == FORWARD_ADDR)
                     _unresolved_jump_instructions.emplace_back(jump_instruction_ptr, _current_token->word);
                 return;
             }
@@ -291,7 +291,7 @@ namespace OoOVis {
                     type,
                     dest_reg,
                     src1,
-                    label_id,
+                    target_addr,
                     imm
                 ));
         }
@@ -338,21 +338,21 @@ namespace OoOVis {
 
         // @call : current token is label
         void Parser::parse_label() {
-            label_id_t unique_id{ unique_label_id() };
-            std::unique_ptr<Label_Instruction> label_instr  {std::make_unique<Label_Instruction>(unique_id)};
             // insert new entry to the label map
-            _label_map.emplace(_current_token->word, unique_id);
-            _program.push_back(std::move(label_instr));
-            advance();
+            while (_current_token->type == TOKEN_TYPE::LABEL) {
+                _label_map.emplace(_current_token->word, static_cast<u32>(_program.size()));
+                advance();
+            }
+           
         }
-        label_id_t Parser::unique_label_id() {
-            static label_id_t unique_id  {FORWARD_LABEL + 1};
-            return unique_id++;
-        }
-        branch_instruction_id_t Parser::unique_branch_id() {
-            static label_id_t unique_id  {0};
-            return unique_id++;
-        }
+        //memory_addr_t Parser::unique_label_id() {
+        //    static memory_addr_t unique_id  {FORWARD_ADDR + 1};
+        //    return unique_id++;
+        //}
+        //branch_instruction_id_t Parser::unique_branch_id() {
+        //    static label_id_t unique_id  {0};
+        //    return unique_id++;
+        //}
         void Parser::advance() {
 
             if (_current_token->type != TOKEN_TYPE::NEW_LINE) {
@@ -494,7 +494,7 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::IDENTIFIER);
 
-                label_id_t target_label_id{ FORWARD_LABEL };
+                memory_addr_t target_label_id{ FORWARD_ADDR };
                 if (_label_map.find(_current_token->word) != _label_map.end())
                     target_label_id = _label_map[_current_token->word];
 
@@ -507,7 +507,7 @@ namespace OoOVis {
                 )
                 };
                 auto jump_instruction_ptr(jump_instruction.get());
-                if (target_label_id == FORWARD_LABEL)
+                if (target_label_id == FORWARD_ADDR)
                     _unresolved_jump_instructions.emplace_back(jump_instruction_ptr, _current_token->word);
 
                 _program.push_back(std::move(jump_instruction));
@@ -708,12 +708,12 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::IDENTIFIER);
 
-                label_id_t target_label_id{ FORWARD_LABEL };
-                branch_instruction_id_t branch_id{ unique_branch_id() };
+                memory_addr_t target_addr{ FORWARD_ADDR };
+                //branch_instruction_id_t branch_id{ unique_branch_id() };
                 std::unique_ptr<Branch_Instruction> branch_instruction;
                 Branch_Instruction* branch_instruction_ptr{ nullptr };
                 if (_label_map.find(_current_token->word) != _label_map.end())
-                    target_label_id = _label_map[_current_token->word];
+                    target_addr = _label_map[_current_token->word];
 
                 // beqz rs1, label  -> beq   rs1, x0,  label
                 if (op[1] == 'e')
@@ -721,9 +721,9 @@ namespace OoOVis {
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BEQ,
                         src1,
                         0,
-                        target_label_id,
-                        branch_id,
-                        static_cast<u32>(_program.size())
+                        target_addr
+                        //branch_id,
+                        //static_cast<u32>(_program.size())
                     );
                 // bnez rs1, label ->  bne   rs1, x0,  label
                 else if (op[1] == 'n')
@@ -731,9 +731,9 @@ namespace OoOVis {
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BNE,
                         src1,
                         0,
-                        target_label_id,
-                        branch_id,
-                        static_cast<u32>(_program.size())
+                        target_addr
+                        //branch_id,
+                        //static_cast<u32>(_program.size())
                     );
                 //   blez rs1, label -> bge   x0,  rs1, label
                 else if (op[1] == 'l' && op[2] == 'e')
@@ -741,9 +741,9 @@ namespace OoOVis {
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BGE,
                         0,
                         src1,
-                        target_label_id,
-                        branch_id,
-                        static_cast<u32>(_program.size())
+                        target_addr
+                        //branch_id,
+                        //static_cast<u32>(_program.size())
                     );
 
                 // bgez rs1, label -> bge   rs1, x0,  label
@@ -752,9 +752,9 @@ namespace OoOVis {
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BGE,
                         src1,
                         0,
-                        target_label_id,
-                        branch_id,
-                        static_cast<u32>(_program.size())
+                        target_addr
+                        //branch_id,
+                        //static_cast<u32>(_program.size())
                     );
                 // bltz rs1, labe ->  blt   rs1, x0,  label
                 else if (op[1] == 'l' && op[2] == 't')
@@ -762,9 +762,9 @@ namespace OoOVis {
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BLT,
                         src1,
                         0,
-                        target_label_id,
-                        branch_id,
-                        static_cast<u32>(_program.size())
+                        target_addr
+                        //branch_id,
+                        //static_cast<u32>(_program.size())
                     );
                 // bgtz rs1, label ->  blt   x0,  rs1, label
                 else if (op[1] == 'g' && op[2] == 't')
@@ -772,12 +772,12 @@ namespace OoOVis {
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BLT,
                         0,
                         src1,
-                        target_label_id,
-                        branch_id,
-                        static_cast<u32>(_program.size())
+                        target_addr
+                        //branch_id,
+                        //static_cast<u32>(_program.size())
                     );
                 branch_instruction_ptr = branch_instruction.get();
-                if (target_label_id == FORWARD_LABEL)
+                if (target_addr == FORWARD_ADDR)
                     _unresolved_branch_instructions.emplace_back(branch_instruction_ptr, _current_token->word);
                 _program.push_back(std::move(branch_instruction));
                 return;
@@ -810,43 +810,43 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::IDENTIFIER);
 
-                label_id_t target_label_id{ FORWARD_LABEL };
-                branch_instruction_id_t branch_id { unique_branch_id()};
+                memory_addr_t target_addr{ FORWARD_ADDR };
+                //branch_instruction_id_t branch_id { unique_branch_id()};
                 std::unique_ptr<Branch_Instruction> branch_instruction;
 
                 if (_label_map.find(_current_token->word) != _label_map.end())
-                    target_label_id = _label_map[_current_token->word];
+                    target_addr = _label_map[_current_token->word];
 
                 // ble rs1, rs2, label  ->  bge rs2, rs1, label (if rs2 >= rs1, then rs1 <= rs2)
                 if (op == "ble")
                     branch_instruction = std::make_unique<Branch_Instruction>(
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BGE,
-                        src2, src1, target_label_id, branch_id,static_cast<u32>(_program.size())
+                        src2, src1, target_addr /*branch_id,static_cast<u32>(_program.size()*/
                     );
 
                 // bgt rs1, rs2, label  ->  blt rs2, rs1, label (if rs2 < rs1, then rs1 > rs2)
                 else if (op == "bgt")
                     branch_instruction = std::make_unique<Branch_Instruction>(
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BLT,
-                        src2, src1, target_label_id, branch_id,static_cast<u32>(_program.size())
+                        src2, src1, target_addr /*branch_id,static_cast<u32>(_program.size()*/
                     );
 
                 // bleu rs1, rs2, label ->  bgeu rs2, rs1, label
                 else if (op == "bleu")
                     branch_instruction = std::make_unique<Branch_Instruction>(
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BGEU,
-                        src2, src1, target_label_id, branch_id,static_cast<u32>(_program.size())
+                        src2, src1, target_addr /*branch_id,static_cast<u32>(_program.size()*/
                     );
 
                 // bgtu rs1, rs2, label ->  bltu rs2, rs1, label
                 else if (op == "bgtu")
                     branch_instruction = std::make_unique<Branch_Instruction>(
                         Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BLTU,
-                        src2, src1, target_label_id, branch_id,static_cast<u32>(_program.size())
+                        src2, src1, target_addr /*branch_id,static_cast<u32>(_program.size()*/
                     );
 
                 Branch_Instruction* branch_instruction_ptr = branch_instruction.get();
-                if (target_label_id == FORWARD_LABEL)
+                if (target_addr == FORWARD_ADDR)
                     _unresolved_branch_instructions.emplace_back(branch_instruction_ptr, _current_token->word);
 
                 _program.push_back(std::move(branch_instruction));
@@ -858,9 +858,9 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::IDENTIFIER);
 
-                label_id_t target_label_id { FORWARD_LABEL};
+                memory_addr_t target_addr { FORWARD_ADDR};
                 if (_label_map.find(_current_token->word) != _label_map.end())
-                    target_label_id = _label_map[_current_token->word];
+                    target_addr = _label_map[_current_token->word];
 
                 std::unique_ptr<Jump_Instruction> jump_instruction;
                 // j label -> jal   x0,  label
@@ -869,7 +869,7 @@ namespace OoOVis {
                         Jump_Instruction::JUMP_INSTRUCTION_TYPE::JAL,
                         0,
                         0,
-                        target_label_id,
+                        target_addr,
                         0
                     );
                     // jal  label -> jal   ra,  label
@@ -879,11 +879,11 @@ namespace OoOVis {
                         Jump_Instruction::JUMP_INSTRUCTION_TYPE::JAL,
                         Lookup::reg_id("ra"),
                         0,
-                        target_label_id,
+                        target_addr,
                         0
                     );
                 }
-                if (target_label_id == FORWARD_LABEL) {
+                if (target_addr == FORWARD_ADDR) {
                     _unresolved_jump_instructions.emplace_back(jump_instruction.get(), _current_token->word);
                 }
                 _program.emplace_back(std::move(jump_instruction));

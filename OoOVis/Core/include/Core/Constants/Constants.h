@@ -11,3 +11,4 @@ auto constexpr NO_STORE{ 0 };
 auto constexpr IS_STORE{ PHYSICAL_REGISTER_FILE_SIZE + 1 };
 auto constexpr LOAD_BUFFER_SIZE{ 6 };
 auto constexpr STORE_BUFFER_SIZE{ 6 };
+auto constexpr BRANCH_SHIFT_REGISTER_SIZE{ 8 };

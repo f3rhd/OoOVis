@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 #include <Frontend/Parser/Instruction.h>
 
@@ -10,13 +11,13 @@ namespace OoOVis
     namespace Core
     {
         struct Fetch_Group {
-            const std::unique_ptr<FrontEnd::Instruction>* first = nullptr;
-            const std::unique_ptr<FrontEnd::Instruction>* second = nullptr;
-            const std::unique_ptr<FrontEnd::Instruction>* third = nullptr;
+            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> first{};
+            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> second{};
+            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> third{};
             Fetch_Group(
-                const std::unique_ptr <FrontEnd::Instruction>* first_,
-                const std::unique_ptr <FrontEnd::Instruction>* second_,
-                const std::unique_ptr <FrontEnd::Instruction>* third_
+                const std::pair<std::unique_ptr <FrontEnd::Instruction>*,memory_addr_t>  first_,
+                const std::pair<std::unique_ptr <FrontEnd::Instruction>*,memory_addr_t>  second_,
+                const std::pair<std::unique_ptr <FrontEnd::Instruction>*,memory_addr_t>  third_
             ) : first(first_), second(second_), third(third_) {}
         };
         class Fetch_Unit {
@@ -25,11 +26,19 @@ namespace OoOVis
             static void                init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions);
             static Fetch_Group         fetch();
             static void                stall();
+            static bool                get_prediction(memory_addr_t branch_instruction_id);
             static void                set_program_counter(memory_addr_t next_pc);
             static memory_addr_t       get_program_counter();
+            static memory_addr_t       get_target_addr_from_btb(memory_addr_t branch_instruction_id);
+            static void                create_btb_entry(memory_addr_t branch_instruction_id, memory_addr_t target_instruction_id);
+            static bool                has_btb_entry(memory_addr_t branch_instruction_id);
+            static void                update_pattern_history_table(memory_addr_t branch_instruction_id, bool actual);
         private:
             static std::vector<std::unique_ptr<FrontEnd::Instruction>> _instruction_cache;
-            static memory_addr_t _program_counter;
+            static std::unordered_map<memory_addr_t, memory_addr_t>    _branch_target_buffer;
+            static std::unordered_map<u32, u32>                        _pattern_history_table;
+            static memory_addr_t                                       _program_counter;
+            static memory_addr_t                                       _branch_shift_register;
             static bool _stalled;
         };
         

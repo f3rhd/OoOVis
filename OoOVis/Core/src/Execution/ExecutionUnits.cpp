@@ -3,6 +3,7 @@
 #include <Core/DCache/DCache.h>
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Fetch/Fetch.h>
+#include <Core/ReservationStation/Pool.h>
 
 namespace OoOVis
 {
@@ -156,10 +157,10 @@ namespace OoOVis
 				return;
 			memory_addr_t address(source_entry->src1.signed_ + static_cast<i32>(source_entry->destination_register_id));
 			data_t        register_data{ source_entry->src2 };
-			if (source_entry->store_id != NO_STORE && !store_buffer_is_full()) {
+			if (source_entry->instruction_id != NO_STORE && !store_buffer_is_full()) {
 				// allocate  the entry in the store buffer
 				_store_buffer.emplace_back(
-					source_entry->store_id,
+					source_entry->instruction_id,
 					static_cast<u32>(source_entry->reorder_buffer_entry_index), 
 					source_entry->store_source_register_id,
 					register_data, 
@@ -249,6 +250,77 @@ namespace OoOVis
 			_load_buffer.erase(_load_buffer.begin() + forwaradable_load_entry_index);
 
 			return result;
+		}
+
+		Execution_Result Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
+
+			if (!source_entry)
+				return { false };
+			memory_addr_t target_address{};
+			bool actual_taken{ false };
+			switch (source_entry->mode) {
+			case EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL:
+				target_address = source_entry->src1.unsigned_ + source_entry->src2.unsigned_;
+				if (!Fetch_Unit::has_btb_entry(source_entry->instruction_id)) {
+					Fetch_Unit::create_btb_entry(source_entry->instruction_id, target_address);
+					Fetch_Unit::set_program_counter(target_address);
+				} 
+				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_id + 1 });
+				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
+				return {
+					true,
+					source_entry->instruction_id + 1, // will be needed in forwarding to reservation stations
+					source_entry->reorder_buffer_entry_index, // wont be used by common data bus since we already set the readiness here
+					source_entry->self_tag, // will be needed in forwarding logic 
+					source_entry->destination_register_id  // this wont be needed as we write to the register file here
+				};
+				break;
+			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_EQUAL:
+				actual_taken = source_entry->src1.signed_ == source_entry->src2.signed_;
+				break;
+			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_NOT_EQUAL:
+				actual_taken = source_entry->src1.signed_ != source_entry->src2.signed_;
+				break;
+			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_LESS_THAN:
+				actual_taken = source_entry->src1.signed_ < source_entry->src2.signed_;
+				break;
+			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_THAN:
+				actual_taken = source_entry->src1.signed_ > source_entry->src2.signed_;
+				break;
+			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_LESS_THAN_UNSIGNED:
+				actual_taken = source_entry->src1.unsigned_ < source_entry->src2.unsigned_;
+				break;
+			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_THAN_UNSIGNED:
+				actual_taken = source_entry->src1.unsigned_ > source_entry->src2.unsigned_;
+				break;
+			// wont happen
+			default:
+				break;
+
+			}
+			// update pht
+			Fetch_Unit::update_pattern_history_table(source_entry->instruction_id, actual_taken);
+
+			target_address = source_entry->branch_target;
+			bool prediction{ Fetch_Unit::get_prediction(source_entry->instruction_id) };
+			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
+			if (prediction == actual_taken) {
+				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, false);
+			}
+			else { // misprediction recovery
+
+				if (actual_taken == true && prediction == false) {
+					Fetch_Unit::set_program_counter(target_address);
+					Reservation_Station_Pool::flush(source_entry->instruction_id);
+				}
+				else {
+
+					Fetch_Unit::set_program_counter(source_entry->instruction_id + 1);
+					Reservation_Station_Pool::flush(source_entry->branch_target);
+				}
+				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, true);
+			}
+			return {true};
 		}
 
 	} // namespace Core

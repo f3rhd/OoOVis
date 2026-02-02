@@ -62,5 +62,8 @@ namespace OoOVis
 			static std::vector<Buffer_Entry> _store_buffer;
 			static std::vector<Buffer_Entry> _load_buffer;
 		};
-	}
-}
+		class Execution_Unit_Branch {
+			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
+		};
+	} // namespace Core
+} // namespace OooVis

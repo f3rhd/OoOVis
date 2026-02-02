@@ -32,12 +32,12 @@ namespace OoOVis {
             void        parse_label();
             std::string tokenize_line_text(const std::string &line_raw);
             void        advance();
-            label_id_t  unique_label_id();
-            branch_instruction_id_t unique_branch_id();
+            //memory_addr_t  unique_label_id();
+            //branch_instruction_id_t unique_branch_id();
         private:
             Token*                                                               _current_token = nullptr;
             size_t                                                               _current_index = 0;
-            std::unordered_map<std::string, label_id_t>                          _label_map;
+            std::unordered_map<std::string, memory_addr_t>                          _label_map;
             std::vector<std::pair<Branch_Instruction*,std::string>>              _unresolved_branch_instructions;// the instructions whose labels are yet to be found
             std::vector<std::pair<Jump_Instruction*,std::string>>                _unresolved_jump_instructions;// the instructions whose labels are yet to be found
             std::vector<Token>                                                   _line_tokens;
