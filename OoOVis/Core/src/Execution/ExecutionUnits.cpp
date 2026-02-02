@@ -235,7 +235,7 @@ namespace OoOVis
 				}
 			}
 			if (!store_buffer_entry_that_is_forwarded_from)
-				return; // we cant forward anything
+				return { false }; // we cant forward anything
 			const Buffer_Entry* forwaradable_load_entry{ &_load_buffer[forwaradable_load_entry_index] };
 			Register_File::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
 			Reorder_Buffer::set_ready(forwaradable_load_entry->reorder_buffer_entry_index);

@@ -37,7 +37,7 @@ namespace OoOVis
 			static bool store_buffer_is_full() { return _store_buffer.size() >= STORE_BUFFER_SIZE; }
 			static bool load_buffer_is_full() { return _load_buffer.size() >= LOAD_BUFFER_SIZE; }
 			struct Buffer_Entry {
-				u32			  self_id; // @VisitMeLater: This could be useless as store buffer entries will always be in state where ids are in increasing order
+				u32			  self_id; // Reorder buffer will find the buffer to flush thanks to this field
 				reg_id_t      register_id; // load uses this to broadcast the value to common data bus
 				size_t	      reorder_buffer_entry_index; // load also uses this to set the rob entry free
 				data_t        register_data; // this is both used by store and load 
