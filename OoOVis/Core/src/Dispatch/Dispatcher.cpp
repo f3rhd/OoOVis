@@ -2,28 +2,27 @@
 #include <Core/RegisterFile/RegisterFile.h>
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Constants/Constants.h>
+#include <Core/ReservationStation/ReservationStationPool.h>
 #include <iostream>
 #include <unordered_map>
 namespace OoOVis
 {
     namespace Core
     {
-		void Dispatcher::dispatch_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, const memory_addr_t instruction_id, std::unordered_map<u32,Reservation_Station>& station_pool) {
+		void Dispatcher::dispatch_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, const memory_addr_t instruction_id) {
             switch (instruction->flow()) {
             case FrontEnd::FLOW_TYPE::REGISTER:
-                dispatch_register_instruction(instruction, instruction_id, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::ADD_SUB)));
+                dispatch_register_instruction(instruction, instruction_id, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::ADD_SUB));
                 break;
             case FrontEnd::FLOW_TYPE::LOAD:
-                dispatch_load_instruction(instruction, instruction_id, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::LOAD_STORE)));
+                dispatch_load_instruction(instruction, instruction_id, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
                 break;
-            case FrontEnd::FLOW_TYPE::STORE:
-                dispatch_store_instruction(instruction, instruction_id, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::LOAD_STORE)));
                 break;
             case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
-                dispatch_branch_instruction(instruction, instruction_id,station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::BRANCH)));
+                dispatch_branch_instruction(instruction, instruction_id,Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
                 break;
             case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL:
-                dispatch_jump_instruction(instruction, instruction_id, station_pool.at(static_cast<u32>(RESERVATION_STATION_ID::BRANCH)));
+                dispatch_jump_instruction(instruction, instruction_id, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
                 break;
             case FrontEnd::FLOW_TYPE::UNKNOWN: // @HandleThis
             default:

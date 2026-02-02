@@ -15,7 +15,7 @@ namespace OoOVis
 			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
 		};
 
-		// in real hardwware designs having a seperate unit just for this bitch ass instruction is very nooby thing to do  but we gon do it in software anyway 
+		// in real hardware designs having a seperate unit just for this bitch ass instruction is very nooby thing to do  but we gon do it in software anyway 
 		class Execution_Unit_Set_Less_Than {
 		public:
 			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
@@ -34,8 +34,9 @@ namespace OoOVis
 		public:
 			static void buffer_allocation_phase(const Reservation_Station_Entry* source_entry);
 			static Execution_Result execute_load();
-			static bool store_buffer_is_full() { return _store_buffer.size() >= STORE_BUFFER_SIZE; }
-			static bool load_buffer_is_full() { return _load_buffer.size() >= LOAD_BUFFER_SIZE; }
+			static void				execute_store(memory_addr_t store_id);
+			static bool				store_buffer_is_full() { return _store_buffer.size() >= STORE_BUFFER_SIZE; }
+			static bool				load_buffer_is_full() { return _load_buffer.size() >= LOAD_BUFFER_SIZE; }
 			struct Buffer_Entry {
 				u32			  self_id; // Reorder buffer will find the buffer to flush thanks to this field
 				reg_id_t      register_id; // load uses this to broadcast the value to common data bus

@@ -52,7 +52,7 @@ namespace OoOVis
 		}
 
 		void Fetch_Unit::update_pattern_history_table(memory_addr_t branch_instruction_id, bool actual) {
-            uint64_t pht_index = _branch_shift_register ^ branch_instruction_id;
+            u32 pht_index = _branch_shift_register ^ branch_instruction_id;
 			u32 branch_history = _pattern_history_table[pht_index];
 			
 			if (actual) {

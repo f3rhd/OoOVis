@@ -14,7 +14,7 @@ namespace OoOVis
 		struct Register_File {
 			static void							init();
 			static bool							full();
-			static void							dealloacte(reg_id_t physical_register_id);
+			static void							deallocate(reg_id_t physical_register_id);
 			static void                         write(reg_id_t physical_register_id,data_t data);
 			static reg_id_t						allocate_physical_register_for(reg_id_t architectural_register_id,u32 producer_tag); 
 			static reg_id_t						aliasof(reg_id_t architectural_register_id);

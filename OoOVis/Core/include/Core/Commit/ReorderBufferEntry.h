@@ -8,10 +8,9 @@ namespace OoOVis
 		struct Reorder_Buffer_Entry {
 			virtual ~Reorder_Buffer_Entry() = default;
 			Reorder_Buffer_Entry(FrontEnd::FLOW_TYPE flow) : flow_type(flow) {}
-			virtual FrontEnd::FLOW_TYPE flow() { return FrontEnd::FLOW_TYPE::UNKNOWN; }
+			virtual FrontEnd::FLOW_TYPE flow() { return FrontEnd::FLOW_TYPE::UNKNOWN; };
 		public:
 			bool ready = false;
-			bool busy = true;
 			FrontEnd::FLOW_TYPE flow_type = FrontEnd::FLOW_TYPE::UNKNOWN;
 		};
 		struct Register_Reorder_Buffer_Entry : Reorder_Buffer_Entry { // load dispatching will also create this type of entry

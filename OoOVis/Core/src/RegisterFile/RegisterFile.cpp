@@ -2,7 +2,6 @@
 #include <Core/RegisterFile/RegisterFile.h>
 #include <Core/Constants/Constants.h>
 #include <stdexcept>
-#include <iostream>
 namespace OoOVis
 {
 	namespace Core
@@ -26,7 +25,7 @@ namespace OoOVis
 			return false;
 		}
 
-		void Register_File::dealloacte(reg_id_t physical_register_id) {
+		void Register_File::deallocate(reg_id_t physical_register_id) {
 			if (physical_register_id == INVALID_REGISTER_ID)
 				throw std::runtime_error("Tried to deallocate invalid register.");
 			if(!_physical_register_file[physical_register_id].allocated)

@@ -3,7 +3,7 @@
 #include <Core/DCache/DCache.h>
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Fetch/Fetch.h>
-#include <Core/ReservationStation/Pool.h>
+#include <Core/ReservationStation/ReservationStationPool.h>
 
 namespace OoOVis
 {
@@ -250,6 +250,19 @@ namespace OoOVis
 			_load_buffer.erase(_load_buffer.begin() + forwaradable_load_entry_index);
 
 			return result;
+		}
+
+		void Execution_Unit_Load_Store::execute_store(memory_addr_t store_id) {
+			std::vector<size_t> commited_stores{};
+			for (size_t i{}; i < _store_buffer.size(); i++) {
+				if (_store_buffer[i].self_id == store_id) {
+					DCache::write(_store_buffer[i].calculated_address, _store_buffer[i].register_data);
+					commited_stores.push_back(i);
+				}
+			}
+			for (auto j : commited_stores) {
+				_store_buffer.erase(_store_buffer.begin() + j);
+			}
 		}
 
 		Execution_Result Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {

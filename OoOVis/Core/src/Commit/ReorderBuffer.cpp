@@ -1,16 +1,18 @@
 #pragma once
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Constants/Constants.h>
+#include <Core/RegisterFile/RegisterFile.h>
+#include <Core/Execution/ExecutionUnits.h>
 #include <iostream>
 namespace OoOVis
 {
 	namespace Core {
 
-		std::vector<std::unique_ptr<Reorder_Buffer_Entry>> Reorder_Buffer::_buffer{};
+		std::vector<std::unique_ptr<Reorder_Buffer_Entry>> Reorder_Buffer::_buffer(REORDER_BUFFER_SIZE);
 		size_t Reorder_Buffer::_head{};
 		size_t Reorder_Buffer::_tail{};
 		size_t Reorder_Buffer::allocate(std::unique_ptr<Reorder_Buffer_Entry>&& entry) {
-			_buffer.emplace_back(std::move(entry));
+			_buffer[_tail] = std::move(entry);
 			_tail = (_tail + 1) % REORDER_BUFFER_SIZE;
 			return _buffer.size() - 1;
 		}
@@ -40,6 +42,43 @@ namespace OoOVis
 
 		}
 
+		void Reorder_Buffer::commit() {
+			for (size_t i{}; i < COMMIT_WIDTH; i++) {
+				auto* entry = _buffer[_head].get();
+				if (entry == nullptr) return;
+				switch (_buffer[_head]->flow()) {
+				case FrontEnd::FLOW_TYPE::REGISTER:
+				case FrontEnd::FLOW_TYPE::LOAD:
+					if (dynamic_cast<Register_Reorder_Buffer_Entry*>(entry)->ready) {
+						Register_File::deallocate(dynamic_cast<Register_Reorder_Buffer_Entry*>(entry)->old_alias);
+						_head++;
+					}
+					break;
+				case FrontEnd::FLOW_TYPE::STORE:
+					if (dynamic_cast<Store_Reorder_Buffer_Entry*>(entry)->ready) {
+						Execution_Unit_Load_Store::execute_store(dynamic_cast<Store_Reorder_Buffer_Entry*>(entry)->id);
+						_head++;
+					}
+					break;
+				case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
+					if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->ready) {
+						if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->mispredicted) {
+							_tail = _head++;
+						}
+					}
+					break;
+				case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL:
+					if (dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->ready) {
+						Register_File::deallocate(dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->old_alias);
+						_head++;
+					}
+					break;
+				default:
+					break;
+
+				}
+			}
+		}
 		bool Reorder_Buffer::full() {
 			return (_tail + 1) % REORDER_BUFFER_SIZE == _head;
 		}

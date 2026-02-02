@@ -11,14 +11,14 @@ namespace OoOVis
     namespace Core
     {
         struct Fetch_Group {
-            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> first{};
-            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> second{};
-            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> third{};
+            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> first_instruction{};
+            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> second_instruction{};
+            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> third_instruction{};
             Fetch_Group(
                 const std::pair<std::unique_ptr <FrontEnd::Instruction>*,memory_addr_t>  first_,
                 const std::pair<std::unique_ptr <FrontEnd::Instruction>*,memory_addr_t>  second_,
                 const std::pair<std::unique_ptr <FrontEnd::Instruction>*,memory_addr_t>  third_
-            ) : first(first_), second(second_), third(third_) {}
+            ) : first_instruction(first_), second_instruction(second_), third_instruction(third_) {}
         };
         class Fetch_Unit {
 
