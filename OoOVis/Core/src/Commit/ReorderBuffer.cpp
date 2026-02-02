@@ -15,7 +15,7 @@ namespace OoOVis
 			return _buffer.size() - 1;
 		}
 
-		void Reorder_Buffer::set_ready(u32 target_entry_index) {
+		void Reorder_Buffer::set_ready(u64 target_entry_index) {
 			if (target_entry_index >= REORDER_BUFFER_SIZE) {
 				std::cout << "Tried to access non-existing reorder buffer entry.\n";
 				exit(EXIT_FAILURE);

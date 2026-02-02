@@ -70,7 +70,7 @@ namespace OoOVis
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
-                temp_reservation_station_entry.destination_id = destination_physical_register_id;
+                temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
             }
             // again shouldnt happen but...
@@ -134,7 +134,7 @@ namespace OoOVis
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
-                temp_reservation_station_entry.destination_id = destination_physical_register_id;
+                temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
 
             }
@@ -148,8 +148,8 @@ namespace OoOVis
 
         }
         void Dispatcher::dispatch_store_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction, Reservation_Station& station) {
+			static u32 store_id(0);
             if (const auto* store_instruction = dynamic_cast<FrontEnd::Store_Instruction*>(instruction.get())) {
-                static u32 store_id(0);
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (store_instruction->kind()) {
                 case FrontEnd::Store_Instruction::STORE_INSTRUCTION_TYPE::SB:
@@ -184,6 +184,8 @@ namespace OoOVis
                 temp_reservation_station_entry.producer_tag2 = src2_entry.producer_tag;
                 temp_reservation_station_entry.src1 = src1_entry.data;
                 temp_reservation_station_entry.src2 = src2_entry.data;
+                temp_reservation_station_entry.destination_register_id = static_cast<reg_id_t>(store_instruction->offset()); // the offset lives in destination id here
+                temp_reservation_station_entry.store_source_register_id = Register_File::aliasof(store_instruction->src2());
                 temp_reservation_station_entry.self_tag = allocated_reservation_station->self_tag;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;

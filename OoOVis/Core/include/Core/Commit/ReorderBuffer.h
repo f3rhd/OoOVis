@@ -8,7 +8,7 @@ namespace OoOVis
 
 		public:
 			static size_t allocate(std::unique_ptr<Reorder_Buffer_Entry>&& entry);
-			static void   set_ready(u32 target_entry_index);
+			static void   set_ready(u64 target_entry_index);
 			static bool   full();
 		private:
 			static std::vector<std::unique_ptr<Reorder_Buffer_Entry>> _buffer;
