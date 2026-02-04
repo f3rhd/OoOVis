@@ -11,106 +11,104 @@ namespace OoOVis
 	{
 
 
-		Execution_Result Execution_Unit_Adder::execute(const Reservation_Station_Entry* source_entry)
+		Forwarding_Data Execution_Unit_Adder::execute(const Reservation_Station_Entry* source_entry)
 		{
 			if (!source_entry)
 				return { false };
-			Execution_Result result{};
-			result.valid = true;
-			result.producer_tag = source_entry->self_tag;
-			result.destination_physical_register = source_entry->destination_register_id;
-			result.target_reorder_buffer_entry_index = source_entry->reorder_buffer_entry_index;
+			Forwarding_Data data{};
+			data.valid = true;
+			data.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_ADD:
-				result.write_data.signed_ = source_entry->src1.signed_ + source_entry->src2.signed_;
+				data.produced_data.signed_ = source_entry->src1.signed_ + source_entry->src2.signed_;
 				break;
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_SUB:
-				result.write_data.signed_ = source_entry->src1.signed_ - source_entry->src2.signed_;
+				data.produced_data.signed_ = source_entry->src1.signed_ - source_entry->src2.signed_;
 				break;
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_AUIPC: // immediate value lives in the source 2
-				result.write_data.unsigned_ = (source_entry->src2.unsigned_ << 20) & 0xFFFFF000 + Fetch_Unit::get_program_counter();
+				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 20) & 0xFFFFF000 + Fetch_Unit::get_program_counter();
 				break;
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_LOAD_UPPER:
-				result.write_data.unsigned_ = (source_entry->src2.unsigned_ << 20) & 0xFFFFF000;
+				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 20) & 0xFFFFF000;
 				break;
 			// shouldnt happen
 			default:
 				break;
 			}
-			return result;
+			Register_File::write(source_entry->destination_register_id, data.produced_data);
+			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
+			return data;
 		}
 
-		Execution_Result Execution_Unit_Bitwise::execute(const Reservation_Station_Entry* source_entry) {
+		Forwarding_Data Execution_Unit_Bitwise::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
 				return { false };
-			Execution_Result result{};
+			Forwarding_Data result{};
 			result.valid = true;
 			result.producer_tag = source_entry->self_tag;
-			result.destination_physical_register = source_entry->destination_register_id;
-			result.target_reorder_buffer_entry_index = source_entry->reorder_buffer_entry_index;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::BITWISE_AND:
-				result.write_data.signed_ = source_entry->src1.signed_ & source_entry->src2.signed_;
+				result.produced_data.signed_ = source_entry->src1.signed_ & source_entry->src2.signed_;
 				break;
 			case EXECUTION_UNIT_MODE::BITWISE_XOR:
-				result.write_data.signed_ = source_entry->src1.signed_ | source_entry->src2.signed_;
+				result.produced_data.signed_ = source_entry->src1.signed_ | source_entry->src2.signed_;
 				break;
 			case EXECUTION_UNIT_MODE::LOGICAL_XOR:
-				result.write_data.signed_ = source_entry->src1.signed_ ^ source_entry->src2.signed_;
+				result.produced_data.signed_ = source_entry->src1.signed_ ^ source_entry->src2.signed_;
 				break;
 			case EXECUTION_UNIT_MODE::BITWISE_SHIFT_LEFT_LOGICAL:
-				result.write_data.unsigned_ = source_entry->src1.unsigned_ << source_entry->src2.unsigned_;
+				result.produced_data.unsigned_ = source_entry->src1.unsigned_ << source_entry->src2.unsigned_;
 				break;
 			case EXECUTION_UNIT_MODE::BITWISE_SHIFT_RIGHT_LOGICAL:
-				result.write_data.unsigned_ = source_entry->src1.unsigned_ >> source_entry->src2.unsigned_;
+				result.produced_data.unsigned_ = source_entry->src1.unsigned_ >> source_entry->src2.unsigned_;
 				break;
 			case EXECUTION_UNIT_MODE::BITWISE_SHIFT_RIGHT_ARITHMETIC:
-				result.write_data.signed_ = source_entry->src1.signed_ >> source_entry->src2.unsigned_;
+				result.produced_data.signed_ = source_entry->src1.signed_ >> source_entry->src2.unsigned_;
 				break;
 			// shouldnt happen
 			default:
 				break;
 			}
 
+			Register_File::write(source_entry->destination_register_id, result.produced_data);
+			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return result;
 		}
 
-		Execution_Result Execution_Unit_Set_Less_Than::execute(const Reservation_Station_Entry* source_entry) {
+		Forwarding_Data Execution_Unit_Set_Less_Than::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
 				return { false };
-			Execution_Result result{};
+			Forwarding_Data result{};
 			result.valid = true;
 			result.producer_tag = source_entry->self_tag;
-			result.destination_physical_register = source_entry->destination_register_id;
-			result.target_reorder_buffer_entry_index = source_entry->reorder_buffer_entry_index;
-			result.write_data.signed_ = source_entry->src1.signed_ < source_entry->src2.signed_ ? 1 : 0;
+			result.produced_data.signed_ = source_entry->src1.signed_ < source_entry->src2.signed_ ? 1 : 0;
+			Register_File::write(source_entry->destination_register_id, result.produced_data);
+			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return result;
 		}
 
-		Execution_Result Execution_Unit_Multiplier::execute(const Reservation_Station_Entry* source_entry) {
+		Forwarding_Data Execution_Unit_Multiplier::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
 				return { false };
-			Execution_Result result{};
+			Forwarding_Data result{};
 			result.valid = true;
 			result.producer_tag = source_entry->self_tag;
-			result.destination_physical_register = source_entry->destination_register_id;
-			result.target_reorder_buffer_entry_index = source_entry->reorder_buffer_entry_index;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_SIGNED:
 			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH:
-				result.write_data.signed_ = source_entry->src1.signed_ * source_entry->src2.signed_;
+				result.produced_data.signed_ = source_entry->src1.signed_ * source_entry->src2.signed_;
 				break;
 				case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_SIGNED_UNSIGNED: {
                 // MULHSU: src1 is signed, src2 is unsigned
                 // We cast to 64-bit to ensure we don't lose the overflow
 					int64_t full_product{ static_cast<int64_t>(source_entry->src1.signed_) * static_cast<uint64_t>(source_entry->src2.unsigned_) };
-                result.write_data.signed_ = static_cast<int32_t>(full_product >> 32);
+                result.produced_data.signed_ = static_cast<int32_t>(full_product >> 32);
                 break;
             }
             case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_UNSIGNED: {
                 // MULHU: Both src1 and src2 are unsigned
 				uint64_t full_product{ static_cast<uint64_t>(source_entry->src1.unsigned_) * static_cast<uint64_t>(source_entry->src2.unsigned_) };
-                result.write_data.unsigned_ = static_cast<uint32_t>(full_product >> 32);
+                result.produced_data.unsigned_ = static_cast<uint32_t>(full_product >> 32);
                 break;
             }
 			// shouldnt happen
@@ -118,35 +116,36 @@ namespace OoOVis
 				break;
 
 			}
+			Register_File::write(source_entry->destination_register_id, result.produced_data);
+			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return result;
 		}
 
-		Execution_Result Execution_Unit_Divider::execute(const Reservation_Station_Entry* source_entry) {
+		Forwarding_Data Execution_Unit_Divider::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
 				return { false };
-			Execution_Result result{};
+			Forwarding_Data result{};
 			result.valid = true;
 			result.producer_tag = source_entry->self_tag;
-			result.destination_physical_register = source_entry->destination_register_id;
-			result.target_reorder_buffer_entry_index = source_entry->reorder_buffer_entry_index;
-
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_SIGNED:
-				result.write_data.signed_ = source_entry->src1.signed_ / source_entry->src2.signed_;
+				result.produced_data.signed_ = source_entry->src1.signed_ / source_entry->src2.signed_;
 				break;
 			case EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_UNSIGNED:
-				result.write_data.unsigned_ = source_entry->src1.unsigned_ / source_entry->src2.unsigned_;
+				result.produced_data.unsigned_ = source_entry->src1.unsigned_ / source_entry->src2.unsigned_;
 				break;
 			case EXECUTION_UNIT_MODE::DIVIDER_REMAINDER_SIGNED:
-				result.write_data.signed_ = source_entry->src1.signed_ % source_entry->src2.signed_;
+				result.produced_data.signed_ = source_entry->src1.signed_ % source_entry->src2.signed_;
 				break;
 			case EXECUTION_UNIT_MODE::DIVIDER_REMAINDER_UNSIGNED:
-				result.write_data.unsigned_ = source_entry->src1.unsigned_ % source_entry->src2.unsigned_;
+				result.produced_data.unsigned_ = source_entry->src1.unsigned_ % source_entry->src2.unsigned_;
 				break;
 			// shouldnt happen
 			default:
 				break;
 			}
+			Register_File::write(source_entry->destination_register_id, result.produced_data);
+			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return result;
 		}
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_store_buffer{};
@@ -184,7 +183,7 @@ namespace OoOVis
 			}
 		}
 
-		Execution_Result Execution_Unit_Load_Store::execute_load() {
+		Forwarding_Data Execution_Unit_Load_Store::execute_load() {
 
 			size_t bypassable_load_entry_index{};
 			bool can_bypass{ false };
@@ -212,12 +211,10 @@ namespace OoOVis
 				// make the rob entry ready
 				Reorder_Buffer::set_ready(bypassable_load_entry->reorder_buffer_entry_index);
 				// deallocate it from the load buffer
-				Execution_Result result{ 
+				Forwarding_Data result{ 
 					true,
 					write_data, // will be needed in forwarding to reservation stations
-					bypassable_load_entry->reorder_buffer_entry_index, // wont be used by common data bus since we already set the readiness here
 					bypassable_load_entry->producer_tag, // will be needed in forwarding logic 
-					bypassable_load_entry->register_id  // this wont be needed as we write to the register file here
 				};
 				_load_buffer.erase(_load_buffer.begin() + bypassable_load_entry_index);
 				return result;
@@ -240,12 +237,10 @@ namespace OoOVis
 			const Buffer_Entry* forwaradable_load_entry{ &_load_buffer[forwaradable_load_entry_index] };
 			Register_File::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
 			Reorder_Buffer::set_ready(forwaradable_load_entry->reorder_buffer_entry_index);
-			Execution_Result result(
+			Forwarding_Data result(
 				true,
 				store_buffer_entry_that_is_forwarded_from->register_data, // will be needed in forwarding to reservation stations
-				forwaradable_load_entry->reorder_buffer_entry_index, // wont be used by common data bus since we already set the readiness here
-				forwaradable_load_entry->producer_tag, // will be needed in forwarding logic 
-				forwaradable_load_entry->register_id  // this wont be needed as we write to the register file here
+				forwaradable_load_entry->producer_tag // will be needed in forwarding logic 
 			);
 			_load_buffer.erase(_load_buffer.begin() + forwaradable_load_entry_index);
 
@@ -265,7 +260,7 @@ namespace OoOVis
 			}
 		}
 
-		Execution_Result Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
+		Forwarding_Data Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
 				return { false };
@@ -283,9 +278,7 @@ namespace OoOVis
 				return {
 					true,
 					source_entry->instruction_id + 1, // will be needed in forwarding to reservation stations
-					source_entry->reorder_buffer_entry_index, // wont be used by common data bus since we already set the readiness here
 					source_entry->self_tag, // will be needed in forwarding logic 
-					source_entry->destination_register_id  // this wont be needed as we write to the register file here
 				};
 				break;
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_EQUAL:

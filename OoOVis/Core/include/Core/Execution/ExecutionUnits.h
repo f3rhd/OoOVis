@@ -8,32 +8,32 @@ namespace OoOVis
 
 		class Execution_Unit_Adder { // does subtracting too.
 		public:
-			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
+			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
 		};
 		class Execution_Unit_Bitwise {
 		public:
-			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
+			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
 		};
 
 		// in real hardware designs having a seperate unit just for this bitch ass instruction is very nooby thing to do  but we gon do it in software anyway 
 		class Execution_Unit_Set_Less_Than {
 		public:
-			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
+			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
 
 		};
 		class Execution_Unit_Multiplier {
 		public:
-			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
+			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
 		};
 		class Execution_Unit_Divider {
 		public:
-			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
+			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
 		};
 
 		class Execution_Unit_Load_Store {
 		public:
 			static void buffer_allocation_phase(const Reservation_Station_Entry* source_entry);
-			static Execution_Result execute_load();
+			static Forwarding_Data execute_load();
 			static void				execute_store(memory_addr_t store_id);
 			static bool				store_buffer_is_full() { return _store_buffer.size() >= STORE_BUFFER_SIZE; }
 			static bool				load_buffer_is_full() { return _load_buffer.size() >= LOAD_BUFFER_SIZE; }
@@ -64,7 +64,8 @@ namespace OoOVis
 			static std::vector<Buffer_Entry> _load_buffer;
 		};
 		class Execution_Unit_Branch {
-			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
+		public:
+			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
 		};
 	} // namespace Core
 } // namespace OooVis

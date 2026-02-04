@@ -1,5 +1,7 @@
 #include <Frontend/Parser/Parser.h>
 #include <Core/Dispatch/Dispatcher.h>
+#include <Core/Execution/ExecutionStage.h>
+#include <Core/Commit/ReorderBuffer.h>
 #include <Core/Fetch/Fetch.h>
 using namespace OoOVis;
 int main(int argc, char** argv) {
@@ -9,6 +11,8 @@ int main(int argc, char** argv) {
 	Core::Fetch_Unit::init(std::move(parse_result.first));
 	Core::Dispatcher dispatcher;
 	while (true) {
+		Core::Reorder_Buffer::commit();
+		Core::Execution_Stage::issue_and_execute();
 		Core::Fetch_Group fetch_group(Core::Fetch_Unit::fetch());
 		if (fetch_group.first_instruction.first) {
 			dispatcher.dispatch_instruction(*fetch_group.first_instruction.first,fetch_group.first_instruction.second);
