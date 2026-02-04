@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
 	Register_File::init();
 	Dispatcher dispatcher;
 	memory_addr_t program_counter_increment{};
-	while (!Fetch_Unit::endofprogram()) {
+	while (true) {
 		Reorder_Buffer::commit();
 		Execution_Stage::issue_and_execute();
 		Fetch_Unit::increment_counter_by(program_counter_increment);

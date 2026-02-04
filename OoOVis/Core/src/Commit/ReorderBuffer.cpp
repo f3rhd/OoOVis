@@ -4,6 +4,7 @@
 #include <Core/RegisterFile/RegisterFile.h>
 #include <Core/Execution/ExecutionUnits.h>
 #include <iostream>
+#include <format>
 namespace OoOVis
 {
 	namespace Core {
@@ -13,8 +14,9 @@ namespace OoOVis
 		size_t Reorder_Buffer::_tail{};
 		size_t Reorder_Buffer::allocate(std::unique_ptr<Reorder_Buffer_Entry>&& entry) {
 			_buffer[_tail] = std::move(entry);
+			auto allocated_entry_index = _tail;
 			_tail = (_tail + 1) % REORDER_BUFFER_SIZE;
-			return _buffer.size() - 1;
+			return allocated_entry_index;
 		}
 
 		void Reorder_Buffer::set_ready(u64 target_entry_index) {
@@ -64,6 +66,7 @@ namespace OoOVis
 					if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->ready) {
 						if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->mispredicted) {
 							_tail = _head++;
+							Register_File::restore_alias_table();
 						}
 					}
 					break;

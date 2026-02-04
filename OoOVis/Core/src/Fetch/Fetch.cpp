@@ -1,4 +1,5 @@
 #include <Core/Fetch/Fetch.h>
+#include <Core/RegisterFile/RegisterFile.h>
 #include <Core/Constants/Constants.h>
 namespace OoOVis
 {
@@ -25,8 +26,6 @@ namespace OoOVis
 
 		void Fetch_Unit::increment_counter_by(memory_addr_t value) {
             _program_counter += value;
-            if (_program_counter >= _instruction_cache.size())
-                _program_counter = static_cast<memory_addr_t>(_instruction_cache.size() - 1);
 		}
 
 		bool Fetch_Unit::get_prediction(memory_addr_t branch_instruction_id) {
@@ -110,26 +109,27 @@ namespace OoOVis
                 third_addr  = current_address;
             }
 
-            if (first_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
+            if (first_instruction && first_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
                 if (Fetch_Unit::has_btb_entry(first_addr)) {
                     _program_counter = Fetch_Unit::get_target_addr_from_btb(first_addr);
                 }
                 second_instruction = third_instruction = nullptr;
                 second_addr = third_addr =  0;
             }
-            else if (second_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
+            else if (second_instruction && second_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
                 if (Fetch_Unit::has_btb_entry(second_addr)) {
                     _program_counter = Fetch_Unit::get_target_addr_from_btb(second_addr);
                 }
                 third_instruction = nullptr;
                 third_addr = 0;
             }
-            else if (third_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
+            else if (third_instruction && third_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
                 if (Fetch_Unit::has_btb_entry(third_addr)) {
                     _program_counter = Fetch_Unit::get_target_addr_from_btb(third_addr);
                 }
             }
-            else if (first_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
+            else if (first_instruction && first_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
+                Register_File::take_snapshot();
                 if (Fetch_Unit::has_btb_entry(first_addr)) {
                     memory_addr_t target_address = Fetch_Unit::get_target_addr_from_btb(first_addr);
                     if (get_prediction(first_addr) == true) {
@@ -139,7 +139,8 @@ namespace OoOVis
                     }
                 }
             }
-            else if (second_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
+            else if (second_instruction && second_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
+                Register_File::take_snapshot();
                 if (Fetch_Unit::has_btb_entry(second_addr)) {
                     memory_addr_t target_address = Fetch_Unit::get_target_addr_from_btb(second_addr);
                     if (get_prediction(second_addr) == true) {
@@ -149,7 +150,8 @@ namespace OoOVis
                     }
                 }
             }
-            else if (third_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
+            else if (third_instruction && third_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
+                Register_File::take_snapshot();
                 if (Fetch_Unit::has_btb_entry(third_addr)) {
                     memory_addr_t target_address = Fetch_Unit::get_target_addr_from_btb(third_addr);
                     if (get_prediction(third_addr) == true) {
@@ -160,9 +162,6 @@ namespace OoOVis
 			return { {first_instruction,first_addr},{second_instruction,second_addr},{third_instruction,third_addr} };
         }
 
-		bool Fetch_Unit::endofprogram() {
-            return _program_counter == _instruction_cache.size() - 1;
-		}
 
 	} // namespace Core
 

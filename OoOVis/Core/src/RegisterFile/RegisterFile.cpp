@@ -2,17 +2,25 @@
 #include <Core/RegisterFile/RegisterFile.h>
 #include <Core/Constants/Constants.h>
 #include <stdexcept>
+#include <format>
+#include <iomanip>
+#include <string>
 #include <iostream>
+#include <format>
 namespace OoOVis
 {
 	namespace Core
 	{
-		std::unordered_map<reg_id_t, Physical_Register_File_Entry> Register_File::_physical_register_file{};
-		std::unordered_map<reg_id_t, reg_id_t> Register_File::_register_alias_table{};
+		std::map<reg_id_t, Physical_Register_File_Entry> Register_File::_physical_register_file{};
+		std::map<reg_id_t, reg_id_t> Register_File::_register_alias_table{};
+		std::map<reg_id_t, reg_id_t> Register_File::_snapshot_register_alias_table{};
 
 		void Register_File::init() {
 			for (reg_id_t i = 0; i < PHYSICAL_REGISTER_FILE_SIZE; i++) {
 				_physical_register_file.emplace(i, Physical_Register_File_Entry());
+				if (i >= 0 && i <= 31) {
+					_physical_register_file[i].allocated = true;
+				}
 			}
 			for (reg_id_t j = 0; j < REGISTER_ALIAS_TABLE_SIZE; j++) {
 				_register_alias_table.emplace(j, j);
@@ -21,11 +29,18 @@ namespace OoOVis
 
 		bool Register_File::full() {
 			for (auto const& [key, entry] : _physical_register_file) {
-				if (!entry.allocated) return true;
+				if (!entry.allocated) return false;
 			}
-			return false;
+			return true;
 		}
 
+		void Register_File::take_snapshot() {
+			_snapshot_register_alias_table = _register_alias_table;
+		}
+
+		void Register_File::restore_alias_table() {
+			_register_alias_table = _snapshot_register_alias_table;
+		}
 		void Register_File::deallocate(reg_id_t physical_register_id) {
 			if (physical_register_id == INVALID_REGISTER_ID) {
 				std::cout << "Tried to deallocate invalid register.\n"; 
@@ -37,6 +52,9 @@ namespace OoOVis
 				exit(EXIT_FAILURE); // @VisitLater
 			}
 			_physical_register_file[physical_register_id].allocated = false;
+#ifdef DEBUG_PRINTS
+			std::cout << std::format("Reorder Buffer deallocated P{}.\n", physical_register_id);
+#endif
 		}
 
 		void Register_File::write(reg_id_t physical_register_id, data_t data) {
@@ -46,14 +64,26 @@ namespace OoOVis
 			}
 			_physical_register_file[physical_register_id].data = data;
 			_physical_register_file[physical_register_id].producer_tag = NO_PRODUCER_TAG;
+#ifdef DEBUG_PRINTS
+			std::cout << std::format(
+				"PhysicalRegisterFile[{}] <- {}\n",
+				physical_register_id,
+				data.signed_
+			);
+#endif
 		}
 
 		reg_id_t Register_File::allocate_physical_register_for(reg_id_t architectural_register_id, u32 producer_tag) {
-			for (auto& [key, entry] : _physical_register_file) {
+			for (auto it{ _physical_register_file.rbegin() }; it != _physical_register_file.rend(); it++) {
+				auto& entry = it->second;
+				auto& key = it->first;
 				if (!entry.allocated) {
 					_register_alias_table[architectural_register_id] = key;
 					entry.allocated = true;
 					entry.producer_tag = producer_tag;
+#ifdef DEBUG_PRINTS
+					std::cout << std::format("Register alias table was updated with x{}->P{} due to register allocation.\n", architectural_register_id, key);
+#endif
 					return key;
 				}
 			}

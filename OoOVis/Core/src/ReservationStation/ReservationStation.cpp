@@ -5,14 +5,16 @@ namespace OoOVis
     namespace Core
     {
         Reservation_Station::Reservation_Station(RESERVATION_STATION_ID id) {
+            static u32 tag_counter{};
+            _id = id;
             for (u32 i(0);i < RESERVATION_STATION_SIZE;i++) {
                 _buffer.emplace_back();
-                _buffer.back().self_tag = i * static_cast<u32>(id) +1;
+                _buffer.back().self_tag = ++tag_counter;
             }
         }
         Reservation_Station_Entry* Reservation_Station::allocate_entry() {
             for (auto& entry : _buffer) {
-                if (!entry.busy) {
+                if (!entry.busy ) {
                     entry.busy = true;
                     return &entry;
                 }
@@ -23,7 +25,7 @@ namespace OoOVis
 
         const Reservation_Station_Entry* Reservation_Station::issue() {
             for (const auto& entry : _buffer) {
-                if (entry.ready)
+                if (entry.ready && entry.busy)
                     return &entry;
             }
             return nullptr;

@@ -1,7 +1,7 @@
 #pragma once
 #include <Core/Types/Types.h>
 #include <Core/Constants/Constants.h>
-#include <unordered_map>
+#include <map>
 namespace OoOVis 
 {
 	namespace Core
@@ -14,14 +14,17 @@ namespace OoOVis
 		struct Register_File {
 			static void							init();
 			static bool							full();
+			static void							take_snapshot();
+			static void							restore_alias_table();
 			static void							deallocate(reg_id_t physical_register_id);
 			static void                         write(reg_id_t physical_register_id,data_t data);
 			static reg_id_t						allocate_physical_register_for(reg_id_t architectural_register_id,u32 producer_tag); 
 			static reg_id_t						aliasof(reg_id_t architectural_register_id);
 			static Physical_Register_File_Entry read_with_alias(reg_id_t architectural_register_id);
 		private:
-			static std::unordered_map<reg_id_t, Physical_Register_File_Entry> _physical_register_file;
-			static std::unordered_map<reg_id_t, reg_id_t>					  _register_alias_table;
+			static std::map<reg_id_t, Physical_Register_File_Entry> _physical_register_file;
+			static std::map<reg_id_t, reg_id_t>					  _register_alias_table;
+			static std::map<reg_id_t, reg_id_t>					  _snapshot_register_alias_table;
 		};
 
 	} // namespace Core

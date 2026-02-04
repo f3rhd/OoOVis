@@ -5,6 +5,7 @@
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <iostream>
 #include <unordered_map>
+#include <format>
 namespace OoOVis
 {
     namespace Core
@@ -55,22 +56,27 @@ namespace OoOVis
                 reg_id_t destination_physical_register_id{ Register_File::allocate_physical_register_for(register_instruction->dest_reg(), allocated_reservation_station_entry->self_tag) }; // we do the fulness checking before calling this, so we good
                 if (register_instruction->uses_immval()) {
                     temp_reservation_station_entry.src2.signed_ = register_instruction->src2().imm_val;
+                    temp_reservation_station_entry.producer_tag2 = NO_PRODUCER_TAG;
                 }
                 else {
 					temp_reservation_station_entry.src2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).data;
+                    temp_reservation_station_entry.producer_tag2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).producer_tag;
                 }
-                temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
+				temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
                 temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
                 temp_reservation_station_entry.instruction_id = instruction_id;
+				#ifdef DEBUG_PRINTS
+                std::cout << std::format("Dispatched instructions[{}] to ReservationStationPool[{}][{}]\n", instruction_id, static_cast<u32>(info.first), temp_reservation_station_entry.self_tag);
+				#endif
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
             }
             // again shouldnt happen but...
             // @HandleThis
             else {
-                std::cout << "Dynamic cast of Instruction -> Register_Instrution failed.\n";
+                std::cout << "Dynamic cast of Instruction -> Register_Instruction failed.\n";
 				exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
             }        
             return true;
@@ -132,6 +138,9 @@ namespace OoOVis
                 temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
                 temp_reservation_station_entry.instruction_id = instruction_id;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
+				#ifdef DEBUG_PRINTS
+                std::cout << std::format("Dispatched instructions[{}] to ReservationStationPool[{}][{}]\n", instruction_id, static_cast<u32>(RESERVATION_STATION_ID::LOAD_STORE), temp_reservation_station_entry.self_tag);
+				#endif
 
             }
             // shouldnt happennnn but again..
@@ -189,6 +198,9 @@ namespace OoOVis
                 );
                 temp_reservation_station_entry.instruction_id = instruction_id; // this id will be passed down to the entry in the store buffer
                 *allocated_reservation_station = temp_reservation_station_entry;
+				#ifdef DEBUG_PRINTS
+                std::cout << std::format("Dispatched instructions[{}] to ReservationStationPool[{}][{}]\n", instruction_id, static_cast<u32>(RESERVATION_STATION_ID::LOAD_STORE) - 1, temp_reservation_station_entry.self_tag);
+				#endif
             }
             else {
                 std::cout << "Dynamic cast of Instruction -> Store_Instruction failed\n";
@@ -222,6 +234,9 @@ namespace OoOVis
 				//temp_reservation_station_entry.fallthrough = branch_instruction->fallthrough();
 				temp_reservation_station_entry.instruction_id = instruction_id;
 				*allocated_reservation_station_entry = temp_reservation_station_entry;
+				#ifdef DEBUG_PRINTS
+                std::cout << std::format("Dispatched instructions[{}] to ReservationStationPool[{}][{}]\n", instruction_id, static_cast<u32>(RESERVATION_STATION_ID::BRANCH), temp_reservation_station_entry.self_tag);
+				#endif
 
             }
             else {
@@ -280,6 +295,9 @@ namespace OoOVis
                 }
                 temp_reservation_station_entry.instruction_id = instruction_id;
 				*allocated_reservation_station_entry = temp_reservation_station_entry;
+				#ifdef DEBUG_PRINTS
+                std::cout << std::format("Dispatched instructions[{}] to ReservationStationPool[{}][{}]\n", instruction_id, static_cast<u32>(RESERVATION_STATION_ID::BRANCH), temp_reservation_station_entry.self_tag);
+				#endif
             }
             else {
                 std::cout << "Dynamic cast of Instruction -> Jump_Instruction failed\n";

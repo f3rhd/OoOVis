@@ -24,15 +24,14 @@ namespace OoOVis
 
         public:
             static void                init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions);
-            static Fetch_Group         fetch();
-            static bool                endofprogram();
+            static Fetch_Group          fetch();
             static void                stall();
             static void                continue_fetching();
             static void                increment_counter_by(memory_addr_t value);
             static bool                get_prediction(memory_addr_t branch_instruction_id);
             static void                set_program_counter(memory_addr_t next_pc);
-            static memory_addr_t       get_program_counter();
-            static memory_addr_t       get_target_addr_from_btb(memory_addr_t branch_instruction_id);
+            static memory_addr_t        get_program_counter();
+            static memory_addr_t        get_target_addr_from_btb(memory_addr_t branch_instruction_id);
             static void                create_btb_entry(memory_addr_t branch_instruction_id, memory_addr_t target_instruction_id);
             static bool                has_btb_entry(memory_addr_t branch_instruction_id);
             static void                update_pattern_history_table(memory_addr_t branch_instruction_id, bool actual);
