@@ -25,7 +25,10 @@ namespace OoOVis
         public:
             static void                init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions);
             static Fetch_Group         fetch();
+            static bool                endofprogram();
             static void                stall();
+            static void                continue_fetching();
+            static void                increment_counter_by(memory_addr_t value);
             static bool                get_prediction(memory_addr_t branch_instruction_id);
             static void                set_program_counter(memory_addr_t next_pc);
             static memory_addr_t       get_program_counter();

@@ -182,7 +182,7 @@ namespace OoOVis {
 			//branch_instruction_id_t id() const { return _id; }
 			//memory_addr_t			fallthrough() const { return _next_instruction_addr; }
 		private:
-			memory_addr_t _next_instruction_addr;
+			//memory_addr_t _next_instruction_addr;
 			//branch_instruction_id_t _id;
 			reg_id_t _src1_reg;
 			reg_id_t _src2_reg;

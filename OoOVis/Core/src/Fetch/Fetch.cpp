@@ -19,6 +19,16 @@ namespace OoOVis
             _stalled = true;
         }
 
+        void Fetch_Unit::continue_fetching() {
+            _stalled = false;
+        }
+
+		void Fetch_Unit::increment_counter_by(memory_addr_t value) {
+            _program_counter += value;
+            if (_program_counter >= _instruction_cache.size())
+                _program_counter = static_cast<memory_addr_t>(_instruction_cache.size() - 1);
+		}
+
 		bool Fetch_Unit::get_prediction(memory_addr_t branch_instruction_id) {
             memory_addr_t pht_index{ _branch_shift_register ^ branch_instruction_id };
 			if(_pattern_history_table.find(pht_index) == _pattern_history_table.end()) {
@@ -80,24 +90,24 @@ namespace OoOVis
             memory_addr_t first_addr{};
             memory_addr_t second_addr{};
             memory_addr_t third_addr{};
-            if (_program_counter >= _instruction_cache.size() && !_stalled) {
+            memory_addr_t current_address = _program_counter;
+            if (current_address >= _instruction_cache.size() && !_stalled) {
                 _stalled = true;
 				return { {first_instruction,first_addr},{second_instruction,second_addr},{third_instruction,third_addr} };
             }
-            if (_program_counter < _instruction_cache.size()) {
-                first_instruction = &_instruction_cache[_program_counter];
-                first_addr = _program_counter;
-				_program_counter++;
+            if (current_address < _instruction_cache.size()) {
+                first_instruction = &_instruction_cache[current_address];
+                first_addr = current_address;
+				current_address++;
             }
-            if (_program_counter < _instruction_cache.size()) {
-                second_instruction = &_instruction_cache[_program_counter + 1];
-                second_addr = _program_counter;
-				_program_counter++;
+            if (current_address < _instruction_cache.size()) {
+                second_instruction = &_instruction_cache[current_address];
+                second_addr = current_address;
+				current_address++;
             }
-            if (_program_counter < _instruction_cache.size()) {
-                third_instruction = &_instruction_cache[_program_counter + 2];
-                third_addr = _program_counter;
-                _program_counter++;
+            if (current_address < _instruction_cache.size()) {
+                third_instruction = &_instruction_cache[current_address];
+                third_addr  = current_address;
             }
 
             if (first_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
@@ -149,6 +159,10 @@ namespace OoOVis
             }
 			return { {first_instruction,first_addr},{second_instruction,second_addr},{third_instruction,third_addr} };
         }
+
+		bool Fetch_Unit::endofprogram() {
+            return _program_counter == _instruction_cache.size() - 1;
+		}
 
 	} // namespace Core
 

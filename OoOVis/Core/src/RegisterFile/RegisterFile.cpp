@@ -2,6 +2,7 @@
 #include <Core/RegisterFile/RegisterFile.h>
 #include <Core/Constants/Constants.h>
 #include <stdexcept>
+#include <iostream>
 namespace OoOVis
 {
 	namespace Core
@@ -26,16 +27,23 @@ namespace OoOVis
 		}
 
 		void Register_File::deallocate(reg_id_t physical_register_id) {
-			if (physical_register_id == INVALID_REGISTER_ID)
-				throw std::runtime_error("Tried to deallocate invalid register.");
-			if(!_physical_register_file[physical_register_id].allocated)
-				throw std::runtime_error("Tried to deallocate an already deallocated register.");
+			if (physical_register_id == INVALID_REGISTER_ID) {
+				std::cout << "Tried to deallocate invalid register.\n"; 
+				exit(EXIT_FAILURE); // @VisitLater
+			}
+				
+			if (!_physical_register_file[physical_register_id].allocated) {
+				std::cout << "Tried to deallocate an already deallocated register.\n";
+				exit(EXIT_FAILURE); // @VisitLater
+			}
 			_physical_register_file[physical_register_id].allocated = false;
 		}
 
 		void Register_File::write(reg_id_t physical_register_id, data_t data) {
-			if(physical_register_id == INVALID_REGISTER_ID)
-				throw std::runtime_error("Tried to write to an invalid register.");
+			if (physical_register_id == INVALID_REGISTER_ID) {
+				std::cout << "Tried to write to an invalid register.\n";
+				exit(EXIT_FAILURE); // @VisitLater
+			}
 			_physical_register_file[physical_register_id].data = data;
 			_physical_register_file[physical_register_id].producer_tag = NO_PRODUCER_TAG;
 		}
@@ -55,7 +63,8 @@ namespace OoOVis
 		reg_id_t Register_File::aliasof(reg_id_t architectural_register_id)
 		{
 			if (architectural_register_id == INVALID_REGISTER_ID) {
-				throw std::runtime_error("Tried to read invalid register.");
+				std::cout << "Tried to read invalid register.";
+				exit(EXIT_FAILURE); // @VisitLater
 			}
 			return _register_alias_table[architectural_register_id];
 		}
