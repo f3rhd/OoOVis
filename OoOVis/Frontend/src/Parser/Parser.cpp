@@ -77,7 +77,7 @@ namespace OoOVis {
                 valid = false;
             }
 
-            return { std::move(input_file), valid };
+            return { std::move(input_file)};
         }
 
 

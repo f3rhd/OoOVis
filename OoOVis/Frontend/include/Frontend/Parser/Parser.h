@@ -14,7 +14,6 @@ namespace OoOVis {
         auto constexpr INVALID_REG_ID = 255;
         struct cli_args_t {
             std::string input_file;
-            bool enable_gui;
         };
         class Parser {
         public:
