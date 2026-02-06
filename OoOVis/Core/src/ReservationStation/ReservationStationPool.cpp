@@ -30,20 +30,12 @@ namespace OoOVis
 		void Reservation_Station_Pool::wakeup(u32 producer_tag, data_t produced_data) {
 			for (auto&  station : _pool) {
 				for (auto& entry : station.get()) {
-					if (entry.busy && entry.ready &&  entry.self_tag == producer_tag){
-#ifdef DEBUG_PRINTS
-						std::cout << std::format("Deallocated ReservationStationPool[{}][{}].\n", static_cast<u32>(station.id()), entry.self_tag);
-#endif
-						entry.busy = false;
-						entry.ready = false;
-						continue;
-					}
 					if (entry.producer_tag1 == producer_tag) {
 						entry.producer_tag1 = NO_PRODUCER_TAG;
 						entry.src1 = produced_data;
 						entry.ready = entry.producer_tag1 == NO_PRODUCER_TAG && entry.producer_tag2 == NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
-						std::cout << std::format("Forwared data:{} to ReservationStationPool[{}][{}].\n", produced_data.signed_,static_cast<u32>(station.id()), entry.self_tag);
+						std::cout << std::format("Forwared data:{} to Instructions[{}] .\n", produced_data.signed_, entry.instruction_id);
 #endif
 
 					}
@@ -52,8 +44,22 @@ namespace OoOVis
 						entry.src2 = produced_data;
 						entry.ready = entry.producer_tag1 == NO_PRODUCER_TAG && entry.producer_tag2 == NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
-						std::cout << std::format("Forwared data:{} to ReservationStationPool[{}][{}].\n", produced_data.signed_,static_cast<u32>(station.id()), entry.self_tag);
+						std::cout << std::format("Forwared data:{} to Instructions[{}].\n", produced_data.signed_,entry.instruction_id);
 #endif
+					}
+				}
+			}
+		}
+		void Reservation_Station_Pool::deallocate_entry(u32 tag) {
+			for (auto& station : _pool) {
+				for (auto& entry : station.get()) {
+					if (entry.busy && entry.ready && entry.self_tag == tag) {
+#ifdef DEBUG_PRINTS
+						std::cout << std::format("Deallocated Instructions[{}] from ReservationStation.\n",entry.instruction_id);
+#endif
+						entry.busy = false;
+						entry.ready = false;
+						break;
 					}
 				}
 			}
