@@ -1,4 +1,6 @@
 #include <Core/ReservationStation/ReservationStation.h>
+#include <algorithm>
+#include <ranges>
 
 namespace OoOVis
 {
@@ -24,6 +26,9 @@ namespace OoOVis
         }
 
         const Reservation_Station_Entry* Reservation_Station::issue() {
+            if (_id == RESERVATION_STATION_ID::LOAD_STORE) {
+                std::ranges::sort(_buffer, [](const Reservation_Station_Entry& a, const Reservation_Station_Entry& b) {return a.instruction_id < b.instruction_id; });
+            }
             for (const auto& entry : _buffer) {
                 if (entry.ready && entry.busy)
                     return &entry;
