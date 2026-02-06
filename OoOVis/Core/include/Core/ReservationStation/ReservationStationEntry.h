@@ -65,7 +65,7 @@ namespace OoOVis
 			u64	   reorder_buffer_entry_index = 0;
 			bool   ready = false;
 			bool   busy = false;
-			u32    instruction_id = NO_STORE;
+			u32    instruction_id = 0;
 			reg_id_t store_source_register_id = INVALID_REGISTER_ID; // will need this in load forwarding and bypassing
 			memory_addr_t branch_target = 0;
 			//branch_instruction_id_t branch_id = 0;
