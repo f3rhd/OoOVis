@@ -526,10 +526,10 @@ namespace OoOVis {
                 advance();
                 EXPECT(TOKEN_TYPE::IMMEDIATE);
 
-                int32_t imm_val { std::stoi(_current_token->word)};
+                int32_t imm_val{ std::stoi(_current_token->word) };
 
-                int32_t low { (imm_val << 20) >> 20};
-                int32_t high { static_cast<int32_t>(imm_val - low)};
+                int32_t low{ imm_val & 0xFFF };
+                int32_t high(static_cast<uint32_t>(imm_val) >> 12);
 
                 if (-2048 <= imm_val && (imm_val) <= 2047) {
                     _program.emplace_back(
@@ -544,7 +544,7 @@ namespace OoOVis {
                 }
                 else {
                     _program.emplace_back(std::make_unique<Register_Instruction>(
-                        Register_Instruction::REGISTER_INSTRUCTION_TYPE::AUIPC,
+                        Register_Instruction::REGISTER_INSTRUCTION_TYPE::LOAD_UPPER,
                         dest_reg,
                         0,
                         high,
