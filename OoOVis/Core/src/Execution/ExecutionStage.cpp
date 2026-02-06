@@ -32,9 +32,9 @@ namespace OoOVis
 				forwarding_data.push_back(Execution_Unit_Multiplier::execute(issued_entries[3]));
 			if (issued_entries[4])
 				forwarding_data.push_back(Execution_Unit_Divider::execute(issued_entries[4]));
+			forwarding_data.push_back(Execution_Unit_Load_Store::execute_load());
 			if (issued_entries[5]) {
-				Execution_Unit_Load_Store::buffer_allocation_phase(issued_entries[5]);
-				Execution_Unit_Load_Store::execute_load();
+				forwarding_data.push_back(Execution_Unit_Load_Store::buffer_allocation_phase(issued_entries[5]));
 			}
 			if (issued_entries[6]) {
 				Execution_Unit_Branch::execute(issued_entries[6]);
@@ -43,8 +43,15 @@ namespace OoOVis
 
 			for (const auto& data : forwarding_data) {
 
-				if (data.valid) {
+				if (data.kind & FORWADING_DATA_FORWARD_ONLY) {
 					Reservation_Station_Pool::wakeup(data.producer_tag, data.produced_data);
+				}
+				else if (data.kind & FORWARDING_DATA_STATION_DEALLOCATE_ONLY) {
+					Reservation_Station_Pool::deallocate_entry(data.producer_tag);
+				}
+				else if (data.kind & FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP) {
+					Reservation_Station_Pool::wakeup(data.producer_tag, data.produced_data);
+					Reservation_Station_Pool::deallocate_entry(data.producer_tag);
 				}
 			}
 		}

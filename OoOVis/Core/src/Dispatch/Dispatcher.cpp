@@ -16,10 +16,10 @@ namespace OoOVis
                 return dispatch_register_instruction(instruction, instruction_id, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::ADD_SUB));
             case FrontEnd::FLOW_TYPE::LOAD:
                 return dispatch_load_instruction(instruction, instruction_id, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
-                break;
+            case FrontEnd::FLOW_TYPE::STORE:
+                return dispatch_store_instruction(instruction, instruction_id, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
             case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
                 return dispatch_branch_instruction(instruction, instruction_id, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
-                break;
             case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL:
                 return dispatch_jump_instruction(instruction, instruction_id, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
             case FrontEnd::FLOW_TYPE::UNKNOWN: // @HandleThis
@@ -38,9 +38,7 @@ namespace OoOVis
                 auto info = get_reservation_station_id_and_execution_mode_for(instruction);
                 Reservation_Station_Entry temp_reservation_station_entry;
                 temp_reservation_station_entry.mode = info.second;
-                Physical_Register_File_Entry entry;
-
-				entry = Register_File::read_with_alias(register_instruction->src1_reg());
+                Physical_Register_File_Entry entry(Register_File::read_with_alias(register_instruction->src1_reg()));
 
 				temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
 				temp_reservation_station_entry.src1 = entry.data;
@@ -69,7 +67,7 @@ namespace OoOVis
                 temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
                 temp_reservation_station_entry.instruction_id = instruction_id;
 				#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched instructions[{}] to ReservationStationPool[{}][{}]\n", instruction_id, static_cast<u32>(info.first), temp_reservation_station_entry.self_tag);
+                std::cout << std::format("Dispatched instructions[{}].\n", instruction_id);
 				#endif
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
             }
@@ -110,15 +108,15 @@ namespace OoOVis
                 default:
                     // shouldnt happen
                     std::cout << "Faced with unkown load instruction type while dispatching.\n";
-					exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+                    exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
                     break;
 
                 }
-                Physical_Register_File_Entry entry;
-				entry = Register_File::read_with_alias(load_instruction->base_reg());
+                Physical_Register_File_Entry entry(Register_File::read_with_alias(load_instruction->base_reg()));
                 temp_reservation_station_entry.src1 = entry.data;
                 temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
-                temp_reservation_station_entry.src2.signed_ = { load_instruction->offset() }; 
+                temp_reservation_station_entry.destination_register_id = load_instruction->dest_reg();
+                temp_reservation_station_entry.src2.signed_ = (load_instruction->offset());
                 temp_reservation_station_entry.producer_tag2 = NO_PRODUCER_TAG;
                 temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
 
@@ -139,7 +137,7 @@ namespace OoOVis
                 temp_reservation_station_entry.instruction_id = instruction_id;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
 				#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched instructions[{}] to ReservationStationPool[{}][{}]\n", instruction_id, static_cast<u32>(RESERVATION_STATION_ID::LOAD_STORE), temp_reservation_station_entry.self_tag);
+                std::cout << std::format("Dispatched instructions[{}]\n", instruction_id);
 				#endif
 
             }
@@ -174,10 +172,8 @@ namespace OoOVis
                     break;
 
                 }
-                Physical_Register_File_Entry src1_entry;
-                Physical_Register_File_Entry src2_entry;
-				src1_entry = Register_File::read_with_alias(store_instruction->src1());
-				src2_entry = Register_File::read_with_alias(store_instruction->src2());
+                Physical_Register_File_Entry src1_entry(Register_File::read_with_alias(store_instruction->src1()));
+                Physical_Register_File_Entry src2_entry(Register_File::read_with_alias(store_instruction->src2()));
                 Reservation_Station_Entry* allocated_reservation_station(station.allocate_entry());
                 temp_reservation_station_entry.producer_tag1 = src1_entry.producer_tag;
                 temp_reservation_station_entry.producer_tag2 = src2_entry.producer_tag;
@@ -198,9 +194,9 @@ namespace OoOVis
                 );
                 temp_reservation_station_entry.instruction_id = instruction_id; // this id will be passed down to the entry in the store buffer
                 *allocated_reservation_station = temp_reservation_station_entry;
-				#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched instructions[{}] to ReservationStationPool[{}][{}]\n", instruction_id, static_cast<u32>(RESERVATION_STATION_ID::LOAD_STORE) - 1, temp_reservation_station_entry.self_tag);
-				#endif
+#ifdef DEBUG_PRINTS
+                std::cout << std::format("Dispatched Instructions[{}]\n", instruction_id);
+#endif
             }
             else {
                 std::cout << "Dynamic cast of Instruction -> Store_Instruction failed\n";
