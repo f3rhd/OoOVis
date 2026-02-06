@@ -166,6 +166,7 @@ namespace OoOVis
 				address = source_entry->src1.signed_ + static_cast<offset_t>(source_entry->destination_register_id);
 				register_data = source_entry->src2 ;
 				_store_buffer.emplace_back(
+					source_entry->mode,
 					source_entry->instruction_id,
 					static_cast<u32>(source_entry->reorder_buffer_entry_index), 
 					source_entry->store_source_register_id,
@@ -183,6 +184,7 @@ namespace OoOVis
 			if (!load_buffer_is_full()) {
 				address = source_entry->src1.signed_ + source_entry->src2.signed_;
 				_load_buffer.emplace_back(
+					source_entry->mode,
 					source_entry->instruction_id,
 					source_entry->destination_register_id,
 					source_entry->reorder_buffer_entry_index,
@@ -246,7 +248,19 @@ namespace OoOVis
 
 				if (executable_load_index.second == LOAD_DOES_NOT_USE_FORWARDING) { // it is a bypassable load
 					const Buffer_Entry* bypassable_load_entry{ &_load_buffer.at(executable_load_index.first) };
-					data_t write_data{DCache::read(bypassable_load_entry->calculated_address) };
+					switch (bypassable_load_entry->mode) {
+					case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_WORD:
+						break;
+					case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE:
+						break;
+					case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF:
+						break;
+					case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE_UNSIGNED:
+						break;
+					case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF_UNSIGNED:
+						break;
+					}
+					data_t write_data{DCache::read(bypassable_load_entry->mode,bypassable_load_entry->calculated_address) };
 					//write to the physical register file
 					Register_File::write(bypassable_load_entry->register_id, write_data);
 					// make the rob entry ready
@@ -287,7 +301,7 @@ namespace OoOVis
 			std::vector<size_t> commited_stores{};
 			for (size_t i{}; i < _store_buffer.size(); i++) {
 				if (_store_buffer[i].self_id == store_id) {
-					DCache::write(_store_buffer[i].calculated_address, _store_buffer[i].register_data);
+					DCache::write(_store_buffer[i].mode,_store_buffer[i].calculated_address, _store_buffer[i].register_data);
 					commited_stores.push_back(i);
 				}
 			}

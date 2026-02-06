@@ -14,6 +14,10 @@ namespace OoOVis
 	using u64 = uint64_t;
 	using u32 = uint32_t;
 	using i32 = int32_t;
+	using i16 = int16_t;
+	using i8 = int8_t;
+	using u16 = uint16_t;
+	using u8 = uint8_t;
 	using memory_addr_t = uint32_t;
 	using offset_t = int32_t;
 	using reg_id_t = uint32_t;

@@ -32,10 +32,8 @@ namespace OoOVis
 
 		class Execution_Unit_Load_Store {
 		public:
-			static Forwarding_Data	buffer_allocation_phase(const Reservation_Station_Entry* source_entry);
-			static Forwarding_Data	execute_load();
-			static void				execute_store(memory_addr_t store_id);
 			struct Buffer_Entry {
+				EXECUTION_UNIT_MODE mode{EXECUTION_UNIT_MODE::UNKNOWN};
 				u32			  self_id; // Reorder buffer will find the buffer to flush thanks to this field
 				reg_id_t      register_id; // load uses this to write  the value to the regsiter file
 				size_t	      reorder_buffer_entry_index; // load  uses this to set the rob entry free
@@ -43,20 +41,24 @@ namespace OoOVis
 				memory_addr_t calculated_address; // this is also both used by store and load
 				u32			  producer_tag; // load uses this to broadcast the tag to the common data bus for forwarding logic
 				Buffer_Entry(
+					EXECUTION_UNIT_MODE mode_,
 					u32 id_,
 					u32 id__,
 					size_t index, 
 					data_t data, 
 					memory_addr_t addr,
 					u32 producer_tag_
-				) : self_id(id_), 
+				) : mode(mode_),
+					self_id(id_), 
 					register_id(id__),
 					reorder_buffer_entry_index(index), 
 					register_data(data), 
 					calculated_address(addr),
 					producer_tag(producer_tag_){}
-				Buffer_Entry() = default;
 			};
+			static Forwarding_Data	buffer_allocation_phase(const Reservation_Station_Entry* source_entry);
+			static Forwarding_Data	execute_load();
+			static void				execute_store(memory_addr_t store_id);
 		private:
 			static std::pair<size_t,size_t>	find_load_that_is_executable(); // .first stands for executabel load if it can be executed by forwarding .second will hold the store buffer entry index that is being forwarded from
 			static bool						store_buffer_is_full() { return _store_buffer.size() >= STORE_BUFFER_SIZE; }
