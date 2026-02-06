@@ -1,5 +1,6 @@
 #pragma  once
 #include <Core/Types/Types.h>
+#include <Core/Constants/Constants.h>
 namespace OoOVis
 {
 	namespace Core
@@ -9,7 +10,7 @@ namespace OoOVis
 		at the same time set the respectful rob entry ready
 		*/
 		struct Forwarding_Data {
-			bool		valid{ false };
+			u32			kind = FORWARDING_DATA_INVALID;
 			data_t		produced_data{};
 			u32			producer_tag{};
 		};
