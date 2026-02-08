@@ -22,23 +22,14 @@ namespace OoOVis
 			//DIVIDER
 			//LOAD_STORE
 			//BRANCH
-			if (issued_entries[0])
-				forwarding_data.push_back(Execution_Unit_Adder::execute(issued_entries[0]));
-			if (issued_entries[1])
-				forwarding_data.push_back(Execution_Unit_Bitwise::execute(issued_entries[1]));
-			if (issued_entries[2])
-				forwarding_data.push_back(Execution_Unit_Set_Less_Than::execute(issued_entries[2]));
-			if (issued_entries[3])
-				forwarding_data.push_back(Execution_Unit_Multiplier::execute(issued_entries[3]));
-			if (issued_entries[4])
-				forwarding_data.push_back(Execution_Unit_Divider::execute(issued_entries[4]));
+			forwarding_data.push_back(Execution_Unit_Adder::execute(issued_entries[0]));
+			forwarding_data.push_back(Execution_Unit_Bitwise::execute(issued_entries[1]));
+			forwarding_data.push_back(Execution_Unit_Set_Less_Than::execute(issued_entries[2]));
+			forwarding_data.push_back(Execution_Unit_Multiplier::execute(issued_entries[3]));
+			forwarding_data.push_back(Execution_Unit_Divider::execute(issued_entries[4]));
 			forwarding_data.push_back(Execution_Unit_Load_Store::execute_load());
-			if (issued_entries[5]) {
-				forwarding_data.push_back(Execution_Unit_Load_Store::buffer_allocation_phase(issued_entries[5]));
-			}
-			if (issued_entries[6]) {
-				Execution_Unit_Branch::execute(issued_entries[6]);
-			}
+			forwarding_data.push_back(Execution_Unit_Load_Store::buffer_allocation_phase(issued_entries[5]));
+			forwarding_data.push_back(Execution_Unit_Branch::execute(issued_entries[6]));
 			// forward the data to reservation stations
 
 			for (const auto& data : forwarding_data) {

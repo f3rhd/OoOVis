@@ -219,6 +219,28 @@ namespace OoOVis
                 );
 				Physical_Register_File_Entry entry1(Register_File::read_with_alias(branch_instruction->src1()));
 				Physical_Register_File_Entry entry2(Register_File::read_with_alias(branch_instruction->src2()));
+                switch (branch_instruction->kind()) {
+                case FrontEnd::Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BEQ:
+                    temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_EQUAL;
+                    break;
+                case FrontEnd::Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BNE:
+                    temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_NOT_EQUAL;
+                    break;
+                case FrontEnd::Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BGE:
+                    temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_OR_EQUAL_THAN;
+                    break;
+                case FrontEnd::Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BGEU:
+                    temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_OR_EQUAL_THAN_UNSIGNED;
+                    break;
+                case FrontEnd::Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BLT:
+                    temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_LESS_THAN;
+                    break;
+                case FrontEnd::Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BLTU:
+                    temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_LESS_THAN_UNSIGNED;
+                    break;
+                default:
+                    break;
+                }
 				temp_reservation_station_entry.producer_tag1 = entry1.producer_tag;
 				temp_reservation_station_entry.producer_tag2 = entry2.producer_tag;
 				temp_reservation_station_entry.src1 = entry1.data;

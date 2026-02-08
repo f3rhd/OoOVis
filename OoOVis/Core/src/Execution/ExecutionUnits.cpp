@@ -244,55 +244,55 @@ namespace OoOVis
 		Forwarding_Data Execution_Unit_Load_Store::execute_load() {
 
 			auto executable_load_index(find_load_that_is_executable());
-			if (executable_load_index.first != EXECUTABLE_LOAD_DOES_NOT_EXIST) {
+			if (executable_load_index.first == EXECUTABLE_LOAD_DOES_NOT_EXIST)
+				return { FORWARDING_DATA_INVALID };
 
-				if (executable_load_index.second == LOAD_DOES_NOT_USE_FORWARDING) { // it is a bypassable load
-					const Buffer_Entry* bypassable_load_entry{ &_load_buffer.at(executable_load_index.first) };
-					switch (bypassable_load_entry->mode) {
-					case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_WORD:
-						break;
-					case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE:
-						break;
-					case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF:
-						break;
-					case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE_UNSIGNED:
-						break;
-					case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF_UNSIGNED:
-						break;
-					}
-					data_t write_data{DCache::read(bypassable_load_entry->mode,bypassable_load_entry->calculated_address) };
-					//write to the physical register file
-					Register_File::write(bypassable_load_entry->register_id, write_data);
-					// make the rob entry ready
-					Reorder_Buffer::set_ready(bypassable_load_entry->reorder_buffer_entry_index);
-					Forwarding_Data result{ 
-						true,
-						write_data, // will be needed in forwarding to reservation stations
-						bypassable_load_entry->producer_tag, // will be needed in forwarding logic 
-					};
-#ifdef DEBUG_PRINTS
-					std::cout << std::format("Load instruction {} was executed using bypasssing.\n", bypassable_load_entry->self_id);
-#endif
-					_load_buffer.erase(_load_buffer.begin() + executable_load_index.first);
-					return result;
+			if (executable_load_index.second == LOAD_DOES_NOT_USE_FORWARDING) { // it is a bypassable load
+				const Buffer_Entry* bypassable_load_entry{ &_load_buffer.at(executable_load_index.first) };
+				switch (bypassable_load_entry->mode) {
+				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_WORD:
+					break;
+				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE:
+					break;
+				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF:
+					break;
+				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE_UNSIGNED:
+					break;
+				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF_UNSIGNED:
+					break;
 				}
-				if (executable_load_index.second != LOAD_DOES_NOT_USE_FORWARDING) {
+				data_t write_data{DCache::read(bypassable_load_entry->mode,bypassable_load_entry->calculated_address) };
+				//write to the physical register file
+				Register_File::write(bypassable_load_entry->register_id, write_data);
+				// make the rob entry ready
+				Reorder_Buffer::set_ready(bypassable_load_entry->reorder_buffer_entry_index);
+				Forwarding_Data result{ 
+					true,
+					write_data, // will be needed in forwarding to reservation stations
+					bypassable_load_entry->producer_tag, // will be needed in forwarding logic 
+				};
+#ifdef DEBUG_PRINTS
+				std::cout << std::format("Load instruction {} was executed using bypasssing.\n", bypassable_load_entry->self_id);
+#endif
+				_load_buffer.erase(_load_buffer.begin() + executable_load_index.first);
+				return result;
+			}
+			if (executable_load_index.second != LOAD_DOES_NOT_USE_FORWARDING) {
 
-					const Buffer_Entry* forwaradable_load_entry{ &_load_buffer[executable_load_index.first] };
-					const Buffer_Entry* store_buffer_entry_that_is_forwarded_from{ &_store_buffer[executable_load_index.second] };
-					Register_File::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
-					Reorder_Buffer::set_ready(forwaradable_load_entry->reorder_buffer_entry_index);
-					Forwarding_Data result(
-						true,
-						store_buffer_entry_that_is_forwarded_from->register_data, // will be needed in forwarding to reservation stations
-						forwaradable_load_entry->producer_tag // will be needed in forwarding logic 
-					);
+				const Buffer_Entry* forwaradable_load_entry{ &_load_buffer[executable_load_index.first] };
+				const Buffer_Entry* store_buffer_entry_that_is_forwarded_from{ &_store_buffer[executable_load_index.second] };
+				Register_File::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
+				Reorder_Buffer::set_ready(forwaradable_load_entry->reorder_buffer_entry_index);
+				Forwarding_Data result(
+					true,
+					store_buffer_entry_that_is_forwarded_from->register_data, // will be needed in forwarding to reservation stations
+					forwaradable_load_entry->producer_tag // will be needed in forwarding logic 
+				);
 #ifdef DEBUG_PRINTS
-					std::cout << std::format("Load instruction {} was executed using forwarding from store instruction {}.\n", forwaradable_load_entry->self_id,store_buffer_entry_that_is_forwarded_from->self_id);
+				std::cout << std::format("Load instruction {} was executed using forwarding from store instruction {}.\n", forwaradable_load_entry->self_id,store_buffer_entry_that_is_forwarded_from->self_id);
 #endif
-					_load_buffer.erase(_load_buffer.begin() +  executable_load_index.first);
-					return result;
-				}
+				_load_buffer.erase(_load_buffer.begin() +  executable_load_index.first);
+				return result;
 			}
 			return { FORWARDING_DATA_INVALID }; // we cant do anything
 		}
@@ -346,6 +346,12 @@ namespace OoOVis
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_THAN:
 				actual_taken = source_entry->src1.signed_ > source_entry->src2.signed_;
 				break;
+			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_OR_EQUAL_THAN:
+				actual_taken = source_entry->src1.signed_ >= source_entry->src2.signed_;
+				break;
+			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_OR_EQUAL_THAN_UNSIGNED:
+				actual_taken = source_entry->src1.unsigned_ >= source_entry->src2.unsigned_;
+				break;
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_LESS_THAN_UNSIGNED:
 				actual_taken = source_entry->src1.unsigned_ < source_entry->src2.unsigned_;
 				break;
@@ -361,7 +367,7 @@ namespace OoOVis
 			Fetch_Unit::update_pattern_history_table(source_entry->instruction_id, actual_taken);
 
 			target_address = source_entry->branch_target;
-			bool prediction{ Fetch_Unit::get_prediction(source_entry->instruction_id) };
+			bool prediction{ Fetch_Unit::get_prediction(source_entry->instruction_id)  && Fetch_Unit::has_btb_entry(source_entry->instruction_id)};
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			if (prediction == actual_taken) {
 				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, false);

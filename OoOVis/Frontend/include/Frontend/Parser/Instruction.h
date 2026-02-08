@@ -177,6 +177,7 @@ namespace OoOVis {
 			memory_addr_t target_addr() const override { return _target_addr; }
 			void set_target_addr(memory_addr_t label_id) { _target_addr = label_id; };
 			FLOW_TYPE flow() const override { return FLOW_TYPE::BRANCH_CONDITIONAL; }
+			BRANCH_INSTRUCTION_TYPE kind() const { return _type; }
 			reg_id_t src1() const { return _src1_reg; }
 			reg_id_t src2() const { return _src2_reg; }
 			//branch_instruction_id_t id() const { return _id; }

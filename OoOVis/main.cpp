@@ -19,16 +19,12 @@ int main(int argc, char** argv) {
 		Execution_Stage::issue_and_execute();
 		Fetch_Unit::increment_counter_by(program_counter_increment);
 		program_counter_increment = 0;
-		Fetch_Group fetch_group(Fetch_Unit::fetch());
-		if (fetch_group.first_instruction.first && !Reorder_Buffer::full())
-			if (dispatcher.dispatch_instruction(*fetch_group.first_instruction.first, fetch_group.first_instruction.second))
-				program_counter_increment++;
-		if (fetch_group.second_instruction.first && !Reorder_Buffer::full())
-			if (dispatcher.dispatch_instruction(*fetch_group.second_instruction.first, fetch_group.second_instruction.second))
-				program_counter_increment++;
-		if (fetch_group.third_instruction.first && !Reorder_Buffer::full())
-			if(dispatcher.dispatch_instruction(*fetch_group.third_instruction.first,fetch_group.third_instruction.second))
-				program_counter_increment++;
-			
+		auto fetch_group(Fetch_Unit::fetch());
+		for (const auto& fetch : fetch_group) {
+			if (fetch.first && !Reorder_Buffer::full()) {
+				if (dispatcher.dispatch_instruction(*fetch.first, fetch.second))
+					program_counter_increment++;
+			}
+		}
 	}
 }

@@ -82,84 +82,35 @@ namespace OoOVis
 			_branch_shift_register &= (1 << BRANCH_SHIFT_REGISTER_SIZE) - 1;
 		}
 
-		Fetch_Group Fetch_Unit::fetch() {
-            std::unique_ptr<FrontEnd::Instruction>* first_instruction{};
-            std::unique_ptr<FrontEnd::Instruction>* second_instruction{};
-            std::unique_ptr<FrontEnd::Instruction>* third_instruction{};
-            memory_addr_t first_addr{};
-            memory_addr_t second_addr{};
-            memory_addr_t third_addr{};
-            memory_addr_t current_address = _program_counter;
-            if (current_address >= _instruction_cache.size() && !_stalled) {
+		fetch_group_t Fetch_Unit::fetch() {
+            fetch_group_t fetch_group(FETCH_WIDTH);
+            if (_program_counter >= _instruction_cache.size() && !_stalled) {
                 _stalled = true;
-				return { {first_instruction,first_addr},{second_instruction,second_addr},{third_instruction,third_addr} };
+                return fetch_group;
             }
-            if (current_address < _instruction_cache.size()) {
-                first_instruction = &_instruction_cache[current_address];
-                first_addr = current_address;
-				current_address++;
-            }
-            if (current_address < _instruction_cache.size()) {
-                second_instruction = &_instruction_cache[current_address];
-                second_addr = current_address;
-				current_address++;
-            }
-            if (current_address < _instruction_cache.size()) {
-                third_instruction = &_instruction_cache[current_address];
-                third_addr  = current_address;
+            for (size_t i{}; i < FETCH_WIDTH; i++) {
+                if (_program_counter < _instruction_cache.size()) {
+                    fetch_group[i].first = &_instruction_cache[_program_counter];
+                    fetch_group[i].second = _program_counter;
+                    if (fetch_group[i].first->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
+                        if (has_btb_entry(fetch_group[i].second)) {
+                            _program_counter = get_target_addr_from_btb(fetch_group[i].second);
+                            break;
+                        }
+                    }
+                    else if (fetch_group[i].first->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
+                        Register_File::take_snapshot();
+                        memory_addr_t target_address{ get_target_addr_from_btb(fetch_group[i].second) };
+                        if (get_prediction(fetch_group[i].second)) {
+                            _program_counter = target_address;
+                            break;
+                        }
+                    }
+                }
+                _program_counter++;
             }
 
-            if (first_instruction && first_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
-                if (Fetch_Unit::has_btb_entry(first_addr)) {
-                    _program_counter = Fetch_Unit::get_target_addr_from_btb(first_addr);
-                }
-                second_instruction = third_instruction = nullptr;
-                second_addr = third_addr =  0;
-            }
-            else if (second_instruction && second_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
-                if (Fetch_Unit::has_btb_entry(second_addr)) {
-                    _program_counter = Fetch_Unit::get_target_addr_from_btb(second_addr);
-                }
-                third_instruction = nullptr;
-                third_addr = 0;
-            }
-            else if (third_instruction && third_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
-                if (Fetch_Unit::has_btb_entry(third_addr)) {
-                    _program_counter = Fetch_Unit::get_target_addr_from_btb(third_addr);
-                }
-            }
-            else if (first_instruction && first_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
-                Register_File::take_snapshot();
-                if (Fetch_Unit::has_btb_entry(first_addr)) {
-                    memory_addr_t target_address = Fetch_Unit::get_target_addr_from_btb(first_addr);
-                    if (get_prediction(first_addr) == true) {
-                        _program_counter = target_address;
-                        second_instruction = third_instruction = nullptr;
-                        second_addr = third_addr = 0;
-                    }
-                }
-            }
-            else if (second_instruction && second_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
-                Register_File::take_snapshot();
-                if (Fetch_Unit::has_btb_entry(second_addr)) {
-                    memory_addr_t target_address = Fetch_Unit::get_target_addr_from_btb(second_addr);
-                    if (get_prediction(second_addr) == true) {
-                        _program_counter = target_address;
-                         third_instruction = nullptr;
-                         third_addr = 0;
-                    }
-                }
-            }
-            else if (third_instruction && third_instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
-                Register_File::take_snapshot();
-                if (Fetch_Unit::has_btb_entry(third_addr)) {
-                    memory_addr_t target_address = Fetch_Unit::get_target_addr_from_btb(third_addr);
-                    if (get_prediction(third_addr) == true) {
-                        _program_counter = target_address;
-                    }
-                }
-            }
-			return { {first_instruction,first_addr},{second_instruction,second_addr},{third_instruction,third_addr} };
+			return fetch_group;
         }
 
 
