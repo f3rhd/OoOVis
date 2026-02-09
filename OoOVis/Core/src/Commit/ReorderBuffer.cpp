@@ -8,6 +8,31 @@ namespace OoOVis
 {
 	namespace Core {
 
+		#define ROB_MISPREDICTION_RECOVERY(BUFFER_TYPE) {                                         \
+			auto branch_id = dynamic_cast<BUFFER_TYPE*>(entry)->self_id; \
+																					   \
+			_buffer[_head].reset();                                                    \
+			_head++;                                                                   \
+																					   \
+			while (                                                                    \
+				_buffer[_head] &&                                                      \
+				_buffer[_head]->origin_branch_id != Constants::NOT_SPECULATIVE &&        \
+				_buffer[_head]->origin_branch_id == branch_id                      \
+			) {                                                                        \
+				auto* current_entry = _buffer[_head].get();                            \
+																					   \
+				if (current_entry->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) { \
+					branch_id = dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(current_entry)->self_id; \
+				}                                                                      \
+				else if (current_entry->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) { \
+					branch_id = dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(current_entry)->self_id; \
+				}                                                                      \
+																					   \
+				_buffer[_head].reset();                                                \
+				_head++;                                                               \
+			}                                                                          \
+			Register_File::restore_alias_table();										\
+		}
 		std::vector<std::unique_ptr<Reorder_Buffer_Entry>> Reorder_Buffer::_buffer(Constants::REORDER_BUFFER_SIZE);
 		size_t Reorder_Buffer::_head{};
 		size_t Reorder_Buffer::_tail{};
@@ -50,15 +75,17 @@ namespace OoOVis
 				if (!entry->ready) return;
 				switch (entry->flow()) {
 				case FrontEnd::FLOW_TYPE::REGISTER:
-				case FrontEnd::FLOW_TYPE::LOAD:
-					Register_File::deallocate(dynamic_cast<Register_Reorder_Buffer_Entry*>(entry)->old_alias);
+				case FrontEnd::FLOW_TYPE::LOAD: {
+					auto entry_{ dynamic_cast<Register_Reorder_Buffer_Entry*>(entry) };
+					Register_File::deallocate((entry_)->old_alias);
 					Register_File::update_retirement_alias_table_with(
-						dynamic_cast<Register_Reorder_Buffer_Entry*>(entry)->architectural_register_id,
-						dynamic_cast<Register_Reorder_Buffer_Entry*>(entry)->new_alias
+						(entry_)->architectural_register_id,
+						(entry_)->new_alias
 					);
 					_buffer[_head].reset();
 					_head++;
 					break;
+				}
 				case FrontEnd::FLOW_TYPE::STORE:
 					Execution_Unit_Load_Store::execute_store(dynamic_cast<Store_Reorder_Buffer_Entry*>(entry)->store_id);
 					_buffer[_head].reset();
@@ -66,35 +93,23 @@ namespace OoOVis
 					break;
 				case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
 
-					if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->mispredicted) {
-						auto speculation_tag{ dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->self_id };
-						do {
-
-							_buffer[_head].reset();
-							_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
-						} while (_buffer[_head] && _buffer[_head]->speculation_id != Constants::NOT_SPECULATIVE && _buffer[_head]->speculation_id == speculation_tag);
-						Register_File::restore_alias_table(); 
-					}
+					if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->mispredicted) 
+						ROB_MISPREDICTION_RECOVERY(Branch_Conditional_Reorder_Buffer_Entry)
 					else {
 						_buffer[_head].reset();
 						_head++;
 					}
 					break;
 				case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL: {
-					Register_File::deallocate(dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->old_alias);
+					auto* entry_{ dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry) };
+					Register_File::deallocate((entry_)->old_alias);
 					Register_File::update_retirement_alias_table_with(
-						dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->architectural_register_id,
-						dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->new_alias
+						(entry_)->architectural_register_id,
+						(entry_)->new_alias
 					);
-					if (dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->mispredicted) {
-						auto speculation_tag{ dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->self_id };
-						do {
-
-							_buffer[_head].reset();
-							_head++;
-						} while (_buffer[_head] && _buffer[_head]->speculation_id != Constants::NOT_SPECULATIVE && _buffer[_head]->speculation_id == speculation_tag);
-						Register_File::restore_alias_table(); 
-					} 
+					if ((entry_)->mispredicted) 
+						ROB_MISPREDICTION_RECOVERY(Branch_Unconditional_Reorder_Buffer_Entry)
+		
 					else {
 						_buffer[_head].reset();
 						_head++;

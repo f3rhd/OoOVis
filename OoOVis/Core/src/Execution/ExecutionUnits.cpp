@@ -386,14 +386,14 @@ namespace OoOVis
 				Fetch_Group::group = std::vector<Fetch_Element>(3);
 				if (actual_taken == true && prediction == false) {
 					Fetch_Unit::set_program_counter(target_address);
-					if (!Reservation_Station_Pool::flush_mispredicted(source_entry->instruction_id))
-						Fetch_Unit::reset_speculation_id();
+					Reservation_Station_Pool::flush_mispredicted(source_entry->instruction_id);
+						//Fetch_Unit::reset_speculation_id();
 				}
 				else {
 
 					Fetch_Unit::set_program_counter(source_entry->instruction_id + 1);
-					if(!Reservation_Station_Pool::flush_mispredicted(source_entry->branch_target - 1))
-						Fetch_Unit::reset_speculation_id();
+					Reservation_Station_Pool::flush_mispredicted(source_entry->branch_target - 1);
+						//Fetch_Unit::reset_speculation_id();
 				}
 			}
 			return { Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };

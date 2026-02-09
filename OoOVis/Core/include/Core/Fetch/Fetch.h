@@ -34,7 +34,7 @@ namespace OoOVis
             static std::unordered_map<u32, u32>                        _pattern_history_table;
             static memory_addr_t                                       _program_counter;
             static memory_addr_t                                       _branch_shift_register;
-            static memory_addr_t                                       _speculation_id;
+            static memory_addr_t                                       _last_branch_id;
         };
         
     } // namespace Core

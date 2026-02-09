@@ -10,7 +10,7 @@ namespace OoOVis
         std::unordered_map<memory_addr_t, memory_addr_t>    Fetch_Unit::_branch_target_buffer{};
         std::unordered_map<u32, u32>                        Fetch_Unit::_pattern_history_table{};
         bool Fetch_Unit::_next_fetch_is_set{ false };
-        memory_addr_t Fetch_Unit::_speculation_id = Constants::NOT_SPECULATIVE;
+        memory_addr_t Fetch_Unit::_last_branch_id = Constants::NOT_SPECULATIVE;
 
         std::vector<Fetch_Element> Fetch_Group::group{};
         memory_addr_t Fetch_Unit::_branch_shift_register{};
@@ -34,12 +34,13 @@ namespace OoOVis
         }
 
         void Fetch_Unit::set_program_counter(memory_addr_t next) {
+            _last_branch_id = Constants::NOT_SPECULATIVE;
             _next_fetch_is_set = true;
             _program_counter = next;
         }
 
 		void Fetch_Unit::reset_speculation_id() {
-            _speculation_id = Constants::NOT_SPECULATIVE;
+            _last_branch_id = Constants::NOT_SPECULATIVE;
 		}
 
 		memory_addr_t Fetch_Unit::get_program_counter() {
@@ -92,15 +93,16 @@ namespace OoOVis
                 if (temp_address < _instruction_cache.size()) {
                     fetch_element.instruction = &_instruction_cache[temp_address];
                     fetch_element.address = temp_address;
-                    fetch_element.speculation_id = _speculation_id;
+                    fetch_element.speculation_id = _last_branch_id;
                     if (fetch_element.instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
                         switch (dynamic_cast<FrontEnd::Jump_Instruction*>(fetch_element.instruction->get())->kind()) {
                         case FrontEnd::Jump_Instruction::JUMP_INSTRUCTION_TYPE::JAL: // this one immediately jumps to the label
                             _program_counter = fetch_element.instruction->get()->target_addr();
+							_last_branch_id = temp_address;
                             _next_fetch_is_set = true;
                             return fetch_group;
                         case FrontEnd::Jump_Instruction::JUMP_INSTRUCTION_TYPE::JALR: 
-							_speculation_id = temp_address;
+							_last_branch_id = temp_address;
                             break;
 					    /*JALR instruction uses rs1 and imm value to calculate the target address we cant do that here we are gonna let
                         the fetch unit to continue fetching from wrong control block we are going to do recovery in the execution phase*/
@@ -109,7 +111,7 @@ namespace OoOVis
                         }
                     }
                     else if (fetch_element.instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
-						_speculation_id = temp_address;
+						_last_branch_id = temp_address;
                         if (has_btb_entry(fetch_element.address)) {
 							memory_addr_t target_address{ get_target_addr_from_btb(fetch_element.address) };
 							if (get_prediction(fetch_element.address)) {
