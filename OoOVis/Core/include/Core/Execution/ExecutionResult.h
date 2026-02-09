@@ -10,9 +10,9 @@ namespace OoOVis
 		at the same time set the respectful rob entry ready
 		*/
 		struct Forwarding_Data {
-			u32			kind = FORWARDING_DATA_INVALID;
+			u32			kind = Constants::FORWARDING_DATA_INVALID;
 			data_t		produced_data{};
 			u32			producer_tag{};
 		};
-	}
-}
+	 } // namespace Core
+} // namespace OoOVis

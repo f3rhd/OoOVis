@@ -60,18 +60,19 @@ namespace OoOVis
 			EXECUTION_UNIT_MODE mode = EXECUTION_UNIT_MODE::UNKNOWN;
 			data_t src1 = {};
 			data_t src2 = {};
-			u32    producer_tag1 = NO_PRODUCER_TAG;
-			u32    producer_tag2 = NO_PRODUCER_TAG;
-			u32    self_tag = NO_PRODUCER_TAG;
-			reg_id_t destination_register_id = INVALID_REGISTER_ID;
+			u32    producer_tag1 = Constants::NO_PRODUCER_TAG;
+			u32    producer_tag2 = Constants::NO_PRODUCER_TAG;
+			u32    self_tag = Constants::NO_PRODUCER_TAG;
+			reg_id_t destination_register_id = Constants::INVALID_PHYSICAL_REGISTER_ID;
 			u64	   reorder_buffer_entry_index = 0;
 			bool   ready = false;
 			bool   busy = false;
+			bool   destination_register_id_as_ofsset = false;
 			u32    instruction_id = 0;
-			reg_id_t store_source_register_id = INVALID_REGISTER_ID; // will need this in load forwarding and bypassing
+			reg_id_t store_source_register_id = Constants::INVALID_PHYSICAL_REGISTER_ID; // will need this in load forwarding and bypassing
 			memory_addr_t branch_target = 0;
 			//branch_instruction_id_t branch_id = 0;
 		};
 
-    }
-}
+    } // namespace Core
+} // namespace OoOVis

@@ -6,27 +6,19 @@ namespace OoOVis
     namespace Core
     {
         memory_addr_t Fetch_Unit::_program_counter{};
-
         std::vector<std::unique_ptr<FrontEnd::Instruction>> Fetch_Unit::_instruction_cache{};
         std::unordered_map<memory_addr_t, memory_addr_t>    Fetch_Unit::_branch_target_buffer{};
         std::unordered_map<u32, u32>                        Fetch_Unit::_pattern_history_table{};
-        bool Fetch_Unit::_stalled{};
+        bool Fetch_Unit::_next_fetch_is_set{ false };
+
+        fetch_group_t Fetch_Group::group{};
         memory_addr_t Fetch_Unit::_branch_shift_register{};
+        bool Fetch_Unit::next_fetch_is_set() {
+            return _next_fetch_is_set;
+        }
         void Fetch_Unit::init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions) {
             _instruction_cache = std::move(instructions);
         }
-
-        void Fetch_Unit::stall() {
-            _stalled = true;
-        }
-
-        void Fetch_Unit::continue_fetching() {
-            _stalled = false;
-        }
-
-		void Fetch_Unit::increment_counter_by(memory_addr_t value) {
-            _program_counter += value;
-		}
 
 		bool Fetch_Unit::get_prediction(memory_addr_t branch_instruction_id) {
             memory_addr_t pht_index{ _branch_shift_register ^ branch_instruction_id };
@@ -41,6 +33,7 @@ namespace OoOVis
 		}
 
 		void Fetch_Unit::set_program_counter(memory_addr_t next) {
+            _next_fetch_is_set = true;
             _program_counter = next;
         }
 
@@ -79,40 +72,48 @@ namespace OoOVis
 			if (actual) {
 				_branch_shift_register |= 1;
 			}
-			_branch_shift_register &= (1 << BRANCH_SHIFT_REGISTER_SIZE) - 1;
+			_branch_shift_register &= (1 << Constants::BRANCH_SHIFT_REGISTER_SIZE) - 1;
 		}
 
 		fetch_group_t Fetch_Unit::fetch() {
-            fetch_group_t fetch_group(FETCH_WIDTH);
-            if (_program_counter >= _instruction_cache.size() && !_stalled) {
-                _stalled = true;
+            fetch_group_t fetch_group(Constants::FETCH_WIDTH);
+            if (_program_counter >= _instruction_cache.size()) {
                 return fetch_group;
             }
-            for (size_t i{}; i < FETCH_WIDTH; i++) {
-                if (_program_counter < _instruction_cache.size()) {
-                    fetch_group[i].first = &_instruction_cache[_program_counter];
-                    fetch_group[i].second = _program_counter;
+            memory_addr_t temp_address{ _program_counter };
+            for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {
+                _next_fetch_is_set = false;
+                if (temp_address < _instruction_cache.size()) {
+                    fetch_group[i].first = &_instruction_cache[temp_address];
+                    fetch_group[i].second = temp_address;
                     if (fetch_group[i].first->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
                         if (has_btb_entry(fetch_group[i].second)) {
                             _program_counter = get_target_addr_from_btb(fetch_group[i].second);
+                            _next_fetch_is_set = true;
                             break;
                         }
                     }
                     else if (fetch_group[i].first->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
-                        Register_File::take_snapshot();
-                        memory_addr_t target_address{ get_target_addr_from_btb(fetch_group[i].second) };
-                        if (get_prediction(fetch_group[i].second)) {
-                            _program_counter = target_address;
-                            break;
+                        if (has_btb_entry(fetch_group[i].second)) {
+							memory_addr_t target_address{ get_target_addr_from_btb(fetch_group[i].second) };
+							if (get_prediction(fetch_group[i].second)) {
+								_program_counter = target_address;
+								_next_fetch_is_set = true;
+								break;
+							}
                         }
                     }
                 }
-                _program_counter++;
+                temp_address++;
             }
 
 			return fetch_group;
         }
 
+
+		void Fetch_Unit::adjust_program_counter_based_on_successful_dispatches(memory_addr_t amount) {
+            _program_counter +=  amount;
+		}
 
 	} // namespace Core
 

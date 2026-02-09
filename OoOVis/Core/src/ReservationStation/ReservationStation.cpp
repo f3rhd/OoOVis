@@ -9,7 +9,7 @@ namespace OoOVis
         Reservation_Station::Reservation_Station(RESERVATION_STATION_ID id) {
             static u32 tag_counter{};
             _id = id;
-            for (u32 i(0);i < RESERVATION_STATION_SIZE;i++) {
+            for (u32 i(0);i < Constants::RESERVATION_STATION_SIZE;i++) {
                 _buffer.emplace_back();
                 _buffer.back().self_tag = ++tag_counter;
             }
@@ -26,9 +26,7 @@ namespace OoOVis
         }
 
         const Reservation_Station_Entry* Reservation_Station::issue() {
-            if (_id == RESERVATION_STATION_ID::LOAD_STORE) {
-                std::ranges::sort(_buffer, [](const Reservation_Station_Entry& a, const Reservation_Station_Entry& b) {return a.instruction_id < b.instruction_id; });
-            }
+			std::ranges::sort(_buffer, [](const Reservation_Station_Entry& a, const Reservation_Station_Entry& b) {return a.instruction_id < b.instruction_id; });
             for (const auto& entry : _buffer) {
                 if (entry.ready && entry.busy)
                     return &entry;

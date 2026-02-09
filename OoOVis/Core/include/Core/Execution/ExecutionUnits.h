@@ -61,8 +61,8 @@ namespace OoOVis
 			static void				execute_store(memory_addr_t store_id);
 		private:
 			static std::pair<size_t,size_t>	find_load_that_is_executable(); // .first stands for executabel load if it can be executed by forwarding .second will hold the store buffer entry index that is being forwarded from
-			static bool						store_buffer_is_full() { return _store_buffer.size() >= STORE_BUFFER_SIZE; }
-			static bool						load_buffer_is_full() { return _load_buffer.size() >= LOAD_BUFFER_SIZE; }
+			static bool						store_buffer_is_full() { return _store_buffer.size() >= Constants::STORE_BUFFER_SIZE; }
+			static bool						load_buffer_is_full() { return _load_buffer.size() >= Constants::LOAD_BUFFER_SIZE; }
 		private:
 			static std::vector<Buffer_Entry> _store_buffer;
 			static std::vector<Buffer_Entry> _load_buffer;

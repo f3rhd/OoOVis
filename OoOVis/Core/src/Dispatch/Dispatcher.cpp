@@ -42,32 +42,36 @@ namespace OoOVis
 
 				temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
 				temp_reservation_station_entry.src1 = entry.data;
+                // store the old alias before renaming
+                auto old_alias{ Register_File::aliasof(register_instruction->dest_reg()) };
+                Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() }; 
+                reg_id_t destination_physical_register_id{ Register_File::allocate_physical_register_for(register_instruction->dest_reg(), allocated_reservation_station_entry->self_tag) }; // we do the fulness checking before calling this, so we good
                 // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
                 auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
-                    std::make_unique<Register_Reorder_Buffer_Entry>(
-                        register_instruction->flow(),
-                        Register_File::aliasof(register_instruction->dest_reg())
-                    )
-                ) };
-                Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() }; 
-                // store the old alias before renaming
-                reg_id_t destination_physical_register_id{ Register_File::allocate_physical_register_for(register_instruction->dest_reg(), allocated_reservation_station_entry->self_tag) }; // we do the fulness checking before calling this, so we good
+						std::make_unique<Register_Reorder_Buffer_Entry>(
+							register_instruction->flow(),
+							register_instruction->dest_reg(),
+							old_alias,
+							destination_physical_register_id
+						)
+					) 
+                };
                 if (register_instruction->uses_immval()) {
                     temp_reservation_station_entry.src2.signed_ = register_instruction->src2().imm_val;
-                    temp_reservation_station_entry.producer_tag2 = NO_PRODUCER_TAG;
+                    temp_reservation_station_entry.producer_tag2 = Constants::NO_PRODUCER_TAG;
                 }
                 else {
 					temp_reservation_station_entry.src2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).data;
                     temp_reservation_station_entry.producer_tag2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).producer_tag;
                 }
-				temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
+				temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
                 temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
                 temp_reservation_station_entry.instruction_id = instruction_id;
 				#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched instructions[{}].\n", instruction_id);
+                std::cout << std::format("Dispatched Instructions[{}] to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.self_tag);
 				#endif
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
             }
@@ -117,19 +121,22 @@ namespace OoOVis
                 temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
                 temp_reservation_station_entry.destination_register_id = load_instruction->dest_reg();
                 temp_reservation_station_entry.src2.signed_ = (load_instruction->offset());
-                temp_reservation_station_entry.producer_tag2 = NO_PRODUCER_TAG;
-                temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
+                temp_reservation_station_entry.producer_tag2 = Constants::NO_PRODUCER_TAG;
+                temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
 
+                auto old_alias{ Register_File::aliasof(load_instruction->dest_reg()) };
+                Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() };
+			    reg_id_t destination_physical_register_id = Register_File::allocate_physical_register_for(load_instruction->dest_reg(),allocated_reservation_station_entry->self_tag);
                 // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
                 auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
                     std::make_unique<Register_Reorder_Buffer_Entry>(
                         load_instruction->flow(),
-                        Register_File::aliasof(load_instruction->dest_reg())
+                        load_instruction->dest_reg(),
+                        old_alias,
+                        destination_physical_register_id
                     )
                 )
                 };
-                Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() };
-			    reg_id_t destination_physical_register_id = Register_File::allocate_physical_register_for(load_instruction->dest_reg(),allocated_reservation_station_entry->self_tag);
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
@@ -137,7 +144,7 @@ namespace OoOVis
                 temp_reservation_station_entry.instruction_id = instruction_id;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
 				#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched instructions[{}]\n", instruction_id);
+                std::cout << std::format("Dispatched Instructions[{}] to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.self_tag);
 				#endif
 
             }
@@ -180,10 +187,11 @@ namespace OoOVis
                 temp_reservation_station_entry.src1 = src1_entry.data;
                 temp_reservation_station_entry.src2 = src2_entry.data;
                 temp_reservation_station_entry.destination_register_id = static_cast<reg_id_t>(store_instruction->offset()); // the offset lives in destination id here
+                temp_reservation_station_entry.destination_register_id_as_ofsset = true;
                 temp_reservation_station_entry.store_source_register_id = Register_File::aliasof(store_instruction->src2());
                 temp_reservation_station_entry.self_tag = allocated_reservation_station->self_tag;
                 temp_reservation_station_entry.busy = true;
-                temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
+                temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
                 // when the store instruction is in the store buffer it will wait a signal from reorder buffer to finish its execution architecturally, that is why we need store_id
                 temp_reservation_station_entry.reorder_buffer_entry_index = static_cast<u32>(Reorder_Buffer::allocate(
 						std::make_unique<Store_Reorder_Buffer_Entry>(
@@ -195,7 +203,7 @@ namespace OoOVis
                 temp_reservation_station_entry.instruction_id = instruction_id; // this id will be passed down to the entry in the store buffer
                 *allocated_reservation_station = temp_reservation_station_entry;
 #ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched Instructions[{}]\n", instruction_id);
+                std::cout << std::format("Dispatched Instructions[{}] to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.self_tag);
 #endif
             }
             else {
@@ -245,16 +253,14 @@ namespace OoOVis
 				temp_reservation_station_entry.producer_tag2 = entry2.producer_tag;
 				temp_reservation_station_entry.src1 = entry1.data;
 				temp_reservation_station_entry.src2 = entry2.data;
-				temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == NO_PRODUCER_TAG;
+				temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
 				// execution stage will need these for branch instruction
-				//temp_reservation_station_entry.branch_id = branch_instruction->id();
 				temp_reservation_station_entry.branch_target = branch_instruction->target_addr();
-				//temp_reservation_station_entry.fallthrough = branch_instruction->fallthrough();
 				temp_reservation_station_entry.instruction_id = instruction_id;
 				*allocated_reservation_station_entry = temp_reservation_station_entry;
-				#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched instructions[{}] to ReservationStationPool[{}][{}]\n", instruction_id, static_cast<u32>(RESERVATION_STATION_ID::BRANCH), temp_reservation_station_entry.self_tag);
-				#endif
+#ifdef DEBUG_PRINTS
+                std::cout << std::format("Dispatched Instructions[{}] to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.self_tag);
+#endif
 
             }
             else {
@@ -283,14 +289,16 @@ namespace OoOVis
 					entry = Register_File::read_with_alias(jump_instruction->src1());
                     temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
                     temp_reservation_station_entry.src1 = entry.data;
-                    temp_reservation_station_entry.producer_tag2 = NO_PRODUCER_TAG;
+                    temp_reservation_station_entry.producer_tag2 = Constants::NO_PRODUCER_TAG;
                     temp_reservation_station_entry.src2.signed_ = jump_instruction->offset();
-                    temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == NO_PRODUCER_TAG;
+                    temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG;
                     temp_reservation_station_entry.destination_register_id = destination_pysical_register_id;
 					target_reorder_buffer_entry_index = Reorder_Buffer::allocate(
-						std::make_unique<Branch_Unconditional_Reorder_Buffer_Entry>(
+						std::make_unique<Register_Reorder_Buffer_Entry>(
 							jump_instruction->flow(),
-                            old_alias
+                            jump_instruction->dest_reg(),
+                            old_alias,
+                            destination_pysical_register_id
 						)
 					);
 					temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
@@ -298,9 +306,11 @@ namespace OoOVis
                 case FrontEnd::Jump_Instruction::JUMP_INSTRUCTION_TYPE::JAL:
                     temp_reservation_station_entry.ready = true;
 					target_reorder_buffer_entry_index = Reorder_Buffer::allocate(
-						std::make_unique<Branch_Unconditional_Reorder_Buffer_Entry>(
+						std::make_unique<Register_Reorder_Buffer_Entry>(
 							jump_instruction->flow(),
-                            old_alias
+                            jump_instruction->dest_reg(),
+                            old_alias,
+                            destination_pysical_register_id
 						)
 					);
                     temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
@@ -314,7 +324,7 @@ namespace OoOVis
                 temp_reservation_station_entry.instruction_id = instruction_id;
 				*allocated_reservation_station_entry = temp_reservation_station_entry;
 				#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched instructions[{}] to ReservationStationPool[{}][{}]\n", instruction_id, static_cast<u32>(RESERVATION_STATION_ID::BRANCH), temp_reservation_station_entry.self_tag);
+                std::cout << std::format("Dispatched Instructions[{}] to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.self_tag);
 				#endif
             }
             else {

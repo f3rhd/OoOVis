@@ -1,5 +1,6 @@
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/Constants/Constants.h>
+#include <Core/RegisterFile/RegisterFile.h>
 #include <iostream>
 #include <format>
 namespace OoOVis
@@ -16,12 +17,19 @@ namespace OoOVis
 				{RESERVATION_STATION_ID::BRANCH}
 		};
 
-		void Reservation_Station_Pool::flush(memory_addr_t id) {
+		void Reservation_Station_Pool::flush_mispredicted(memory_addr_t id) {
 			for (auto& station : _pool) {
 				for (auto& entry : station.get()) {
-					if (entry.instruction_id > id) {
-						entry.busy = false;
-						entry.ready = false;
+					if (entry.busy && entry.instruction_id > id) {
+#ifdef DEBUG_PRINTS
+						std::cout << std::format("Dealloacted Instructions[{}] from ReservationStation Entry : {} due to misprediction.\n", entry.instruction_id,entry.self_tag);
+#endif
+						if (entry.destination_register_id != Constants::INVALID_PHYSICAL_REGISTER_ID && !entry.destination_register_id_as_ofsset) {
+							Register_File::deallocate(entry.destination_register_id);
+						}
+						auto copy_tag{ entry.self_tag };
+						entry = Reservation_Station_Entry{};
+						entry.self_tag = copy_tag;
 					}
 				}
 			}
@@ -31,18 +39,18 @@ namespace OoOVis
 			for (auto&  station : _pool) {
 				for (auto& entry : station.get()) {
 					if (entry.producer_tag1 == producer_tag) {
-						entry.producer_tag1 = NO_PRODUCER_TAG;
+						entry.producer_tag1 = Constants::NO_PRODUCER_TAG;
 						entry.src1 = produced_data;
-						entry.ready = entry.producer_tag1 == NO_PRODUCER_TAG && entry.producer_tag2 == NO_PRODUCER_TAG;
+						entry.ready = entry.producer_tag1 == Constants::NO_PRODUCER_TAG && entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
 						std::cout << std::format("Forwared data:{} to Instructions[{}] .\n", produced_data.signed_, entry.instruction_id);
 #endif
 
 					}
 					if (entry.producer_tag2 == producer_tag) {
-						entry.producer_tag2 = NO_PRODUCER_TAG;
+						entry.producer_tag2 = Constants::NO_PRODUCER_TAG;
 						entry.src2 = produced_data;
-						entry.ready = entry.producer_tag1 == NO_PRODUCER_TAG && entry.producer_tag2 == NO_PRODUCER_TAG;
+						entry.ready = entry.producer_tag1 == Constants::NO_PRODUCER_TAG && entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
 						std::cout << std::format("Forwared data:{} to Instructions[{}].\n", produced_data.signed_,entry.instruction_id);
 #endif
@@ -57,8 +65,9 @@ namespace OoOVis
 #ifdef DEBUG_PRINTS
 						std::cout << std::format("Deallocated Instructions[{}] from ReservationStation.\n",entry.instruction_id);
 #endif
-						entry.busy = false;
-						entry.ready = false;
+						auto copy_tag{ entry.self_tag };
+						entry = Reservation_Station_Entry{};
+						entry.self_tag = copy_tag;
 						break;
 					}
 				}
