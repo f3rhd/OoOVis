@@ -17,8 +17,7 @@ namespace OoOVis
 				{RESERVATION_STATION_ID::BRANCH}
 		};
 
-		bool Reservation_Station_Pool::flush_mispredicted(memory_addr_t id) {
-			bool flushed_something{ false };
+		void Reservation_Station_Pool::flush_mispredicted(memory_addr_t id) {
 			for (auto& station : _pool) {
 				for (auto& entry : station.get()) {
 					if (entry.busy && entry.instruction_id > id) {
@@ -31,11 +30,9 @@ namespace OoOVis
 						auto copy_tag{ entry.self_tag };
 						entry = Reservation_Station_Entry{};
 						entry.self_tag = copy_tag;
-						flushed_something = true;
 					}
 				}
 			}
-			return flushed_something;
 		}
 
 		void Reservation_Station_Pool::wakeup(u32 producer_tag, data_t produced_data) {
