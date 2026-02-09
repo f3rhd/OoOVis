@@ -12,19 +12,20 @@ namespace OoOVis
 	namespace Core
 	{
 		std::map<reg_id_t, Physical_Register_File_Entry> Register_File::_physical_register_file{};
-		std::map<reg_id_t, reg_id_t> Register_File::_register_alias_table{};
-		std::map<reg_id_t, reg_id_t> Register_File::_snapshot_register_alias_table{};
+		std::map<reg_id_t, reg_id_t> Register_File::_frontend_register_alias_table{};
+		std::map<reg_id_t, reg_id_t> Register_File::_retirement_alias_table{};
 
 		void Register_File::init() {
-			for (reg_id_t i = 0; i < PHYSICAL_REGISTER_FILE_SIZE; i++) {
+			for (reg_id_t i = 0; i < Constants::PHYSICAL_REGISTER_FILE_SIZE; i++) {
 				_physical_register_file.emplace(i, Physical_Register_File_Entry());
 				if (i >= 0 && i <= 31) {
 					_physical_register_file[i].allocated = true;
 				}
 			}
-			for (reg_id_t j = 0; j < REGISTER_ALIAS_TABLE_SIZE; j++) {
-				_register_alias_table.emplace(j, j);
+			for (reg_id_t j = 0; j < Constants::REGISTER_ALIAS_TABLE_SIZE; j++) {
+				_frontend_register_alias_table.emplace(j, j);
 			}
+			_retirement_alias_table = _frontend_register_alias_table;
 		}
 
 		bool Register_File::full() {
@@ -34,15 +35,26 @@ namespace OoOVis
 			return true;
 		}
 
-		void Register_File::take_snapshot() {
-			_snapshot_register_alias_table = _register_alias_table;
-		}
 
 		void Register_File::restore_alias_table() {
-			_register_alias_table = _snapshot_register_alias_table;
+			//for (reg_id_t i{}; i < ARCHITECTURAL_REGISTER_AMOUNT; i++) {
+			//	if (_snapshot_register_alias_table[i] != _register_alias_table[i]) {
+			//		Register_File::deallocate(_register_alias_table[i]);
+			//	}
+			//	_register_alias_table[i] = _snapshot_register_alias_table[i];
+			//}
+			_frontend_register_alias_table = _retirement_alias_table;
+#ifdef DEBUG_PRINTS
+			std::cout << std::format("Register alias table was restored due to mis-prediction.\n");
+#endif
 		}
+
+		void Register_File::update_retirement_alias_table_with(reg_id_t architectural, reg_id_t physical) {
+			_retirement_alias_table.insert_or_assign(architectural, physical);
+		}
+
 		void Register_File::deallocate(reg_id_t physical_register_id) {
-			if (physical_register_id == INVALID_REGISTER_ID) {
+			if (physical_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to deallocate invalid register.\n"; 
 				exit(EXIT_FAILURE); // @VisitLater
 			}
@@ -52,18 +64,19 @@ namespace OoOVis
 				exit(EXIT_FAILURE); // @VisitLater
 			}
 			_physical_register_file[physical_register_id].allocated = false;
+			_physical_register_file[physical_register_id].producer_tag = Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
-			std::cout << std::format("Reorder Buffer deallocated P{}.\n", physical_register_id);
+			std::cout << std::format("Register File deallocated P{}.\n", physical_register_id);
 #endif
 		}
 
 		void Register_File::write(reg_id_t physical_register_id, data_t data) {
-			if (physical_register_id == INVALID_REGISTER_ID) {
+			if (physical_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to write to an invalid register.\n";
 				exit(EXIT_FAILURE); // @VisitLater
 			}
 			_physical_register_file[physical_register_id].data = data;
-			_physical_register_file[physical_register_id].producer_tag = NO_PRODUCER_TAG;
+			_physical_register_file[physical_register_id].producer_tag = Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
 			std::cout << std::format(
 				"PhysicalRegisterFile[{}] <- {}\n",
@@ -78,7 +91,7 @@ namespace OoOVis
 				auto& entry = it->second;
 				auto& key = it->first;
 				if (!entry.allocated) {
-					_register_alias_table[architectural_register_id] = key;
+					_frontend_register_alias_table[architectural_register_id] = key;
 					entry.allocated = true;
 					entry.producer_tag = producer_tag;
 #ifdef DEBUG_PRINTS
@@ -87,16 +100,16 @@ namespace OoOVis
 					return key;
 				}
 			}
-			return INVALID_REGISTER_ID;
+			return Constants::INVALID_PHYSICAL_REGISTER_ID;
 		}
 
 		reg_id_t Register_File::aliasof(reg_id_t architectural_register_id)
 		{
-			if (architectural_register_id == INVALID_REGISTER_ID) {
+			if (architectural_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to read invalid register.";
 				exit(EXIT_FAILURE); // @VisitLater
 			}
-			return _register_alias_table[architectural_register_id];
+			return _frontend_register_alias_table[architectural_register_id];
 		}
 
 		Physical_Register_File_Entry Register_File::read_with_alias(reg_id_t architectural_register_id) {

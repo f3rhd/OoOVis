@@ -17,9 +17,9 @@ namespace OoOVis
 		Forwarding_Data Execution_Unit_Adder::execute(const Reservation_Station_Entry* source_entry)
 		{
 			if (!source_entry)
-				return { FORWARDING_DATA_INVALID };
+				return { Constants::FORWARDING_DATA_INVALID };
 			Forwarding_Data data{};
-			data.kind = FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
+			data.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
 			data.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_ADD:
@@ -45,9 +45,9 @@ namespace OoOVis
 
 		Forwarding_Data Execution_Unit_Bitwise::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
-				return { FORWARDING_DATA_INVALID };
+				return { Constants::FORWARDING_DATA_INVALID };
 			Forwarding_Data result{};
-			result.kind = FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
+			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::BITWISE_AND:
@@ -80,9 +80,9 @@ namespace OoOVis
 
 		Forwarding_Data Execution_Unit_Set_Less_Than::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
-				return { FORWARDING_DATA_INVALID };
+				return { Constants::FORWARDING_DATA_INVALID };
 			Forwarding_Data result{};
-			result.kind = FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
+			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
 			result.producer_tag = source_entry->self_tag;
 			result.produced_data.signed_ = source_entry->src1.signed_ < source_entry->src2.signed_ ? 1 : 0;
 			Register_File::write(source_entry->destination_register_id, result.produced_data);
@@ -92,9 +92,9 @@ namespace OoOVis
 
 		Forwarding_Data Execution_Unit_Multiplier::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
-				return { FORWARDING_DATA_INVALID };
+				return { Constants::FORWARDING_DATA_INVALID };
 			Forwarding_Data result{};
-			result.kind = FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
+			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_SIGNED:
@@ -126,9 +126,9 @@ namespace OoOVis
 
 		Forwarding_Data Execution_Unit_Divider::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
-				return { FORWARDING_DATA_INVALID };
+				return { Constants::FORWARDING_DATA_INVALID };
 			Forwarding_Data result{};
-			result.kind = FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
+			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_SIGNED:
@@ -156,12 +156,12 @@ namespace OoOVis
 		Forwarding_Data Execution_Unit_Load_Store::buffer_allocation_phase(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
-				return { FORWARDING_DATA_INVALID };
+				return { Constants::FORWARDING_DATA_INVALID };
 			memory_addr_t address{}; ;
 			data_t        register_data{}; ;
-			if (source_entry->store_source_register_id != INVALID_REGISTER_ID) {
+			if (source_entry->store_source_register_id != Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				if (store_buffer_is_full())
-					return { FORWARDING_DATA_INVALID };
+					return { Constants::FORWARDING_DATA_INVALID };
 				// allocate  the entry in the store buffer
 				address = source_entry->src1.signed_ + static_cast<offset_t>(source_entry->destination_register_id);
 				register_data = source_entry->src2 ;
@@ -172,14 +172,14 @@ namespace OoOVis
 					source_entry->store_source_register_id,
 					register_data, 
 					address,
-					NO_PRODUCER_TAG
+					Constants::NO_PRODUCER_TAG
 				);
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Created entry in the store buffer: id:{}, source_id:{}, address:{}\n", source_entry->instruction_id, source_entry->store_source_register_id, address);
 #endif
 				// tell the rob that address and the data is ready
 				Reorder_Buffer::set_ready(static_cast<u32>(source_entry->reorder_buffer_entry_index));
-				return {FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
+				return {Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 			}
 			if (!load_buffer_is_full()) {
 				address = source_entry->src1.signed_ + source_entry->src2.signed_;
@@ -195,16 +195,16 @@ namespace OoOVis
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Created entry in the load buffer buffer: id:{}, destination_reg:{}, address:{}\n", source_entry->instruction_id, source_entry->destination_register_id, address);
 #endif
-				return {FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
+				return {Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 			}
-			return { FORWARDING_DATA_INVALID };
+			return { Constants::FORWARDING_DATA_INVALID };
 		}
 
 		std::pair<size_t,size_t> Execution_Unit_Load_Store::find_load_that_is_executable() {
-			if (_load_buffer.empty()) return { EXECUTABLE_LOAD_DOES_NOT_EXIST,LOAD_DOES_NOT_USE_FORWARDING };
+			if (_load_buffer.empty()) return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARDING };
 			// maybe store buffer is empty?
 			if (_store_buffer.empty()) {
-				return { 0,LOAD_DOES_NOT_USE_FORWARDING };
+				return { 0,Constants::LOAD_DOES_NOT_USE_FORWARDING };
 			}
 			// maybe we can bypass?
 			size_t bypassable_load_entry_index{};
@@ -223,31 +223,31 @@ namespace OoOVis
 
 			}
 			if (can_bypass)
-				return { bypassable_load_entry_index,LOAD_DOES_NOT_USE_FORWARDING };
+				return { bypassable_load_entry_index,Constants::LOAD_DOES_NOT_USE_FORWARDING };
 
 			// maybe we can forward anything?
-			size_t forwaradable_load_entry_index{EXECUTABLE_LOAD_DOES_NOT_EXIST};
-			size_t store_buffer_entry_index_that_is_forwarded_from{LOAD_DOES_NOT_USE_FORWARDING};
+			size_t forwaradable_load_entry_index{Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST};
+			size_t store_buffer_entry_index_that_is_forwarded_from{Constants::LOAD_DOES_NOT_USE_FORWARDING};
 			for (size_t i{}; i < _load_buffer.size(); i++) {
 				for (size_t j{}; j < _store_buffer.size(); j++) {
 					if (_load_buffer[i].calculated_address == _store_buffer[j].calculated_address) {
 						store_buffer_entry_index_that_is_forwarded_from = j;
 					}
 				}
-				if (store_buffer_entry_index_that_is_forwarded_from != LOAD_DOES_NOT_USE_FORWARDING) {
+				if (store_buffer_entry_index_that_is_forwarded_from != Constants::LOAD_DOES_NOT_USE_FORWARDING) {
 					return { i,store_buffer_entry_index_that_is_forwarded_from };
 				}
 			}
 
-			return { EXECUTABLE_LOAD_DOES_NOT_EXIST,LOAD_DOES_NOT_USE_FORWARDING };
+			return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARDING };
 		}
 		Forwarding_Data Execution_Unit_Load_Store::execute_load() {
 
 			auto executable_load_index(find_load_that_is_executable());
-			if (executable_load_index.first == EXECUTABLE_LOAD_DOES_NOT_EXIST)
-				return { FORWARDING_DATA_INVALID };
+			if (executable_load_index.first == Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST)
+				return { Constants::FORWARDING_DATA_INVALID };
 
-			if (executable_load_index.second == LOAD_DOES_NOT_USE_FORWARDING) { // it is a bypassable load
+			if (executable_load_index.second == Constants::LOAD_DOES_NOT_USE_FORWARDING) { // it is a bypassable load
 				const Buffer_Entry* bypassable_load_entry{ &_load_buffer.at(executable_load_index.first) };
 				switch (bypassable_load_entry->mode) {
 				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_WORD:
@@ -277,7 +277,7 @@ namespace OoOVis
 				_load_buffer.erase(_load_buffer.begin() + executable_load_index.first);
 				return result;
 			}
-			if (executable_load_index.second != LOAD_DOES_NOT_USE_FORWARDING) {
+			if (executable_load_index.second != Constants::LOAD_DOES_NOT_USE_FORWARDING) {
 
 				const Buffer_Entry* forwaradable_load_entry{ &_load_buffer[executable_load_index.first] };
 				const Buffer_Entry* store_buffer_entry_that_is_forwarded_from{ &_store_buffer[executable_load_index.second] };
@@ -294,7 +294,7 @@ namespace OoOVis
 				_load_buffer.erase(_load_buffer.begin() +  executable_load_index.first);
 				return result;
 			}
-			return { FORWARDING_DATA_INVALID }; // we cant do anything
+			return { Constants::FORWARDING_DATA_INVALID }; // we cant do anything
 		}
 
 		void Execution_Unit_Load_Store::execute_store(memory_addr_t store_id) {
@@ -316,7 +316,7 @@ namespace OoOVis
 		Forwarding_Data Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
-				return { false };
+				return { Constants::FORWARDING_DATA_INVALID };
 			memory_addr_t target_address{};
 			bool actual_taken{ false };
 			switch (source_entry->mode) {
@@ -364,28 +364,29 @@ namespace OoOVis
 
 			}
 			// update pht
-			Fetch_Unit::update_pattern_history_table(source_entry->instruction_id, actual_taken);
-
-			target_address = source_entry->branch_target;
 			bool prediction{ Fetch_Unit::get_prediction(source_entry->instruction_id)  && Fetch_Unit::has_btb_entry(source_entry->instruction_id)};
+			Fetch_Unit::update_pattern_history_table(source_entry->instruction_id, actual_taken);
+			target_address = source_entry->branch_target;
+			Fetch_Unit::create_btb_entry(source_entry->instruction_id, target_address);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			if (prediction == actual_taken) {
 				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, false);
 			}
 			else { // misprediction recovery
 
+				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, true);
+				Fetch_Group::group = fetch_group_t(3);
 				if (actual_taken == true && prediction == false) {
 					Fetch_Unit::set_program_counter(target_address);
-					Reservation_Station_Pool::flush(source_entry->instruction_id);
+					Reservation_Station_Pool::flush_mispredicted(source_entry->instruction_id);
 				}
 				else {
 
 					Fetch_Unit::set_program_counter(source_entry->instruction_id + 1);
-					Reservation_Station_Pool::flush(source_entry->branch_target);
+					Reservation_Station_Pool::flush_mispredicted(source_entry->branch_target - 1);
 				}
-				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, true);
 			}
-			return { FORWARDING_DATA_STATION_DEALLOCATE_ONLY };
+			return { Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 		}
 
 	} // namespace Core

@@ -82,6 +82,6 @@ namespace OoOVis
 			return result;
 
 		}
-	}
-}
+	} // namespace Core
+} // namespace OoOVis
 

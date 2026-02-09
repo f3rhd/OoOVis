@@ -11,5 +11,5 @@ namespace OoOVis
 		private:
 			static std::unordered_map<memory_addr_t, u8> _memory;
 		};
-	}
-}
+	} // namespace Core
+} // namepsace OoOVis

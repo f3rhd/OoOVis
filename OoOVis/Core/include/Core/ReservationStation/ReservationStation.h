@@ -19,6 +19,6 @@ namespace OoOVis
 			RESERVATION_STATION_ID _id;
 		};
 
-	}
+	} // namespace Core
 
-}
+} // namespace OoOVis

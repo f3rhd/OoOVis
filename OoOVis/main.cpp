@@ -13,18 +13,18 @@ int main(int argc, char** argv) {
 	Fetch_Unit::init(std::move(parse_result.first));
 	Register_File::init();
 	Dispatcher dispatcher;
-	memory_addr_t program_counter_increment{};
 	while (true) {
 		Reorder_Buffer::commit();
 		Execution_Stage::issue_and_execute();
-		Fetch_Unit::increment_counter_by(program_counter_increment);
-		program_counter_increment = 0;
-		auto fetch_group(Fetch_Unit::fetch());
-		for (const auto& fetch : fetch_group) {
+		memory_addr_t successful_dispatches{};
+		for (const auto& fetch : Fetch_Group::group) {
 			if (fetch.first && !Reorder_Buffer::full()) {
 				if (dispatcher.dispatch_instruction(*fetch.first, fetch.second))
-					program_counter_increment++;
+					successful_dispatches++;
 			}
 		}
+		if(!Fetch_Unit::next_fetch_is_set())
+			Fetch_Unit::adjust_program_counter_based_on_successful_dispatches(successful_dispatches);
+		Fetch_Group::group = (Fetch_Unit::fetch());
 	}
 }
