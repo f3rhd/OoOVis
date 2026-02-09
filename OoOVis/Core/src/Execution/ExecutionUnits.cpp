@@ -19,7 +19,7 @@ namespace OoOVis
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
 			Forwarding_Data data{};
-			data.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
+			data.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
 			data.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_ADD:
@@ -47,7 +47,7 @@ namespace OoOVis
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
 			Forwarding_Data result{};
-			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
+			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::BITWISE_AND:
@@ -82,7 +82,7 @@ namespace OoOVis
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
 			Forwarding_Data result{};
-			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
+			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
 			result.produced_data.signed_ = source_entry->src1.signed_ < source_entry->src2.signed_ ? 1 : 0;
 			Register_File::write(source_entry->destination_register_id, result.produced_data);
@@ -94,7 +94,7 @@ namespace OoOVis
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
 			Forwarding_Data result{};
-			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
+			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_SIGNED:
@@ -128,7 +128,7 @@ namespace OoOVis
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
 			Forwarding_Data result{};
-			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP;
+			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_SIGNED:
@@ -319,17 +319,25 @@ namespace OoOVis
 				return { Constants::FORWARDING_DATA_INVALID };
 			memory_addr_t target_address{};
 			bool actual_taken{ false };
-			switch (source_entry->mode) {
-			case EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL:
+			switch (source_entry->mode) { 
+			case EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL_JALR:// Fetch unit keeps fetching when it sees jalr instruction so we gotta recover
 				target_address = source_entry->src1.unsigned_ + source_entry->src2.unsigned_;
-				if (!Fetch_Unit::has_btb_entry(source_entry->instruction_id)) {
-					Fetch_Unit::create_btb_entry(source_entry->instruction_id, target_address);
-					Fetch_Unit::set_program_counter(target_address);
-				} 
+				Fetch_Unit::set_program_counter(target_address);
+				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_id + 1 });
+				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
+				Reservation_Station_Pool::flush_mispredicted(source_entry->instruction_id);
+				Fetch_Group::group = std::vector<Fetch_Element>(3);
+				return {
+					Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD,
+					source_entry->instruction_id + 1, // will be needed in forwarding to reservation stations
+					source_entry->self_tag, // will be needed in forwarding logic 
+				};
+				break;
+			case EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL_JAL: // Fetch unit already jumped so all we have to do is write the values to the registers
 				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_id + 1 });
 				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 				return {
-					true,
+					Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD,
 					source_entry->instruction_id + 1, // will be needed in forwarding to reservation stations
 					source_entry->self_tag, // will be needed in forwarding logic 
 				};
@@ -375,15 +383,17 @@ namespace OoOVis
 			else { // misprediction recovery
 
 				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, true);
-				Fetch_Group::group = fetch_group_t(3);
+				Fetch_Group::group = std::vector<Fetch_Element>(3);
 				if (actual_taken == true && prediction == false) {
 					Fetch_Unit::set_program_counter(target_address);
-					Reservation_Station_Pool::flush_mispredicted(source_entry->instruction_id);
+					if (!Reservation_Station_Pool::flush_mispredicted(source_entry->instruction_id))
+						Fetch_Unit::reset_speculation_id();
 				}
 				else {
 
 					Fetch_Unit::set_program_counter(source_entry->instruction_id + 1);
-					Reservation_Station_Pool::flush_mispredicted(source_entry->branch_target - 1);
+					if(!Reservation_Station_Pool::flush_mispredicted(source_entry->branch_target - 1))
+						Fetch_Unit::reset_speculation_id();
 				}
 			}
 			return { Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };

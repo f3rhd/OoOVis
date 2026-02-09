@@ -5,23 +5,23 @@
 #include <unordered_map>
 
 #include <Frontend/Parser/Instruction.h>
+#include <Core/Fetch/Fetch_Elements.h>
+#include <Core/Constants/Constants.h>
 
 namespace OoOVis
 {
     namespace Core
     {
-        struct Fetch_Group {
-            static fetch_group_t group;
-        };
         class Fetch_Unit {
 
         public:
             static void                init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions);
 			static bool			      next_fetch_is_set();
-            static fetch_group_t        fetch();
+            static std::vector<Fetch_Element>       fetch();
             static void                adjust_program_counter_based_on_successful_dispatches(memory_addr_t amount);
             static bool                get_prediction(memory_addr_t branch_instruction_id);
             static void                set_program_counter(memory_addr_t next_pc);
+            static void                reset_speculation_id();
             static memory_addr_t        get_program_counter();
             static memory_addr_t        get_target_addr_from_btb(memory_addr_t branch_instruction_id);
             static void                create_btb_entry(memory_addr_t branch_instruction_id, memory_addr_t target_instruction_id);
@@ -34,6 +34,7 @@ namespace OoOVis
             static std::unordered_map<u32, u32>                        _pattern_history_table;
             static memory_addr_t                                       _program_counter;
             static memory_addr_t                                       _branch_shift_register;
+            static memory_addr_t                                       _speculation_id;
         };
         
     } // namespace Core

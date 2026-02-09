@@ -35,7 +35,7 @@ namespace OoOVis
 				else if (data.kind & Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY) {
 					Reservation_Station_Pool::deallocate_entry(data.producer_tag);
 				}
-				else if (data.kind & Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_WAKEUP) {
+				else if (data.kind & Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD) {
 					Reservation_Station_Pool::wakeup(data.producer_tag, data.produced_data);
 					Reservation_Station_Pool::deallocate_entry(data.producer_tag);
 				}

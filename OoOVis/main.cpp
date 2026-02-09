@@ -17,9 +17,9 @@ int main(int argc, char** argv) {
 		Reorder_Buffer::commit();
 		Execution_Stage::issue_and_execute();
 		memory_addr_t successful_dispatches{};
-		for (const auto& fetch : Fetch_Group::group) {
-			if (fetch.first && !Reorder_Buffer::full()) {
-				if (dispatcher.dispatch_instruction(*fetch.first, fetch.second))
+		for (const auto& fetch_element : Fetch_Group::group) {
+			if (!Reorder_Buffer::full()) {
+				if (dispatcher.dispatch_instruction(fetch_element))
 					successful_dispatches++;
 			}
 		}

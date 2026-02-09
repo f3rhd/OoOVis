@@ -1,6 +1,7 @@
 #pragma once
 #include <Core/RegisterFile/RegisterFile.h>
 #include <Core/Constants/Constants.h>
+#include <Frontend/Parser/Lookup.h>
 #include <stdexcept>
 #include <format>
 #include <iomanip>
@@ -54,6 +55,8 @@ namespace OoOVis
 		}
 
 		void Register_File::deallocate(reg_id_t physical_register_id) {
+			if (physical_register_id == 0)
+				return;
 			if (physical_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to deallocate invalid register.\n"; 
 				exit(EXIT_FAILURE); // @VisitLater
@@ -75,6 +78,9 @@ namespace OoOVis
 				std::cout << "Tried to write to an invalid register.\n";
 				exit(EXIT_FAILURE); // @VisitLater
 			}
+			if (physical_register_id == 0) {
+				return;
+			}
 			_physical_register_file[physical_register_id].data = data;
 			_physical_register_file[physical_register_id].producer_tag = Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
@@ -87,15 +93,21 @@ namespace OoOVis
 		}
 
 		reg_id_t Register_File::allocate_physical_register_for(reg_id_t architectural_register_id, u32 producer_tag) {
+			if (architectural_register_id == 0) {
+	#ifdef DEBUG_PRINTS
+				std::cout << std::format("Register alias table was updated with zero->P0 due to register allocation.\n");
+	#endif
+				return 0;
+			}
 			for (auto it{ _physical_register_file.rbegin() }; it != _physical_register_file.rend(); it++) {
 				auto& entry = it->second;
 				auto& key = it->first;
-				if (!entry.allocated) {
+				if (!entry.allocated) { // zero->P0 is direct mapping no one can allocate for it except "zero" ofc
 					_frontend_register_alias_table[architectural_register_id] = key;
 					entry.allocated = true;
 					entry.producer_tag = producer_tag;
 #ifdef DEBUG_PRINTS
-					std::cout << std::format("Register alias table was updated with x{}->P{} due to register allocation.\n", architectural_register_id, key);
+					std::cout << std::format("Register alias table was updated with {}->P{} due to register allocation.\n", FrontEnd::Lookup::reg_name(architectural_register_id), key);
 #endif
 					return key;
 				}
