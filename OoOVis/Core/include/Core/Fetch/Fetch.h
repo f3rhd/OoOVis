@@ -11,23 +11,15 @@ namespace OoOVis
     namespace Core
     {
         struct Fetch_Group {
-            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> first_instruction{};
-            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> second_instruction{};
-            const std::pair<std::unique_ptr<FrontEnd::Instruction>*, memory_addr_t> third_instruction{};
-            Fetch_Group(
-                const std::pair<std::unique_ptr <FrontEnd::Instruction>*,memory_addr_t>  first_,
-                const std::pair<std::unique_ptr <FrontEnd::Instruction>*,memory_addr_t>  second_,
-                const std::pair<std::unique_ptr <FrontEnd::Instruction>*,memory_addr_t>  third_
-            ) : first_instruction(first_), second_instruction(second_), third_instruction(third_) {}
+            static fetch_group_t group;
         };
         class Fetch_Unit {
 
         public:
             static void                init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions);
-            static fetch_group_t       fetch();
-            static void                stall();
-            static void                continue_fetching();
-            static void                increment_counter_by(memory_addr_t value);
+			static bool			      next_fetch_is_set();
+            static fetch_group_t        fetch();
+            static void                adjust_program_counter_based_on_successful_dispatches(memory_addr_t amount);
             static bool                get_prediction(memory_addr_t branch_instruction_id);
             static void                set_program_counter(memory_addr_t next_pc);
             static memory_addr_t        get_program_counter();
@@ -36,12 +28,12 @@ namespace OoOVis
             static bool                has_btb_entry(memory_addr_t branch_instruction_id);
             static void                update_pattern_history_table(memory_addr_t branch_instruction_id, bool actual);
         private:
+            static bool                                           _next_fetch_is_set;
             static std::vector<std::unique_ptr<FrontEnd::Instruction>> _instruction_cache;
             static std::unordered_map<memory_addr_t, memory_addr_t>    _branch_target_buffer;
             static std::unordered_map<u32, u32>                        _pattern_history_table;
             static memory_addr_t                                       _program_counter;
             static memory_addr_t                                       _branch_shift_register;
-            static bool _stalled;
         };
         
     } // namespace Core
