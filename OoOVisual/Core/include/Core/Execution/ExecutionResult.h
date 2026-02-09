@@ -1,7 +1,7 @@
 #pragma  once
 #include <Core/Types/Types.h>
 #include <Core/Constants/Constants.h>
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core
 	{

@@ -3,7 +3,7 @@
 #include <Core/RegisterFile/RegisterFile.h>
 #include <iostream>
 #include <format>
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core 
 	{
@@ -78,28 +78,28 @@ namespace OoOVis
 		{
 			switch (id)
 			{
-			case OoOVis::Core::RESERVATION_STATION_ID::ADD_SUB:
+			case OoOVisual::Core::RESERVATION_STATION_ID::ADD_SUB:
 				return _pool[0];
 				break;
-			case OoOVis::Core::RESERVATION_STATION_ID::BITWISE:
+			case OoOVisual::Core::RESERVATION_STATION_ID::BITWISE:
 				return _pool[1];
 				break;
-			case OoOVis::Core::RESERVATION_STATION_ID::SET_LESS:
+			case OoOVisual::Core::RESERVATION_STATION_ID::SET_LESS:
 				return _pool[2];
 				break;
-			case OoOVis::Core::RESERVATION_STATION_ID::MULTIPLIER:
+			case OoOVisual::Core::RESERVATION_STATION_ID::MULTIPLIER:
 				return _pool[3];
 				break;
-			case OoOVis::Core::RESERVATION_STATION_ID::DIVIDER:
+			case OoOVisual::Core::RESERVATION_STATION_ID::DIVIDER:
 				return _pool[4];
 				break;
-			case OoOVis::Core::RESERVATION_STATION_ID::LOAD_STORE:
+			case OoOVisual::Core::RESERVATION_STATION_ID::LOAD_STORE:
 				return _pool[5];
 				break;
-			case OoOVis::Core::RESERVATION_STATION_ID::BRANCH:
+			case OoOVisual::Core::RESERVATION_STATION_ID::BRANCH:
 				return _pool[6];
 				break;
-			case OoOVis::Core::RESERVATION_STATION_ID::UNKNOWN:
+			case OoOVisual::Core::RESERVATION_STATION_ID::UNKNOWN:
 				break;
 			default:
 				break;

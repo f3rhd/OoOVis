@@ -4,7 +4,7 @@
 #include <Core/ReservationStation/ReservationStation.h>
 #include <Core/Fetch/Fetch_Elements.h>
 #include <memory>
-namespace OoOVis
+namespace OoOVisual
 {
     namespace Core
     {

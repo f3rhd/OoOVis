@@ -8,7 +8,7 @@
 #include <iostream>
 #include <format>
 
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core
 	{

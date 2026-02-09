@@ -6,7 +6,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <format>
-namespace OoOVis
+namespace OoOVisual
 {
     namespace Core
     {

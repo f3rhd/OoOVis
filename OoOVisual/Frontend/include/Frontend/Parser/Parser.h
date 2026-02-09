@@ -8,7 +8,7 @@
 #include <Frontend/Parser/Instruction.h>
 #include <FrontEnd/Parser/Token.h>
 
-namespace OoOVis {
+namespace OoOVisual {
     namespace FrontEnd {
 
         auto constexpr INVALID_REG_ID = 255;

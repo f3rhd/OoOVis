@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-namespace OoOVis {
+namespace OoOVisual {
 	namespace FrontEnd {
 		enum class TOKEN_TYPE {
 			LOAD_OPERATION,

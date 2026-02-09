@@ -1,6 +1,6 @@
 #include <Core/Commit/ReorderBufferEntry.h>
 #include <memory>
-namespace OoOVis 
+namespace OoOVisual 
 {
 	namespace Core 
 	{

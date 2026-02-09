@@ -1,6 +1,6 @@
 #include <Frontend/Parser/Lookup.h>
 
-namespace OoOVis {
+namespace OoOVisual {
     namespace FrontEnd {
 		const std::unordered_map<std::string,reg_id_t> 
 		Lookup::_str_to_id_registers {

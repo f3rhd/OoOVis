@@ -1,6 +1,6 @@
 #pragma once
 #include <Core/Types/Types.h>
-namespace OoOVis {
+namespace OoOVisual {
 	namespace FrontEnd {
 		auto constexpr NO_LABEL = 0;
 		auto constexpr FORWARD_ADDR = 0xFFFFFFFFu;

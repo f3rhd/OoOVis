@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <Core/Execution/ExecutionResult.h>
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core
 	{

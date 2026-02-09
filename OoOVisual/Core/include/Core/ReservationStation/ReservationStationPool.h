@@ -3,7 +3,7 @@
 #include <Core/ReservationStation/ReservationStation.h>
 #include <Frontend/Parser/Instruction.h>
 #include <memory>
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core
 	{

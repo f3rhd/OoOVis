@@ -4,7 +4,7 @@
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Fetch/Fetch.h>
 #include <Core/RegisterFile/RegisterFile.h>
-using namespace OoOVis;
+using namespace OoOVisual;
 using namespace Core;
 int main(int argc, char** argv) {
 	FrontEnd::Parser parser;

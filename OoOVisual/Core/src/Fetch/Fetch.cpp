@@ -1,7 +1,7 @@
 #include <Core/Fetch/Fetch.h>
 #include <Core/RegisterFile/RegisterFile.h>
 #include <Core/Constants/Constants.h>
-namespace OoOVis
+namespace OoOVisual
 {
     namespace Core
     {

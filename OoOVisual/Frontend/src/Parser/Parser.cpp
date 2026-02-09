@@ -2,7 +2,7 @@
 #include <Frontend/Parser/Lookup.h>
 #include <fstream>
 #include <iostream>
-namespace OoOVis {
+namespace OoOVisual {
     namespace FrontEnd
     {
         #define EXPECT(EXPECTED_TOKEN_TYPE)                   \

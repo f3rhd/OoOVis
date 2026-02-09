@@ -4,7 +4,7 @@
 #include <Core/RegisterFile/RegisterFile.h>
 #include <Core/Execution/ExecutionUnits.h>
 #include <iostream>
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core {
 

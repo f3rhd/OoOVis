@@ -1,5 +1,5 @@
 #pragma  once
-namespace OoOVis {
+namespace OoOVisual {
 	namespace Core {
 		namespace Constants {
 				auto constexpr REORDER_BUFFER_SIZE{ 64 };

@@ -1,7 +1,7 @@
 #pragma  once
 #include <Core/Types/Types.h>
 #include <Core/Execution/ExecutionUnits.h>
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core {
 		class DCache {

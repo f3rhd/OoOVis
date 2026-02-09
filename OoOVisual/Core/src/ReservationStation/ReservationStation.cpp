@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <ranges>
 
-namespace OoOVis
+namespace OoOVisual
 {
     namespace Core
     {

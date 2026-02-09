@@ -8,7 +8,7 @@
 #include <Core/Fetch/Fetch_Elements.h>
 #include <Core/Constants/Constants.h>
 
-namespace OoOVis
+namespace OoOVisual
 {
     namespace Core
     {

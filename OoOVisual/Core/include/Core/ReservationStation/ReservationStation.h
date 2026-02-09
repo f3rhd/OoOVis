@@ -1,7 +1,7 @@
 #pragma once
 #include <Core/ReservationStation/ReservationStationEntry.h>
 #include <vector>
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core {
 

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <memory>
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core {
 		class Reservation_Station;

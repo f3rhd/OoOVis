@@ -3,7 +3,7 @@
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/Constants/Constants.h>
 
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core
 	{

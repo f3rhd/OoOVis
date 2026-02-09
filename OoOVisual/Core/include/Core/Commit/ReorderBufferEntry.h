@@ -3,7 +3,7 @@
 #include <Core/Types/Types.h>
 #include <Frontend/Parser/Instruction.h>
 #include <Core/Constants/Constants.h>
-namespace OoOVis
+namespace OoOVisual
 {
 	namespace Core {
 		struct Reorder_Buffer_Entry {

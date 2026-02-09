@@ -6,7 +6,7 @@
 
 #include <FrontEnd/Parser/instruction.h>
 
-namespace OoOVis {
+namespace OoOVisual {
     namespace FrontEnd {
 
 		class Lookup {
