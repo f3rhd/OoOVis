@@ -10,9 +10,11 @@ namespace OoOVisual
 {
     namespace Core
     {
-		bool Dispatcher::dispatch_instruction(const Fetch_Element& fetch_element) {
+		DISPATCH_FEEDBACK Dispatcher::dispatch_fetch_element(const Fetch_Element& fetch_element) {
+            if (Reorder_Buffer::full())
+                return DISPATCH_FEEDBACK::REORDER_BUFFER_WAS_FULL;
             if (!fetch_element.instruction)
-                return false;
+                return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
             switch ((*fetch_element.instruction)->flow()) {
             case FrontEnd::FLOW_TYPE::REGISTER:
                 return dispatch_register_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::ADD_SUB));
@@ -31,15 +33,16 @@ namespace OoOVisual
             }
             
         }
-		bool Dispatcher::dispatch_register_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
+		DISPATCH_FEEDBACK Dispatcher::dispatch_register_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
-            const auto& speculation_id = fetch_element.speculation_id;
+            const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* register_instruction{ dynamic_cast<FrontEnd::Register_Instruction*>(instruction.get()) }) {
-                if (station.full()) return false;
-                if (Register_File::full()) return false;
+                if (station.full()) 
+                    return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
+                if (Register_File::full()) return DISPATCH_FEEDBACK::REORDER_BUFFER_WAS_FULL;
                 if (register_instruction->dest_reg() == 0)
-                    return true;
+                    return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
                 auto info = get_reservation_station_id_and_execution_mode_for_register_instruction(instruction);
                 Reservation_Station_Entry temp_reservation_station_entry;
                 temp_reservation_station_entry.mode = info.second;
@@ -75,9 +78,10 @@ namespace OoOVisual
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
                 temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
-                temp_reservation_station_entry.instruction_id = instruction_id;
+                temp_reservation_station_entry.instruction_address = instruction_id;
+                temp_reservation_station_entry.timestamp = fetch_element.timestamp;
 				#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched Instructions[{}] to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.self_tag);
+                std::cout << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.timestamp,temp_reservation_station_entry.self_tag);
 				#endif
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
             }
@@ -87,19 +91,19 @@ namespace OoOVisual
                 std::cout << "Dynamic cast of Instruction -> Register_Instruction failed.\n";
 				exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
             }        
-            return true;
+            return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
         }
-        bool Dispatcher::dispatch_load_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
+        DISPATCH_FEEDBACK Dispatcher::dispatch_load_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
-            const auto& speculation_id = fetch_element.speculation_id;
+            const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* load_instruction{ dynamic_cast<FrontEnd::Load_Instruction*>(instruction.get()) }) {
                 if (station.full())
-                    return false;
+                    return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
                 if (Register_File::full())
-                    return false;
+                    return DISPATCH_FEEDBACK::REGISTER_FILE_WAS_FULL;
                 if (load_instruction->dest_reg() == 0)
-                    return true;
+                    return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (load_instruction->kind()) {
                 case FrontEnd::Load_Instruction::LOAD_INSTRUCTION_TYPE::LB:
@@ -151,10 +155,11 @@ namespace OoOVisual
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
                 temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
-                temp_reservation_station_entry.instruction_id = instruction_id;
+                temp_reservation_station_entry.instruction_address = instruction_id;
+                temp_reservation_station_entry.timestamp = fetch_element.timestamp;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
 				#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched Instructions[{}] to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.self_tag);
+                std::cout << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.timestamp,temp_reservation_station_entry.self_tag);
 				#endif
 
             }
@@ -164,15 +169,15 @@ namespace OoOVisual
                 exit(EXIT_FAILURE);
 
             }
-            return true;
+            return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
         }
-        bool Dispatcher::dispatch_store_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
+        DISPATCH_FEEDBACK Dispatcher::dispatch_store_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
-            const auto& speculation_id = fetch_element.speculation_id;
+            const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* store_instruction = dynamic_cast<FrontEnd::Store_Instruction*>(instruction.get())) {
                 if (station.full())
-                    return false;
+                    return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (store_instruction->kind()) {
                 case FrontEnd::Store_Instruction::STORE_INSTRUCTION_TYPE::SB:
@@ -205,6 +210,7 @@ namespace OoOVisual
                 temp_reservation_station_entry.self_tag = allocated_reservation_station->self_tag;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
+                temp_reservation_station_entry.timestamp = fetch_element.timestamp;
                 // when the store instruction is in the store buffer it will wait a signal from reorder buffer to finish its execution architecturally, that is why we need store_id
                 temp_reservation_station_entry.reorder_buffer_entry_index = static_cast<u32>(Reorder_Buffer::allocate(
 						std::make_unique<Store_Reorder_Buffer_Entry>(
@@ -214,25 +220,25 @@ namespace OoOVisual
 						)
 					)
                 );
-                temp_reservation_station_entry.instruction_id = instruction_id; // this id will be passed down to the entry in the store buffer
+                temp_reservation_station_entry.instruction_address = instruction_id; // this id will be passed down to the entry in the store buffer
                 *allocated_reservation_station = temp_reservation_station_entry;
-#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched Instructions[{}] to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.self_tag);
-#endif
+				#ifdef DEBUG_PRINTS
+                std::cout << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.timestamp,temp_reservation_station_entry.self_tag);
+				#endif
             }
             else {
                 std::cout << "Dynamic cast of Instruction -> Store_Instruction failed\n";
                 exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
             }        
-            return true;
+            return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
         }
-        bool Dispatcher::dispatch_branch_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
+        DISPATCH_FEEDBACK Dispatcher::dispatch_branch_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
-            const auto& speculation_id = fetch_element.speculation_id;
+            const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* branch_instruction{ dynamic_cast<FrontEnd::Branch_Instruction*>(instruction.get()) }) {
                 if (station.full())
-                    return false;
+                    return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
                 Reservation_Station_Entry* allocated_reservation_station_entry ( station.allocate_entry());
                 Reservation_Station_Entry temp_reservation_station_entry;
                 temp_reservation_station_entry.busy = true;
@@ -241,7 +247,7 @@ namespace OoOVisual
                     std::make_unique<Branch_Conditional_Reorder_Buffer_Entry>(
                         branch_instruction->flow(),
                         speculation_id,
-                        instruction_id
+                        fetch_element.timestamp
                     )
                 );
 				Physical_Register_File_Entry entry1(Register_File::read_with_alias(branch_instruction->src1()));
@@ -275,28 +281,29 @@ namespace OoOVisual
 				temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
 				// execution stage will need these for branch instruction
 				temp_reservation_station_entry.branch_target = branch_instruction->target_addr();
-				temp_reservation_station_entry.instruction_id = instruction_id;
+				temp_reservation_station_entry.instruction_address = instruction_id;
+                temp_reservation_station_entry.timestamp = fetch_element.timestamp;
+                temp_reservation_station_entry.fetch_unit_prediction = fetch_element.branch_prediction;
 				*allocated_reservation_station_entry = temp_reservation_station_entry;
-#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched Instructions[{}] to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.self_tag);
-#endif
-
+				#ifdef DEBUG_PRINTS
+                std::cout << Constants::YELLOW << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}] Fetch_Unit_Prediction : {}  .\n", instruction_id,temp_reservation_station_entry.timestamp,temp_reservation_station_entry.self_tag,temp_reservation_station_entry.fetch_unit_prediction) <<Constants::RESET;
+				#endif
             }
             else {
                 std::cout << "Dynamic cast of Instruction -> Branch_Instruction failed\n";
                 exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
             }
-            return true;
+            return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
         }
-        bool Dispatcher::dispatch_jump_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
+        DISPATCH_FEEDBACK Dispatcher::dispatch_jump_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
 
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
-            const auto& speculation_id = fetch_element.speculation_id;
+            const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* jump_instruction = dynamic_cast<FrontEnd::Jump_Instruction*>(instruction.get())) {
 
                 if (station.full())
-                    return false;
+                    return DISPATCH_FEEDBACK::REORDER_BUFFER_WAS_FULL;
                 Reservation_Station_Entry* allocated_reservation_station_entry(station.allocate_entry());
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (jump_instruction->kind()) {
@@ -311,6 +318,7 @@ namespace OoOVisual
                 }
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.busy = true;
+                temp_reservation_station_entry.timestamp = fetch_element.timestamp;
                 reg_id_t old_alias = Register_File::aliasof(jump_instruction->dest_reg());
 				reg_id_t destination_pysical_register_id = Register_File::allocate_physical_register_for(jump_instruction->dest_reg(), allocated_reservation_station_entry->self_tag);
 				temp_reservation_station_entry.destination_register_id = destination_pysical_register_id;
@@ -332,7 +340,7 @@ namespace OoOVisual
                             destination_pysical_register_id,
                             true, // always mispredicted
                             speculation_id,
-                            instruction_id
+							fetch_element.timestamp
 						)
 					);
 					temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
@@ -347,7 +355,7 @@ namespace OoOVisual
                             destination_pysical_register_id,
                             false, // never mispredicted
                             speculation_id,
-                            instruction_id
+                            fetch_element.timestamp
 						)
 					);
                     temp_reservation_station_entry.reorder_buffer_entry_index = target_reorder_buffer_entry_index;
@@ -357,17 +365,17 @@ namespace OoOVisual
 					exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
                     break;
                 }
-                temp_reservation_station_entry.instruction_id = instruction_id;
+                temp_reservation_station_entry.instruction_address = instruction_id;
 				*allocated_reservation_station_entry = temp_reservation_station_entry;
 				#ifdef DEBUG_PRINTS
-                std::cout << std::format("Dispatched Instructions[{}] to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.self_tag);
+                std::cout << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.timestamp,temp_reservation_station_entry.self_tag);
 				#endif
             }
             else {
                 std::cout << "Dynamic cast of Instruction -> Jump_Instruction failed\n";
                 exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
             }
-            return true;
+            return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
 
         }
 
@@ -426,6 +434,18 @@ namespace OoOVisual
                 break;
             }
 			}
+
+        std::vector<DISPATCH_FEEDBACK> Dispatcher::dispatch_fetch_group()
+        {
+            std::vector<DISPATCH_FEEDBACK> feedback;
+            feedback.reserve(Constants::FETCH_WIDTH);
+            if (Fetch_Group::group.empty())
+                return std::vector<DISPATCH_FEEDBACK>(Constants::FETCH_WIDTH,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH);
+			for (const auto& fetch_element : Fetch_Group::group) {
+                feedback.emplace_back(dispatch_fetch_element(fetch_element));
+			}
+            return feedback;
+        }
      
 	} // namespace Core
     

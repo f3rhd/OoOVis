@@ -8,18 +8,26 @@ namespace OoOVisual
 {
     namespace Core
     {
+        enum class DISPATCH_FEEDBACK : u8 {
+            NO_INSTRUCTION_TO_DISPATCH,
+            RESERVATION_STATION_WAS_FULL,
+            REGISTER_FILE_WAS_FULL,
+            REORDER_BUFFER_WAS_FULL,
+            SUCCESSFUL_DISPATCH
+        };
         class Dispatcher {
 
         public:
             Dispatcher() = default;
-            bool                                                   dispatch_instruction(const Fetch_Element& fetch_element);
-            std::pair<RESERVATION_STATION_ID, EXECUTION_UNIT_MODE> get_reservation_station_id_and_execution_mode_for_register_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction);
+            static std::pair<RESERVATION_STATION_ID, EXECUTION_UNIT_MODE>              get_reservation_station_id_and_execution_mode_for_register_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction);
+            static std::vector<DISPATCH_FEEDBACK>                                      dispatch_fetch_group();
         private:
-            bool                                                   dispatch_register_instruction(const Fetch_Element& element, Reservation_Station& station);
-            bool                                                   dispatch_load_instruction(const Fetch_Element& element, Reservation_Station& station);
-            bool                                                   dispatch_store_instruction(const Fetch_Element& element, Reservation_Station& station);
-            bool                                                   dispatch_branch_instruction(const Fetch_Element& element, Reservation_Station& station);
-            bool                                                   dispatch_jump_instruction(const Fetch_Element& element,  Reservation_Station& station);
+            static DISPATCH_FEEDBACK                                                   dispatch_fetch_element(const Fetch_Element& fetch_element);
+            static DISPATCH_FEEDBACK                                                   dispatch_register_instruction(const Fetch_Element& element, Reservation_Station& station);
+            static DISPATCH_FEEDBACK                                                   dispatch_load_instruction(const Fetch_Element& element, Reservation_Station& station);
+            static DISPATCH_FEEDBACK                                                   dispatch_store_instruction(const Fetch_Element& element, Reservation_Station& station);
+            static DISPATCH_FEEDBACK                                                   dispatch_branch_instruction(const Fetch_Element& element, Reservation_Station& station);
+            static DISPATCH_FEEDBACK                                                   dispatch_jump_instruction(const Fetch_Element& element,  Reservation_Station& station);
 
         };
         
