@@ -389,11 +389,15 @@ namespace OoOVisual
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			if (prediction == actual_taken) {
 				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, false);
+#ifdef DEBUG_PRINTS
 				std::cout << Constants::GREEN << "Instructions[" << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was predicted correctly\n" << Constants::RESET;
+#endif
 			}
 			else { // misprediction recovery
 
+#ifdef DEBUG_PRINTS
 				std::cout << Constants::RED << "Instructions[ " << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was mispredicted\n" << Constants::RESET;
+#endif
 				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, true);
 				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
 				if (actual_taken == true && prediction == false) {
