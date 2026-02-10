@@ -40,7 +40,8 @@ namespace OoOVisual {
                     branch_instruction_data.first->set_target_addr(_label_map.at(branch_instruction_data.second));
                 }
                 else {
-                    std::cout << "\033[31m" << "Error\033: Unknown label identifier was found(Cause : " << branch_instruction_data.second << ")";
+					std::cout << "\033[31m" << "Error: \033[0m: " << "Cause: " << "'" << branch_instruction_data.second << "' Unknown label identifier was found"  << "\n" ;               \
+                    exit(EXIT_FAILURE);
                 }
             }
             for (auto& jump_instruction_data : _unresolved_jump_instructions) {
@@ -48,7 +49,8 @@ namespace OoOVisual {
                     jump_instruction_data.first->set_target_addr(_label_map.at(jump_instruction_data.second));
                 }
                 else {
-                    std::cout << "\033[31m" << "Error\033: Unknown label identifier was found(Cause : " << jump_instruction_data.second << ")";
+					std::cout << "\033[31m" << "Error: \033[0m: " << "Cause: " << "'" << jump_instruction_data.second << "' Unknown label identifier was found"  << "\n" ;               \
+                    exit(EXIT_FAILURE);
                 }
             }
             file.close();
