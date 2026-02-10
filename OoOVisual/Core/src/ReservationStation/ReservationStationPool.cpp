@@ -22,7 +22,7 @@ namespace OoOVisual
 				for (auto& entry : station.get()) {
 					if (entry.busy && entry.timestamp > flusher_timestamp && entry.self_tag != flusher_tag) {
 #ifdef DEBUG_PRINTS
-						std::cout << std::format("Dealloacted Instructions[{}] timestamp : {} from ReservationStation Entry : {} due to misprediction.\n", entry.instruction_id,entry.timestamp,entry.self_tag);
+						std::cout << std::format("Dealloacted Instructions[{}] timestamp : {} from ReservationStation Entry : {} due to misprediction.\n", entry.instruction_address,entry.timestamp,entry.self_tag);
 #endif
 						if (entry.destination_register_id != Constants::INVALID_PHYSICAL_REGISTER_ID && !entry.destination_register_id_as_ofsset) {
 							Register_File::deallocate(entry.destination_register_id);
@@ -43,7 +43,7 @@ namespace OoOVisual
 						entry.src1 = produced_data;
 						entry.ready = entry.producer_tag1 == Constants::NO_PRODUCER_TAG && entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
-						std::cout << Constants::BLUE << std::format("Forwarded data:{} to Instructions[{}] timestamp : {} from ReservationStationPool[{}].\n", produced_data.signed_, entry.instruction_id,entry.timestamp,producer_tag) << Constants::RESET;
+						std::cout << Constants::BLUE << std::format("Forwarded data:{} to Instructions[{}] timestamp : {} from ReservationStationPool[{}].\n", produced_data.signed_, entry.instruction_address,entry.timestamp,producer_tag) << Constants::RESET;
 #endif
 
 					}
@@ -52,7 +52,7 @@ namespace OoOVisual
 						entry.src2 = produced_data;
 						entry.ready = entry.producer_tag1 == Constants::NO_PRODUCER_TAG && entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
-						std::cout << Constants::BLUE << std::format("Forwarded data:{} to Instructions[{}] timestamp : {} from ReservationStationPool[{}].\n", produced_data.signed_, entry.instruction_id,entry.timestamp,producer_tag) << Constants::RESET;
+						std::cout << Constants::BLUE << std::format("Forwarded data:{} to Instructions[{}] timestamp : {} from ReservationStationPool[{}].\n", produced_data.signed_, entry.instruction_address,entry.timestamp,producer_tag) << Constants::RESET;
 #endif
 					}
 				}
@@ -63,7 +63,7 @@ namespace OoOVisual
 				for (auto& entry : station.get()) {
 					if (entry.busy && entry.ready && entry.self_tag == tag) {
 #ifdef DEBUG_PRINTS
-						std::cout << std::format("Deallocated Instructions[{}] timestamp : {} from ReservationStation.\n",entry.instruction_id,entry.timestamp);
+						std::cout << std::format("Deallocated Instructions[{}] timestamp : {} from ReservationStation.\n",entry.instruction_address,entry.timestamp);
 #endif
 						auto copy_tag{ entry.self_tag };
 						entry = Reservation_Station_Entry{};
