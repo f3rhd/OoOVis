@@ -26,11 +26,21 @@ namespace OoOVisual
         }
 
         const Reservation_Station_Entry* Reservation_Station::issue() {
-			std::ranges::sort(_buffer, [](const Reservation_Station_Entry& a, const Reservation_Station_Entry& b) {return a.instruction_id < b.instruction_id; });
-            for (const auto& entry : _buffer) {
-                if (entry.ready && entry.busy)
-                    return &entry;
-            }
+            const Reservation_Station_Entry* best = nullptr;
+			for (auto& e : _buffer) {
+                if (_id == RESERVATION_STATION_ID::BRANCH) { 
+                    if (!e.busy) // for branches we have to issue in order 
+                        continue;
+                }
+                else {
+                    if (!e.busy && !e.ready)
+                        continue;
+                }
+				if (!best || e.timestamp < best->timestamp)
+					best = &e;
+			}
+            if(best && best->ready)
+				return best;
             return nullptr;
         }
         
