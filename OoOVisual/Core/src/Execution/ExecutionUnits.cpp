@@ -38,6 +38,9 @@ namespace OoOVisual
 			default:
 				break;
 			}
+#ifdef DEBUG_PRINTS
+			std::cout << Constants::MAGENTA << std::format("Instructions[{}] timestamp:{} is executing.", source_entry->instruction_address, source_entry->timestamp);
+#endif
 			Register_File::write(source_entry->destination_register_id, data.produced_data);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return data;
@@ -167,7 +170,7 @@ namespace OoOVisual
 				register_data = source_entry->src2 ;
 				_store_buffer.emplace_back(
 					source_entry->mode,
-					source_entry->instruction_id,
+					source_entry->timestamp,
 					static_cast<u32>(source_entry->reorder_buffer_entry_index), 
 					source_entry->store_source_register_id,
 					register_data, 
@@ -175,7 +178,7 @@ namespace OoOVisual
 					Constants::NO_PRODUCER_TAG
 				);
 #ifdef DEBUG_PRINTS
-				std::cout << std::format("Created entry in the store buffer: id:{}, source_id:{}, address:{}\n", source_entry->instruction_id, source_entry->store_source_register_id, address);
+				std::cout << std::format("Created entry in the store buffer: timestamp:{}, source_id:{}, address:{}\n", source_entry->timestamp, source_entry->store_source_register_id, address);
 #endif
 				// tell the rob that address and the data is ready
 				Reorder_Buffer::set_ready(static_cast<u32>(source_entry->reorder_buffer_entry_index));
@@ -185,7 +188,7 @@ namespace OoOVisual
 				address = source_entry->src1.signed_ + source_entry->src2.signed_;
 				_load_buffer.emplace_back(
 					source_entry->mode,
-					source_entry->instruction_id,
+					source_entry->timestamp,
 					source_entry->destination_register_id,
 					source_entry->reorder_buffer_entry_index,
 					register_data,
@@ -193,7 +196,7 @@ namespace OoOVisual
 					source_entry->self_tag
 				);
 #ifdef DEBUG_PRINTS
-				std::cout << std::format("Created entry in the load buffer buffer: id:{}, destination_reg:{}, address:{}\n", source_entry->instruction_id, source_entry->destination_register_id, address);
+				std::cout << std::format("Created entry in the load buffer buffer: timestamp:{}, destination_reg:{}, address:{}\n", source_entry->timestamp, source_entry->destination_register_id, address);
 #endif
 				return {Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 			}
@@ -204,7 +207,7 @@ namespace OoOVisual
 			if (_load_buffer.empty()) return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARDING };
 			// maybe store buffer is empty?
 			if (_store_buffer.empty()) {
-				return { 0,Constants::LOAD_DOES_NOT_USE_FORWARDING };
+				return { 0,Constants::LOAD_DOES_NOT_USE_FORWARDING }; // select the first entry in the load buffer ( implied by 0 ) 
 			}
 			// maybe we can bypass?
 			size_t bypassable_load_entry_index{};
@@ -228,10 +231,14 @@ namespace OoOVisual
 			// maybe we can forward anything?
 			size_t forwaradable_load_entry_index{Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST};
 			size_t store_buffer_entry_index_that_is_forwarded_from{Constants::LOAD_DOES_NOT_USE_FORWARDING};
+			// forward from the latest store instruction that writes to the same address
 			for (size_t i{}; i < _load_buffer.size(); i++) {
+				time_t max_store_timestamp{};
 				for (size_t j{}; j < _store_buffer.size(); j++) {
-					if (_load_buffer[i].calculated_address == _store_buffer[j].calculated_address) {
+					if (_load_buffer[i].calculated_address == _store_buffer[j].calculated_address && _store_buffer[j].timestamp >= max_store_timestamp) { 
+						// we cant use store_buffer_entry_index_that_is_forwarded_from for comparison since its initial value is max(u32) which will never execute the loop
 						store_buffer_entry_index_that_is_forwarded_from = j;
+						max_store_timestamp = static_cast<time_t>(j);
 					}
 				}
 				if (store_buffer_entry_index_that_is_forwarded_from != Constants::LOAD_DOES_NOT_USE_FORWARDING) {
@@ -272,7 +279,7 @@ namespace OoOVisual
 					bypassable_load_entry->producer_tag, // will be needed in forwarding logic 
 				};
 #ifdef DEBUG_PRINTS
-				std::cout << std::format("Load instruction {} was executed using bypasssing.\n", bypassable_load_entry->self_id);
+				std::cout << std::format("Load instruction {} was executed using bypasssing.\n", bypassable_load_entry->timestamp);
 #endif
 				_load_buffer.erase(_load_buffer.begin() + executable_load_index.first);
 				return result;
@@ -289,7 +296,7 @@ namespace OoOVisual
 					forwaradable_load_entry->producer_tag // will be needed in forwarding logic 
 				);
 #ifdef DEBUG_PRINTS
-				std::cout << std::format("Load instruction {} was executed using forwarding from store instruction {}.\n", forwaradable_load_entry->self_id,store_buffer_entry_that_is_forwarded_from->self_id);
+				std::cout << std::format("Load instruction {} was executed using forwarding from store instruction {}.\n", forwaradable_load_entry->timestamp,store_buffer_entry_that_is_forwarded_from->timestamp);
 #endif
 				_load_buffer.erase(_load_buffer.begin() +  executable_load_index.first);
 				return result;
@@ -300,14 +307,14 @@ namespace OoOVisual
 		void Execution_Unit_Load_Store::execute_store(memory_addr_t store_id) {
 			std::vector<size_t> commited_stores{};
 			for (size_t i{}; i < _store_buffer.size(); i++) {
-				if (_store_buffer[i].self_id == store_id) {
+				if (_store_buffer[i].timestamp == store_id) {
 					DCache::write(_store_buffer[i].mode,_store_buffer[i].calculated_address, _store_buffer[i].register_data);
 					commited_stores.push_back(i);
 				}
 			}
 			for (auto j : commited_stores) {
 #ifdef DEBUG_PRINTS
-				std::cout << std::format("Store instruction {} wrote its data to the memory.\n",_store_buffer[j].self_id),
+				std::cout << std::format("Store instruction timestamp : {} wrote its data to the memory.\n",_store_buffer[j].timestamp),
 #endif
 				_store_buffer.erase(_store_buffer.begin() + j);
 			}
@@ -323,22 +330,23 @@ namespace OoOVisual
 			case EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL_JALR:// Fetch unit keeps fetching when it sees jalr instruction so we gotta recover
 				target_address = source_entry->src1.unsigned_ + source_entry->src2.unsigned_;
 				Fetch_Unit::set_program_counter(target_address);
-				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_id + 1 });
+				Fetch_Unit::set_program_counter_flags();
+				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_address + 1 });
 				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
-				Reservation_Station_Pool::flush_mispredicted(source_entry->instruction_id);
-				Fetch_Group::group = std::vector<Fetch_Element>(3);
+				Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp);
+				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
 				return {
 					Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD,
-					source_entry->instruction_id + 1, // will be needed in forwarding to reservation stations
+					source_entry->instruction_address + 1, // will be needed in forwarding to reservation stations
 					source_entry->self_tag, // will be needed in forwarding logic 
 				};
 				break;
 			case EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL_JAL: // Fetch unit already jumped so all we have to do is write the values to the registers
-				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_id + 1 });
+				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_address + 1 });
 				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 				return {
 					Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD,
-					source_entry->instruction_id + 1, // will be needed in forwarding to reservation stations
+					source_entry->instruction_address + 1, // will be needed in forwarding to reservation stations
 					source_entry->self_tag, // will be needed in forwarding logic 
 				};
 				break;
@@ -372,29 +380,29 @@ namespace OoOVisual
 
 			}
 			// update pht
-			bool prediction{ Fetch_Unit::get_prediction(source_entry->instruction_id)  && Fetch_Unit::has_btb_entry(source_entry->instruction_id)};
-			Fetch_Unit::update_pattern_history_table(source_entry->instruction_id, actual_taken);
+			bool prediction{ false };
+			if (source_entry->fetch_unit_prediction & Constants::PREDICTED_TAKEN)
+				prediction = true;
+			Fetch_Unit::update_pattern_history_table(source_entry->instruction_address, actual_taken);
 			target_address = source_entry->branch_target;
-			Fetch_Unit::create_btb_entry(source_entry->instruction_id, target_address);
+			Fetch_Unit::create_btb_entry(source_entry->instruction_address, target_address);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			if (prediction == actual_taken) {
 				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, false);
+				std::cout << Constants::GREEN << "Instructions[" << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was predicted correctly\n" << Constants::RESET;
 			}
 			else { // misprediction recovery
 
+				std::cout << Constants::RED << "Instructions[ " << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was mispredicted\n" << Constants::RESET;
 				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, true);
-				Fetch_Group::group = std::vector<Fetch_Element>(3);
+				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
 				if (actual_taken == true && prediction == false) {
 					Fetch_Unit::set_program_counter(target_address);
-					Reservation_Station_Pool::flush_mispredicted(source_entry->instruction_id);
-						//Fetch_Unit::reset_speculation_id();
 				}
-				else {
-
-					Fetch_Unit::set_program_counter(source_entry->instruction_id + 1);
-					Reservation_Station_Pool::flush_mispredicted(source_entry->branch_target - 1);
-						//Fetch_Unit::reset_speculation_id();
-				}
+				else 
+					Fetch_Unit::set_program_counter(source_entry->instruction_address + 1);
+				Fetch_Unit::set_program_counter_flags();
+				Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp);
 			}
 			return { Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 		}
