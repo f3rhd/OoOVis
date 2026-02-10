@@ -9,27 +9,27 @@ namespace OoOVisual
 	namespace Core {
 
 		#define ROB_MISPREDICTION_RECOVERY(BUFFER_TYPE) {                                         \
-			auto branch_id = dynamic_cast<BUFFER_TYPE*>(entry)->self_id; \
+			auto branch_id = dynamic_cast<BUFFER_TYPE*>(entry)->self_timestamp; \
 																					   \
 			_buffer[_head].reset();                                                    \
-			_head++;                                                                   \
+			_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;                                                                   \
 																					   \
 			while (                                                                    \
 				_buffer[_head] &&                                                      \
-				_buffer[_head]->origin_branch_id != Constants::NOT_SPECULATIVE &&        \
-				_buffer[_head]->origin_branch_id == branch_id                      \
+				_buffer[_head]->origin_branch_timestamp != Constants::NOT_SPECULATIVE &&        \
+				_buffer[_head]->origin_branch_timestamp == branch_id                      \
 			) {                                                                        \
 				auto* current_entry = _buffer[_head].get();                            \
 																					   \
 				if (current_entry->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) { \
-					branch_id = dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(current_entry)->self_id; \
+					branch_id = dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(current_entry)->self_timestamp; \
 				}                                                                      \
 				else if (current_entry->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) { \
-					branch_id = dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(current_entry)->self_id; \
+					branch_id = dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(current_entry)->self_timestamp; \
 				}                                                                      \
 																					   \
 				_buffer[_head].reset();                                                \
-				_head++;                                                               \
+				_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;                                                               \
 			}                                                                          \
 			Register_File::restore_alias_table();										\
 		}
@@ -83,21 +83,22 @@ namespace OoOVisual
 						(entry_)->new_alias
 					);
 					_buffer[_head].reset();
-					_head++;
+					_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
 					break;
 				}
 				case FrontEnd::FLOW_TYPE::STORE:
 					Execution_Unit_Load_Store::execute_store(dynamic_cast<Store_Reorder_Buffer_Entry*>(entry)->store_id);
 					_buffer[_head].reset();
-					_head++;
+					_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
 					break;
 				case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
 
-					if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->mispredicted) 
+					if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->mispredicted) {
 						ROB_MISPREDICTION_RECOVERY(Branch_Conditional_Reorder_Buffer_Entry)
+					}
 					else {
 						_buffer[_head].reset();
-						_head++;
+						_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
 					}
 					break;
 				case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL: {
@@ -107,12 +108,12 @@ namespace OoOVisual
 						(entry_)->architectural_register_id,
 						(entry_)->new_alias
 					);
-					if ((entry_)->mispredicted) 
+					if ((entry_)->mispredicted) {
 						ROB_MISPREDICTION_RECOVERY(Branch_Unconditional_Reorder_Buffer_Entry)
-		
+					}
 					else {
 						_buffer[_head].reset();
-						_head++;
+						_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
 					}
 					break;
 
