@@ -69,7 +69,7 @@ namespace OoOVisual
 			_physical_register_file[physical_register_id].allocated = false;
 			_physical_register_file[physical_register_id].producer_tag = Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
-			std::cout << std::format("Register File deallocated P{}.\n", physical_register_id);
+			std::cout << Constants::GREEN << std::format("Register File deallocated P{}.\n", physical_register_id) << Constants::RESET;
 #endif
 		}
 
@@ -84,18 +84,18 @@ namespace OoOVisual
 			_physical_register_file[physical_register_id].data = data;
 			_physical_register_file[physical_register_id].producer_tag = Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
-			std::cout << std::format(
+			std::cout << Constants::CYAN <<std::format(
 				"PhysicalRegisterFile[{}] <- {}\n",
 				physical_register_id,
 				data.signed_
-			);
+			) << Constants::RESET;
 #endif
 		}
 
 		reg_id_t Register_File::allocate_physical_register_for(reg_id_t architectural_register_id, u32 producer_tag) {
 			if (architectural_register_id == 0) {
 	#ifdef DEBUG_PRINTS
-				std::cout << std::format("Register alias table was updated with zero->P0 due to register allocation.\n");
+				std::cout << Constants::BLUE <<  std::format("Register alias table was updated with zero->P0 due to register allocation.\n") << Constants::RESET;
 	#endif
 				return 0;
 			}
@@ -107,7 +107,7 @@ namespace OoOVisual
 					entry.allocated = true;
 					entry.producer_tag = producer_tag;
 #ifdef DEBUG_PRINTS
-					std::cout << std::format("Register alias table was updated with {}->P{} due to register allocation.\n", FrontEnd::Lookup::reg_name(architectural_register_id), key);
+					std::cout << Constants::BLUE << std::format("Register alias table was updated with x{},{}->P{} due to register allocation.\n", architectural_register_id,FrontEnd::Lookup::reg_name(architectural_register_id), key) << Constants::RESET;
 #endif
 					return key;
 				}
