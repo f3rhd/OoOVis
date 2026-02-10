@@ -5,7 +5,7 @@ namespace OoOVisual
 {
     namespace Core
     {
-		enum class RESERVATION_STATION_ID : u32 {
+		enum class RESERVATION_STATION_ID : u8 {
 			ADD_SUB,
 			BITWISE,
 			SET_LESS,
@@ -15,7 +15,7 @@ namespace OoOVisual
 			BRANCH,
 			UNKNOWN
 		};
-		enum class EXECUTION_UNIT_MODE {
+		enum class EXECUTION_UNIT_MODE : u8 {
 			BRANCH_UNCONDITIONAL_JAL,
 			BRANCH_UNCONDITIONAL_JALR,
 			BRANCH_CONDITIONAL_GREATER_OR_EQUAL_THAN_UNSIGNED,
@@ -68,10 +68,11 @@ namespace OoOVisual
 			bool   ready = false;
 			bool   busy = false;
 			bool   destination_register_id_as_ofsset = false;
-			u32    instruction_id = 0;
+			u32    instruction_address = 0;
 			reg_id_t store_source_register_id = Constants::INVALID_PHYSICAL_REGISTER_ID; // will need this in load forwarding and bypassing
 			memory_addr_t branch_target = 0;
-			//branch_instruction_id_t branch_id = 0;
+			u32 timestamp = 0;
+			u8 fetch_unit_prediction = Constants::NOT_BRANCH_INSTRUCTION;
 		};
 
     } // namespace Core

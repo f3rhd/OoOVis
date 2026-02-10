@@ -10,7 +10,9 @@ namespace OoOVisual
         struct Fetch_Element {
             std::unique_ptr<FrontEnd::Instruction>* instruction;
             memory_addr_t address;
-            u32 speculation_id = Constants::NOT_SPECULATIVE;
+            u32 origin_branch_timestamp = Constants::NOT_SPECULATIVE;
+            u32 timestamp = 0;
+            u32 branch_prediction = Constants::NOT_BRANCH_INSTRUCTION;
         };
         struct Fetch_Group {
             static std::vector<Fetch_Element> group;
