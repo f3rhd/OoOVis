@@ -38,12 +38,6 @@ namespace OoOVisual
 
 
 		void Register_File::restore_alias_table() {
-			//for (reg_id_t i{}; i < ARCHITECTURAL_REGISTER_AMOUNT; i++) {
-			//	if (_snapshot_register_alias_table[i] != _register_alias_table[i]) {
-			//		Register_File::deallocate(_register_alias_table[i]);
-			//	}
-			//	_register_alias_table[i] = _snapshot_register_alias_table[i];
-			//}
 			_frontend_register_alias_table = _retirement_alias_table;
 #ifdef DEBUG_PRINTS
 			std::cout << std::format("Register alias table was restored due to mis-prediction.\n");

@@ -163,15 +163,11 @@ namespace OoOVisual {
 				reg_id_t src1_,
 				reg_id_t src2_,
 				memory_addr_t target_addr_
-				//branch_instruction_id_t branch_id,
-				//memory_addr_t next_instruction_
 			) :
 				_src1_reg(src1_),
 				_src2_reg(src2_),
 				_target_addr(target_addr_),
 				_type(type_)
-				//_id(branch_id),
-				//_next_instruction_addr(next_instruction_)
 			{
 			}
 			memory_addr_t target_addr() const override { return _target_addr; }
@@ -180,11 +176,7 @@ namespace OoOVisual {
 			BRANCH_INSTRUCTION_TYPE kind() const { return _type; }
 			reg_id_t src1() const { return _src1_reg; }
 			reg_id_t src2() const { return _src2_reg; }
-			//branch_instruction_id_t id() const { return _id; }
-			//memory_addr_t			fallthrough() const { return _next_instruction_addr; }
 		private:
-			//memory_addr_t _next_instruction_addr;
-			//branch_instruction_id_t _id;
 			reg_id_t _src1_reg;
 			reg_id_t _src2_reg;
 			memory_addr_t _target_addr;
@@ -229,16 +221,6 @@ namespace OoOVisual {
 			reg_id_t _src1;// jalr uses this
 			int32_t _imm;  // jalr uses this
 		};
-		//struct Label_Instruction : Instruction {
-		//	Label_Instruction(label_id_t label_) : _label_id(label_) {}
-		//	label_id_t target_label() const override { return _label_id; }
-		//	memory_addr_t physical_addr() { return _physical_addr; }
-		//	bool is_label_instruction() const override { return true; }
-		//	FLOW_TYPE flow() const override { return FLOW_TYPE::UNKNOWN; }
-		//private:
-		//	memory_addr_t _physical_addr;
-		//	label_id_t _label_id;
-		//};
 
 	} // namespace Instruction
 } //namespace OoOVis
