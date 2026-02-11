@@ -43,11 +43,70 @@ namespace OoOVisual
                 if (Register_File::full()) return DISPATCH_FEEDBACK::REORDER_BUFFER_WAS_FULL;
                 if (register_instruction->dest_reg() == 0)
                     return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
-                auto info = get_reservation_station_id_and_execution_mode_for_register_instruction(instruction);
-                Reservation_Station_Entry temp_reservation_station_entry;
-                temp_reservation_station_entry.mode = info.second;
-                Physical_Register_File_Entry entry(Register_File::read_with_alias(register_instruction->src1_reg()));
 
+                Reservation_Station_Entry temp_reservation_station_entry;
+                switch (register_instruction->instruction_type()) {
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::ADD:
+					temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::ADD_SUB_UNIT_ADD ;
+					break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SUB:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::ADD_SUB_UNIT_SUB;
+						break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::LOAD_UPPER:
+					temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::ADD_SUB_UNIT_LOAD_UPPER;
+					break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::AUIPC:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::ADD_SUB_UNIT_AUIPC;
+					break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::DIV:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_SIGNED ;
+                     break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::DIVU:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_UNSIGNED ;
+                     break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::REM:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::DIVIDER_REMAINDER_SIGNED ;
+                     break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::REMU:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::DIVIDER_REMAINDER_UNSIGNED ;
+                     break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MUL:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_SIGNED ;
+                     break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MULH:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH ;
+                     break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MULHSU:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_SIGNED_UNSIGNED ;
+                     break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MULHU:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_UNSIGNED ;
+                     break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::AND:
+                    temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BITWISE_AND;
+					break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::OR:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BITWISE_XOR;
+					break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::XOR:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::LOGICAL_XOR;
+                     break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLL:
+                    temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BITWISE_SHIFT_LEFT_LOGICAL;
+					break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SRL:
+				    temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BITWISE_SHIFT_RIGHT_LOGICAL;
+					break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SRA:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BITWISE_SHIFT_RIGHT_ARITHMETIC;
+                     break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLT:
+					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::SET_LESS_THAN;
+                     break;
+				default: // shouldn't happen
+					break;
+                }
+                Physical_Register_File_Entry entry(Register_File::read_with_alias(register_instruction->src1_reg()));
 				temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
 				temp_reservation_station_entry.src1 = entry.data;
                 // store the old alias before renaming
@@ -378,63 +437,6 @@ namespace OoOVisual
             return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
 
         }
-
-		std::pair<RESERVATION_STATION_ID, EXECUTION_UNIT_MODE> Dispatcher::get_reservation_station_id_and_execution_mode_for_register_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction){
-            switch (instruction->flow())
-            {
-            case FrontEnd::FLOW_TYPE::REGISTER:
-                if (const auto* register_instr = dynamic_cast<const FrontEnd::Register_Instruction*>(instruction.get())) {
-                    switch (register_instr->instruction_type()) {
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::ADD:
-                            return { RESERVATION_STATION_ID::ADD_SUB,EXECUTION_UNIT_MODE::ADD_SUB_UNIT_ADD };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SUB:
-                            return { RESERVATION_STATION_ID::ADD_SUB,EXECUTION_UNIT_MODE::ADD_SUB_UNIT_SUB };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::LOAD_UPPER:
-                            return { RESERVATION_STATION_ID::ADD_SUB,EXECUTION_UNIT_MODE::ADD_SUB_UNIT_LOAD_UPPER };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::AUIPC:
-                            return { RESERVATION_STATION_ID::ADD_SUB,EXECUTION_UNIT_MODE::ADD_SUB_UNIT_AUIPC };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::DIV:
-                            return { RESERVATION_STATION_ID::DIVIDER,EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_SIGNED };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::DIVU:
-                            return { RESERVATION_STATION_ID::DIVIDER,EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_UNSIGNED };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::REM:
-                            return { RESERVATION_STATION_ID::DIVIDER,EXECUTION_UNIT_MODE::DIVIDER_REMAINDER_SIGNED };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::REMU:
-                            return { RESERVATION_STATION_ID::DIVIDER,EXECUTION_UNIT_MODE::DIVIDER_REMAINDER_UNSIGNED };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MUL:
-                            return { RESERVATION_STATION_ID::DIVIDER,EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_SIGNED };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MULH:
-                            return { RESERVATION_STATION_ID::DIVIDER,EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MULHSU:
-                            return { RESERVATION_STATION_ID::DIVIDER,EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_SIGNED_UNSIGNED };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MULHU:
-                            return { RESERVATION_STATION_ID::DIVIDER,EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_UNSIGNED };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::AND:
-                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::BITWISE_AND };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::OR:
-                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::BITWISE_XOR };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::XOR:
-                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::LOGICAL_XOR };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLL:
-                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::BITWISE_SHIFT_LEFT_LOGICAL };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SRL:
-                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::BITWISE_SHIFT_RIGHT_LOGICAL };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SRA:
-                            return { RESERVATION_STATION_ID::BITWISE,EXECUTION_UNIT_MODE::BITWISE_SHIFT_RIGHT_ARITHMETIC };
-                        case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLT:
-                            return { RESERVATION_STATION_ID::SET_LESS,EXECUTION_UNIT_MODE::SET_LESS_THAN };
-                        default: // shouldn't happen
-                            break;
-                    }
-                }
-                return { RESERVATION_STATION_ID::UNKNOWN,EXECUTION_UNIT_MODE::UNKNOWN };
-                break;
-            default:
-                return { RESERVATION_STATION_ID::UNKNOWN,EXECUTION_UNIT_MODE::UNKNOWN };
-                break;
-            }
-			}
-
         std::vector<DISPATCH_FEEDBACK> Dispatcher::dispatch_fetch_group()
         {
             std::vector<DISPATCH_FEEDBACK> feedback;

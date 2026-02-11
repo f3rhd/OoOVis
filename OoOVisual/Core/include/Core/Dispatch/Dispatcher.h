@@ -19,7 +19,6 @@ namespace OoOVisual
 
         public:
             Dispatcher() = default;
-            static std::pair<RESERVATION_STATION_ID, EXECUTION_UNIT_MODE>              get_reservation_station_id_and_execution_mode_for_register_instruction(const std::unique_ptr<FrontEnd::Instruction>& instruction);
             static std::vector<DISPATCH_FEEDBACK>                                      dispatch_fetch_group();
         private:
             static DISPATCH_FEEDBACK                                                   dispatch_fetch_element(const Fetch_Element& fetch_element);
