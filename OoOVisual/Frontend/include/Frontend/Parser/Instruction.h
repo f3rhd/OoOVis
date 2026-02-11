@@ -4,7 +4,7 @@ namespace OoOVisual {
 	namespace FrontEnd {
 		auto constexpr NO_LABEL = 0;
 		auto constexpr FORWARD_ADDR = 0xFFFFFFFFu;
-		enum class FLOW_TYPE {
+		enum class FLOW_TYPE : u8 {
 			REGISTER,
 			LOAD,
 			STORE,

@@ -11,8 +11,8 @@ namespace OoOVisual
 			Reorder_Buffer_Entry(FrontEnd::FLOW_TYPE flow,u32 origin_branch_timestamp_) : flow_type(flow), origin_branch_timestamp(origin_branch_timestamp_) {}
 			virtual FrontEnd::FLOW_TYPE flow() { return flow_type; };
 		public:
-			bool ready = false;
 			time_t origin_branch_timestamp = Constants::NOT_SPECULATIVE;
+			bool ready = false;
 			FrontEnd::FLOW_TYPE flow_type = FrontEnd::FLOW_TYPE::UNKNOWN;
 		};
 		struct Register_Reorder_Buffer_Entry : Reorder_Buffer_Entry { // load dispatching and jump will also create this type of entry
