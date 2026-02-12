@@ -7,6 +7,7 @@
 #include <Core/Constants/Constants.h>
 #include <iostream>
 #include <format>
+#include <ranges>
 
 namespace OoOVisual
 {
@@ -177,6 +178,9 @@ namespace OoOVisual
 					address,
 					Constants::NO_PRODUCER_TAG
 				);
+				if (source_entry->timestamp == 800) { // @Debug
+					int a{};
+				}
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Created entry in the store buffer: timestamp:{}, source_id:{}, address:{}\n", source_entry->timestamp, source_entry->store_source_register_id, address);
 #endif
@@ -204,10 +208,10 @@ namespace OoOVisual
 		}
 
 		std::pair<size_t,size_t> Execution_Unit_Load_Store::find_load_that_is_executable() {
-			if (_load_buffer.empty()) return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARDING };
+			if (_load_buffer.empty()) return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
 			// maybe store buffer is empty?
 			if (_store_buffer.empty()) {
-				return { 0,Constants::LOAD_DOES_NOT_USE_FORWARDING }; // select the first entry in the load buffer ( implied by 0 ) 
+				return { 0,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE }; // select the first entry in the load buffer ( implied by 0 ) 
 			}
 			// maybe we can bypass?
 			size_t bypassable_load_entry_index{};
@@ -226,11 +230,11 @@ namespace OoOVisual
 
 			}
 			if (can_bypass)
-				return { bypassable_load_entry_index,Constants::LOAD_DOES_NOT_USE_FORWARDING };
+				return { bypassable_load_entry_index,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
 
 			// maybe we can forward anything?
 			size_t forwaradable_load_entry_index{Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST};
-			size_t store_buffer_entry_index_that_is_forwarded_from{Constants::LOAD_DOES_NOT_USE_FORWARDING};
+			size_t store_buffer_entry_index_that_is_forwarded_from{Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE};
 			// forward from the latest store instruction that writes to the same address
 			for (size_t i{}; i < _load_buffer.size(); i++) {
 				time_t max_store_timestamp{};
@@ -241,12 +245,12 @@ namespace OoOVisual
 						max_store_timestamp = static_cast<time_t>(j);
 					}
 				}
-				if (store_buffer_entry_index_that_is_forwarded_from != Constants::LOAD_DOES_NOT_USE_FORWARDING) {
+				if (store_buffer_entry_index_that_is_forwarded_from != Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE) {
 					return { i,store_buffer_entry_index_that_is_forwarded_from };
 				}
 			}
 
-			return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARDING };
+			return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
 		}
 		Forwarding_Data Execution_Unit_Load_Store::execute_load() {
 
@@ -254,70 +258,67 @@ namespace OoOVisual
 			if (executable_load_index.first == Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST)
 				return { Constants::FORWARDING_DATA_INVALID };
 
-			if (executable_load_index.second == Constants::LOAD_DOES_NOT_USE_FORWARDING) { // it is a bypassable load
+			if (executable_load_index.second == Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE) { // it is a bypassable load
 				const Buffer_Entry* bypassable_load_entry{ &_load_buffer.at(executable_load_index.first) };
-				switch (bypassable_load_entry->mode) {
-				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_WORD:
-					break;
-				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE:
-					break;
-				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF:
-					break;
-				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE_UNSIGNED:
-					break;
-				case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF_UNSIGNED:
-					break;
-				}
 				data_t write_data{DCache::read(bypassable_load_entry->mode,bypassable_load_entry->calculated_address) };
 				//write to the physical register file
 				Register_File::write(bypassable_load_entry->register_id, write_data);
 				// make the rob entry ready
 				Reorder_Buffer::set_ready(bypassable_load_entry->reorder_buffer_entry_index);
 				Forwarding_Data result{ 
-					true,
+					Constants::FORWADING_DATA_FORWARD_ONLY, // if we are in the load buffer we are already deallocated from the reservation station 
 					write_data, // will be needed in forwarding to reservation stations
 					bypassable_load_entry->producer_tag, // will be needed in forwarding logic 
 				};
+				if (bypassable_load_entry->timestamp == 460) { // @Debug
+					int a{};
+				}
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Load instruction {} was executed using bypasssing.\n", bypassable_load_entry->timestamp);
 #endif
 				_load_buffer.erase(_load_buffer.begin() + executable_load_index.first);
 				return result;
 			}
-			if (executable_load_index.second != Constants::LOAD_DOES_NOT_USE_FORWARDING) {
 
-				const Buffer_Entry* forwaradable_load_entry{ &_load_buffer[executable_load_index.first] };
-				const Buffer_Entry* store_buffer_entry_that_is_forwarded_from{ &_store_buffer[executable_load_index.second] };
-				Register_File::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
-				Reorder_Buffer::set_ready(forwaradable_load_entry->reorder_buffer_entry_index);
-				Forwarding_Data result(
-					true,
-					store_buffer_entry_that_is_forwarded_from->register_data, // will be needed in forwarding to reservation stations
-					forwaradable_load_entry->producer_tag // will be needed in forwarding logic 
-				);
+			const Buffer_Entry* forwaradable_load_entry{ &_load_buffer[executable_load_index.first] };
+			const Buffer_Entry* store_buffer_entry_that_is_forwarded_from{ &_store_buffer[executable_load_index.second] };
+			Register_File::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
+			Reorder_Buffer::set_ready(forwaradable_load_entry->reorder_buffer_entry_index);
+			Forwarding_Data result(
+				Constants::FORWADING_DATA_FORWARD_ONLY,
+				store_buffer_entry_that_is_forwarded_from->register_data, // will be needed in forwarding to reservation stations
+				forwaradable_load_entry->producer_tag // will be needed in forwarding logic 
+			);
 #ifdef DEBUG_PRINTS
-				std::cout << std::format("Load instruction {} was executed using forwarding from store instruction {}.\n", forwaradable_load_entry->timestamp,store_buffer_entry_that_is_forwarded_from->timestamp);
+			std::cout << std::format("Load instruction {} was executed using forwarding from store instruction {}.\n", forwaradable_load_entry->timestamp,store_buffer_entry_that_is_forwarded_from->timestamp);
 #endif
-				_load_buffer.erase(_load_buffer.begin() +  executable_load_index.first);
-				return result;
-			}
-			return { Constants::FORWARDING_DATA_INVALID }; // we cant do anything
+			_load_buffer.erase(_load_buffer.begin() +  executable_load_index.first);
+			return result;
 		}
 
-		void Execution_Unit_Load_Store::execute_store(memory_addr_t store_id) {
+		void Execution_Unit_Load_Store::execute_store(memory_addr_t store_timestamp) {
+#ifdef DEBUG_PRINTS
 			std::vector<size_t> commited_stores{};
+#endif
 			for (size_t i{}; i < _store_buffer.size(); i++) {
-				if (_store_buffer[i].timestamp == store_id) {
+				if (_store_buffer[i].timestamp == store_timestamp) {
 					DCache::write(_store_buffer[i].mode,_store_buffer[i].calculated_address, _store_buffer[i].register_data);
+#ifdef DEBUG_PRINTS
 					commited_stores.push_back(i);
+#endif
 				}
 			}
-			for (auto j : commited_stores) {
 #ifdef DEBUG_PRINTS
-				std::cout << std::format("Store instruction timestamp : {} wrote its data to the memory.\n",_store_buffer[j].timestamp),
-#endif
-				_store_buffer.erase(_store_buffer.begin() + j);
+			for (auto j : commited_stores) {
+				std::cout << std::format("Store instruction timestamp : {} wrote its data to the memory.\n", _store_buffer[j].timestamp);
 			}
+#endif
+			std::erase_if(_store_buffer, [&](const auto& a) {return a.timestamp == store_timestamp; });
+		}
+
+		void Execution_Unit_Load_Store::flush_mispredicted(time_t timestamp) {
+			std::erase_if(_load_buffer, [&](const Execution_Unit_Load_Store::Buffer_Entry& a) {return a.timestamp > timestamp; });
+			std::erase_if(_store_buffer, [&](const Execution_Unit_Load_Store::Buffer_Entry& a) {return a.timestamp > timestamp; });
 		}
 
 		Forwarding_Data Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
@@ -407,6 +408,7 @@ namespace OoOVisual
 					Fetch_Unit::set_program_counter(source_entry->instruction_address + 1);
 				Fetch_Unit::set_program_counter_flags();
 				Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp);
+				Execution_Unit_Load_Store::flush_mispredicted(source_entry->timestamp);
 			}
 			return { Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 		}

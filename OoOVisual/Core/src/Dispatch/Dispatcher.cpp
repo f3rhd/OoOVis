@@ -38,11 +38,11 @@ namespace OoOVisual
             const auto& instruction_id = fetch_element.address;
             const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* register_instruction{ dynamic_cast<FrontEnd::Register_Instruction*>(instruction.get()) }) {
-                if (station.full()) 
-                    return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
-                if (Register_File::full()) return DISPATCH_FEEDBACK::REORDER_BUFFER_WAS_FULL;
                 if (register_instruction->dest_reg() == 0)
                     return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
+                if (station.full()) 
+                    return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
+                if (Register_File::full()) return DISPATCH_FEEDBACK::REGISTER_FILE_WAS_FULL;
 
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (register_instruction->instruction_type()) {
@@ -112,18 +112,6 @@ namespace OoOVisual
                 // store the old alias before renaming
                 auto old_alias{ Register_File::aliasof(register_instruction->dest_reg()) };
                 Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() }; 
-                reg_id_t destination_physical_register_id{ Register_File::allocate_physical_register_for(register_instruction->dest_reg(), allocated_reservation_station_entry->self_tag) }; // we do the fulness checking before calling this, so we good
-                // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
-                auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
-						std::make_unique<Register_Reorder_Buffer_Entry>(
-							register_instruction->flow(),
-							register_instruction->dest_reg(),
-							old_alias,
-							destination_physical_register_id,
-                            speculation_id
-						)
-					) 
-                };
                 if (register_instruction->uses_immval()) {
                     temp_reservation_station_entry.src2.signed_ = register_instruction->src2().imm_val;
                     temp_reservation_station_entry.producer_tag2 = Constants::NO_PRODUCER_TAG;
@@ -132,6 +120,19 @@ namespace OoOVisual
 					temp_reservation_station_entry.src2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).data;
                     temp_reservation_station_entry.producer_tag2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).producer_tag;
                 }
+                reg_id_t destination_physical_register_id{ Register_File::allocate_physical_register_for(register_instruction->dest_reg(), allocated_reservation_station_entry->self_tag) }; // we do the fulness checking before calling this, so we good
+                // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
+                auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
+						std::make_unique<Register_Reorder_Buffer_Entry>(
+							register_instruction->flow(),
+							register_instruction->dest_reg(),
+							old_alias,
+							destination_physical_register_id,
+                            speculation_id,
+                            fetch_element.timestamp
+						)
+					) 
+                };
 				temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
@@ -157,12 +158,12 @@ namespace OoOVisual
             const auto& instruction_id = fetch_element.address;
             const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* load_instruction{ dynamic_cast<FrontEnd::Load_Instruction*>(instruction.get()) }) {
+                if (load_instruction->dest_reg() == 0)
+                    return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
                 if (station.full())
                     return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
                 if (Register_File::full())
                     return DISPATCH_FEEDBACK::REGISTER_FILE_WAS_FULL;
-                if (load_instruction->dest_reg() == 0)
-                    return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (load_instruction->kind()) {
                 case FrontEnd::Load_Instruction::LOAD_INSTRUCTION_TYPE::LB:
@@ -198,15 +199,15 @@ namespace OoOVisual
 
                 auto old_alias{ Register_File::aliasof(load_instruction->dest_reg()) };
                 Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() };
-			    reg_id_t destination_physical_register_id = Register_File::allocate_physical_register_for(load_instruction->dest_reg(),allocated_reservation_station_entry->self_tag);
-                // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
+			    reg_id_t destination_physical_register_id = Register_File::allocate_physical_register_for(load_instruction->dest_reg(),allocated_reservation_station_entry->self_tag); // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
                 auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
                     std::make_unique<Register_Reorder_Buffer_Entry>(
                         load_instruction->flow(),
                         load_instruction->dest_reg(),
                         old_alias,
                         destination_physical_register_id,
-                        speculation_id
+                        speculation_id,
+						fetch_element.timestamp
                     )
                 )
                 };
@@ -274,8 +275,9 @@ namespace OoOVisual
                 temp_reservation_station_entry.reorder_buffer_entry_index = static_cast<u32>(Reorder_Buffer::allocate(
 						std::make_unique<Store_Reorder_Buffer_Entry>(
 							store_instruction->flow(),
-                            instruction_id,
-                            speculation_id
+                            fetch_element.timestamp,
+                            speculation_id,
+                            fetch_element.timestamp
 						)
 					)
                 );
@@ -379,13 +381,12 @@ namespace OoOVisual
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.timestamp = fetch_element.timestamp;
                 reg_id_t old_alias = Register_File::aliasof(jump_instruction->dest_reg());
+                Physical_Register_File_Entry entry{ Register_File::read_with_alias(jump_instruction->src1()) };
 				reg_id_t destination_pysical_register_id = Register_File::allocate_physical_register_for(jump_instruction->dest_reg(), allocated_reservation_station_entry->self_tag);
 				temp_reservation_station_entry.destination_register_id = destination_pysical_register_id;
-                Physical_Register_File_Entry entry;
                 u64 target_reorder_buffer_entry_index{};
                 switch (jump_instruction->kind()) {
                 case FrontEnd::Jump_Instruction::JUMP_INSTRUCTION_TYPE::JALR:
-					entry = Register_File::read_with_alias(jump_instruction->src1());
                     temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
                     temp_reservation_station_entry.src1 = entry.data;
                     temp_reservation_station_entry.producer_tag2 = Constants::NO_PRODUCER_TAG;
@@ -437,15 +438,22 @@ namespace OoOVisual
             return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
 
         }
-        std::vector<DISPATCH_FEEDBACK> Dispatcher::dispatch_fetch_group()
-        {
-            std::vector<DISPATCH_FEEDBACK> feedback;
-            feedback.reserve(Constants::FETCH_WIDTH);
-            if (Fetch_Group::group.empty())
-                return std::vector<DISPATCH_FEEDBACK>(Constants::FETCH_WIDTH,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH);
-			for (const auto& fetch_element : Fetch_Group::group) {
-                feedback.emplace_back(dispatch_fetch_element(fetch_element));
-			}
+        std::vector<DISPATCH_FEEDBACK> Dispatcher::dispatch_fetch_group() {
+            std::vector<DISPATCH_FEEDBACK> feedback(Constants::FETCH_WIDTH, DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH);
+            if(Fetch_Group::group.empty())
+                return feedback;
+            for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {
+                if (Fetch_Group::group[i].timestamp == 800 ) { //@Debug
+                    int a{};
+                }
+                feedback[i] = dispatch_fetch_element(Fetch_Group::group[i]);
+                if (
+                    feedback[i] != DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH &&
+                    feedback[i] != DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH
+                ) {
+                    break;
+                }
+            }
             return feedback;
         }
      

@@ -130,7 +130,11 @@ namespace OoOVisual {
 
             // we should be imm
             EXPECT(TOKEN_TYPE::IMMEDIATE);
-            offset_t offset{ std::stoi(_current_token->word) };
+            offset_t offset{};
+			if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
+				offset = std::stoi(_current_token->word, nullptr, 16);
+			else
+				offset = std::stoi(_current_token->word);
 
             advance();
             // we should be left paranthesis
@@ -528,7 +532,11 @@ namespace OoOVisual {
                 advance();
                 EXPECT(TOKEN_TYPE::IMMEDIATE);
 
-                int32_t imm_val{ std::stoi(_current_token->word) };
+                int32_t imm_val{};
+				if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
+					imm_val = std::stoi(_current_token->word, nullptr, 16);
+				else
+					imm_val = std::stoi(_current_token->word);
 
                 int32_t low{ imm_val & 0xFFF };
                 int32_t high(static_cast<uint32_t>(imm_val) >> 12);

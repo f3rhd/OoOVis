@@ -13,6 +13,7 @@ namespace OoOVisual
             RESERVATION_STATION_WAS_FULL,
             REGISTER_FILE_WAS_FULL,
             REORDER_BUFFER_WAS_FULL,
+            BLOCKED_BY_EARLIER_INSTRUCTION,
             SUCCESSFUL_DISPATCH
         };
         class Dispatcher {

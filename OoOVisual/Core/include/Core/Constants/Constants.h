@@ -30,7 +30,7 @@ namespace OoOVisual {
 				unsigned int constexpr NOT_BRANCH_INSTRUCTION{ 0 };
 				unsigned int constexpr PREDICTED_TAKEN{ 1 << 1 };
 				unsigned int constexpr PREDICTED_NOT_TAKEN{ 1 << 2 };
-				unsigned int constexpr LOAD_DOES_NOT_USE_FORWARDING{ 0xFFFFFFFF };
+				unsigned int constexpr LOAD_DOES_NOT_USE_FORWARD_FROM_STORE{ 0xFFFFFFFF };
 				unsigned int constexpr EXECUTABLE_LOAD_DOES_NOT_EXIST{ 0xFFFFFFFF};
 				unsigned int constexpr NOT_SPECULATIVE{ 0xFFFFFFFF };
 		} // namespace Constants

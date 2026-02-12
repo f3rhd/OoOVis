@@ -1,4 +1,5 @@
 #include <Core/ReservationStation/ReservationStation.h>
+#include <Core/Execution/ExecutionUnits.h>
 #include <algorithm>
 #include <ranges>
 
@@ -33,14 +34,21 @@ namespace OoOVisual
                         continue;
                 }
                 else {
-                    if (!e.busy && !e.ready)
+                    if ((!e.ready && e.busy) || (!e.ready && !e.busy))
                         continue;
                 }
 				if (!best || e.timestamp < best->timestamp)
 					best = &e;
 			}
-            if(best && best->ready)
+            if (best && best->ready) {
+                if (_id == RESERVATION_STATION_ID::LOAD_STORE) {
+                    if (best->store_source_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) { // it is a load instruction
+                        return Execution_Unit_Load_Store::load_buffer_is_full() ? nullptr : best;
+                    }
+                    return Execution_Unit_Load_Store::store_buffer_is_full() ? nullptr : best;
+                }
 				return best;
+            }
             return nullptr;
         }
         
