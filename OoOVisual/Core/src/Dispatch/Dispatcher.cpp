@@ -432,9 +432,6 @@ namespace OoOVisual
             if(Fetch_Group::group.empty())
                 return feedback;
             for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {
-                if (Fetch_Group::group[i].timestamp == 800 ) { //@Debug
-                    int a{};
-                }
                 feedback[i] = dispatch_fetch_element(Fetch_Group::group[i]);
                 if (
                     feedback[i] != DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH &&
