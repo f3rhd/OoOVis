@@ -18,10 +18,8 @@ namespace OoOVisual
         std::vector<Fetch_Element> Fetch_Unit::fetch(const std::vector<DISPATCH_FEEDBACK>& dispatch_feedback) {
 			_timestamp += Constants::UNIT_TIME;
             std::vector<Fetch_Element> fetch_group(Constants::FETCH_WIDTH);
-            if (_program_counter >= _instruction_cache.size()) {
-                _last_fetch_group = fetch_group;
+            if (_program_counter >= _instruction_cache.size())
                 return fetch_group;
-            }
             for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {
                 switch (dispatch_feedback[i])
                 {

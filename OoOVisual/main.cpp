@@ -15,7 +15,6 @@ int main(int argc, char** argv) {
 	while (true) {
 		Reorder_Buffer::commit();
 		Execution_Stage::issue_and_execute();
-		memory_addr_t successful_dispatches{};
 		auto feedback(Dispatcher::dispatch_fetch_group());
 		Fetch_Group::group = (Fetch_Unit::fetch(feedback));
 	}
