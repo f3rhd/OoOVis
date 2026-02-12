@@ -91,23 +91,7 @@ namespace OoOVisual
 				case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
 
 					if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->mispredicted) {
-						//ROB_MISPREDICTION_RECOVERY(Branch_Conditional_Reorder_Buffer_Entry)
-						auto branch_timestamp = dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->self_timestamp; 
-						auto flush_boundary{ dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->flush_timestamp_boundary };
-						if (flush_boundary == Constants::TIME_ZERO) {
-							_buffer[_head].reset(); 
-							_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE; 
-						}
-						else {
-							while (_buffer[_head] && 
-								_buffer[_head]->self_timestamp >=  branch_timestamp && 
-								_buffer[_head]->self_timestamp <= flush_boundary
-							) {
-								_buffer[_head].reset();
-								_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE; 
-							} 
-						}
-						Register_File::restore_alias_table();
+						ROB_MISPREDICTION_RECOVERY(Branch_Conditional_Reorder_Buffer_Entry)
 					}
 					else {
 						_buffer[_head].reset();
@@ -122,22 +106,7 @@ namespace OoOVisual
 						(entry_)->new_alias
 					);
 					if ((entry_)->mispredicted) {
-						auto branch_timestamp = dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->self_timestamp; 
-						auto flush_boundary{ dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->flush_timestamp_boundary };
-						if (flush_boundary == Constants::TIME_ZERO) {
-							_buffer[_head].reset(); 
-							_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE; 
-						}
-						else {
-							while (_buffer[_head] && 
-								_buffer[_head]->self_timestamp >=  branch_timestamp && 
-								_buffer[_head]->self_timestamp <= flush_boundary
-							) {
-								_buffer[_head].reset();
-								_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE; 
-							} 
-						}
-						Register_File::restore_alias_table();
+						ROB_MISPREDICTION_RECOVERY(Branch_Unconditional_Reorder_Buffer_Entry);
 					}
 					else {
 						_buffer[_head].reset();
