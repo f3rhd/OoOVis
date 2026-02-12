@@ -9,7 +9,7 @@ namespace OoOVisual
 	{
 		struct Reservation_Station_Pool {
 
-			static void flush_mispredicted(u32 flusher_tag, time_t flusher_timestamp); 
+			static time_t flush_mispredicted(u32 flusher_tag, time_t flusher_timestamp); 
 			static void wakeup(u32 producer_tag, data_t produced_data);
 			static void deallocate_entry(u32 tag);
 			static Reservation_Station& get_reservation_station(RESERVATION_STATION_ID id);

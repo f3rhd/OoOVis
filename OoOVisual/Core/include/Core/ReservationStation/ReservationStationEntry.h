@@ -67,7 +67,7 @@ namespace OoOVisual
 			reg_id_t destination_register_id = Constants::INVALID_PHYSICAL_REGISTER_ID;
 			reg_id_t store_source_register_id = Constants::INVALID_PHYSICAL_REGISTER_ID; // will need this in load forwarding and bypassing
 			memory_addr_t branch_target = 0;
-			u32 timestamp = 0;
+			u32 timestamp = Constants::TIME_ZERO;
 			u8 fetch_unit_prediction = Constants::NOT_BRANCH_INSTRUCTION;
 			bool   ready = false;
 			bool   busy = false;

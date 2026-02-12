@@ -9,7 +9,7 @@ namespace OoOVisual
 		public:
 			static size_t allocate(std::unique_ptr<Reorder_Buffer_Entry>&& entry);
 			static void   set_ready(u64 target_entry_index);
-			static void   set_branch_evaluation(u64 target,bool was_misprediction);
+			static void   set_branch_evaluation(u64 target,bool was_misprediction,time_t flush_boundary);
 			static void   commit();
 			static bool   full();
 		private:

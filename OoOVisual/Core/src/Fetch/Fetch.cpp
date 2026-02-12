@@ -11,7 +11,6 @@ namespace OoOVisual
         std::unordered_map<u32, u32>                        Fetch_Unit::_pattern_history_table{};
         time_t                                              Fetch_Unit::_timestamp{ 0};
         bool                                                Fetch_Unit::_next_fetch_is_set{ false };
-        memory_addr_t                                       Fetch_Unit::_last_branch_timestamp = Constants::NOT_SPECULATIVE;
         memory_addr_t                                       Fetch_Unit::_branch_shift_register{};
         std::vector<Fetch_Element>                          Fetch_Unit::_last_fetch_group{};
         std::vector<Fetch_Element>                          Fetch_Group::group{};
@@ -49,7 +48,6 @@ namespace OoOVisual
                 if (temp_address < _instruction_cache.size()) {
                     fetch_element.instruction = &_instruction_cache[temp_address];
                     fetch_element.address = temp_address;
-                    fetch_element.origin_branch_timestamp = _last_branch_timestamp;
                     fetch_element.timestamp = _timestamp;
                     if (fetch_element.instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) {
                         switch (dynamic_cast<FrontEnd::Jump_Instruction*>(fetch_element.instruction->get())->kind()) {
@@ -60,7 +58,6 @@ namespace OoOVisual
                             return fetch_group;
                         case FrontEnd::Jump_Instruction::JUMP_INSTRUCTION_TYPE::JALR: 
                             /* jalr is always wrong predicted so we have to seperate its timestamp from incoming instructions*/
-							_last_branch_timestamp = _timestamp;
 							_timestamp += Constants::UNIT_TIME;
                             break;
 					    /*JALR instruction uses rs1 and imm value to calculate the target address we cant do that here we are gonna let 
@@ -70,7 +67,6 @@ namespace OoOVisual
                         }
                     }
                     else if (fetch_element.instruction->get()->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) {
-						_last_branch_timestamp = _timestamp;
                         if (has_btb_entry(fetch_element.address)) {
 							memory_addr_t target_address{ get_target_addr_from_btb(fetch_element.address) };
 							if (get_prediction(fetch_element.address)) {
@@ -111,18 +107,11 @@ namespace OoOVisual
         }
 
         void Fetch_Unit::set_program_counter_flags() {
-
-            _last_branch_timestamp = Constants::NOT_SPECULATIVE;
             _next_fetch_is_set = true;
         }
         void Fetch_Unit::set_program_counter(memory_addr_t next) {
             _program_counter = next;
         }
-
-		void Fetch_Unit::reset_speculation_id() {
-            _last_branch_timestamp = Constants::NOT_SPECULATIVE;
-		}
-
 		memory_addr_t Fetch_Unit::get_program_counter() {
             return _program_counter;
         }

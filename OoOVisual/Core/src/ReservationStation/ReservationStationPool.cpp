@@ -3,6 +3,7 @@
 #include <Core/RegisterFile/RegisterFile.h>
 #include <iostream>
 #include <format>
+#include <ranges>
 namespace OoOVisual
 {
 	namespace Core 
@@ -17,7 +18,8 @@ namespace OoOVisual
 				{RESERVATION_STATION_ID::BRANCH}
 		};
 
-		void Reservation_Station_Pool::flush_mispredicted(u32 flusher_tag, time_t flusher_timestamp) {
+		time_t Reservation_Station_Pool::flush_mispredicted(u32 flusher_tag, time_t flusher_timestamp) {
+			std::vector<time_t> flushed_entry_timestamps{};
 			for (auto& station : _pool) {
 				for (auto& entry : station.get()) {
 					if (entry.busy && entry.timestamp > flusher_timestamp && entry.self_tag != flusher_tag) {
@@ -28,11 +30,16 @@ namespace OoOVisual
 							Register_File::deallocate(entry.destination_register_id);
 						}
 						auto copy_tag{ entry.self_tag };
+						flushed_entry_timestamps.push_back(entry.timestamp);
 						entry = Reservation_Station_Entry{};
 						entry.self_tag = copy_tag;
 					}
 				}
 			}
+			auto it(std::ranges::max_element(flushed_entry_timestamps));
+			if (it != flushed_entry_timestamps.end())
+				return *it;
+			return Constants::TIME_ZERO;
 		}
 
 		void Reservation_Station_Pool::wakeup(u32 producer_tag, data_t produced_data) {

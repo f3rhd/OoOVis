@@ -178,9 +178,6 @@ namespace OoOVisual
 					address,
 					Constants::NO_PRODUCER_TAG
 				);
-				if (source_entry->timestamp == 800) { // @Debug
-					int a{};
-				}
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Created entry in the store buffer: timestamp:{}, source_id:{}, address:{}\n", source_entry->timestamp, source_entry->store_source_register_id, address);
 #endif
@@ -270,9 +267,6 @@ namespace OoOVisual
 					write_data, // will be needed in forwarding to reservation stations
 					bypassable_load_entry->producer_tag, // will be needed in forwarding logic 
 				};
-				if (bypassable_load_entry->timestamp == 460) { // @Debug
-					int a{};
-				}
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Load instruction {} was executed using bypasssing.\n", bypassable_load_entry->timestamp);
 #endif
@@ -316,9 +310,32 @@ namespace OoOVisual
 			std::erase_if(_store_buffer, [&](const auto& a) {return a.timestamp == store_timestamp; });
 		}
 
-		void Execution_Unit_Load_Store::flush_mispredicted(time_t timestamp) {
-			std::erase_if(_load_buffer, [&](const Execution_Unit_Load_Store::Buffer_Entry& a) {return a.timestamp > timestamp; });
-			std::erase_if(_store_buffer, [&](const Execution_Unit_Load_Store::Buffer_Entry& a) {return a.timestamp > timestamp; });
+		time_t Execution_Unit_Load_Store::flush_mispredicted(time_t timestamp) {
+			std::vector<time_t> erased_entry_timestamps{};
+			std::erase_if(
+				_load_buffer, 
+				[&](const Execution_Unit_Load_Store::Buffer_Entry& a) { 
+					if (a.timestamp > timestamp) {
+						erased_entry_timestamps.push_back(a.timestamp);
+						return true;
+					}
+					return false;
+				}
+			);
+			std::erase_if(
+				_store_buffer, 
+				[&](const Execution_Unit_Load_Store::Buffer_Entry& a) { 
+					if (a.timestamp > timestamp) {
+						erased_entry_timestamps.push_back(a.timestamp);
+						return true;
+					}
+					return false;
+				}
+			);
+			auto it(std::ranges::max_element(erased_entry_timestamps));
+			if (it != erased_entry_timestamps.end())
+				return *it;
+			return Constants::TIME_ZERO;
 		}
 
 		Forwarding_Data Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
@@ -329,19 +346,27 @@ namespace OoOVisual
 			bool actual_taken{ false };
 			switch (source_entry->mode) { 
 			case EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL_JALR:// Fetch unit keeps fetching when it sees jalr instruction so we gotta recover
+			{
 				target_address = source_entry->src1.unsigned_ + source_entry->src2.unsigned_;
 				Fetch_Unit::set_program_counter(target_address);
 				Fetch_Unit::set_program_counter_flags();
 				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_address + 1 });
 				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
-				Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp);
+				time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp) };
+				time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(source_entry->timestamp) };
+				Reorder_Buffer::set_branch_evaluation(
+					source_entry->reorder_buffer_entry_index,
+					true,
+					std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
+				);
 				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
 				return {
 					Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD,
 					source_entry->instruction_address + 1, // will be needed in forwarding to reservation stations
 					source_entry->self_tag, // will be needed in forwarding logic 
 				};
-				break;
+			}
+			break;
 			case EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL_JAL: // Fetch unit already jumped so all we have to do is write the values to the registers
 				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_address + 1 });
 				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
@@ -389,7 +414,7 @@ namespace OoOVisual
 			Fetch_Unit::create_btb_entry(source_entry->instruction_address, target_address);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			if (prediction == actual_taken) {
-				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, false);
+				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, false,Constants::TIME_ZERO);
 #ifdef DEBUG_PRINTS
 				std::cout << Constants::GREEN << "Instructions[" << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was predicted correctly\n" << Constants::RESET;
 #endif
@@ -399,7 +424,6 @@ namespace OoOVisual
 #ifdef DEBUG_PRINTS
 				std::cout << Constants::RED << "Instructions[ " << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was mispredicted\n" << Constants::RESET;
 #endif
-				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, true);
 				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
 				if (actual_taken == true && prediction == false) {
 					Fetch_Unit::set_program_counter(target_address);
@@ -407,8 +431,13 @@ namespace OoOVisual
 				else 
 					Fetch_Unit::set_program_counter(source_entry->instruction_address + 1);
 				Fetch_Unit::set_program_counter_flags();
-				Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp);
-				Execution_Unit_Load_Store::flush_mispredicted(source_entry->timestamp);
+				time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp) };
+				time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(source_entry->timestamp)};
+				Reorder_Buffer::set_branch_evaluation(
+					source_entry->reorder_buffer_entry_index,
+					true,
+					std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
+				);
 			}
 			return { Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 		}

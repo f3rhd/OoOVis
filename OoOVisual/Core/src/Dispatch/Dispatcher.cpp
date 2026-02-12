@@ -36,7 +36,6 @@ namespace OoOVisual
 		DISPATCH_FEEDBACK Dispatcher::dispatch_register_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
-            const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* register_instruction{ dynamic_cast<FrontEnd::Register_Instruction*>(instruction.get()) }) {
                 if (register_instruction->dest_reg() == 0)
                     return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
@@ -128,7 +127,6 @@ namespace OoOVisual
 							register_instruction->dest_reg(),
 							old_alias,
 							destination_physical_register_id,
-                            speculation_id,
                             fetch_element.timestamp
 						)
 					) 
@@ -156,7 +154,6 @@ namespace OoOVisual
         DISPATCH_FEEDBACK Dispatcher::dispatch_load_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
-            const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* load_instruction{ dynamic_cast<FrontEnd::Load_Instruction*>(instruction.get()) }) {
                 if (load_instruction->dest_reg() == 0)
                     return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
@@ -206,7 +203,6 @@ namespace OoOVisual
                         load_instruction->dest_reg(),
                         old_alias,
                         destination_physical_register_id,
-                        speculation_id,
 						fetch_element.timestamp
                     )
                 )
@@ -234,7 +230,6 @@ namespace OoOVisual
         DISPATCH_FEEDBACK Dispatcher::dispatch_store_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
-            const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* store_instruction = dynamic_cast<FrontEnd::Store_Instruction*>(instruction.get())) {
                 if (station.full())
                     return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
@@ -276,7 +271,6 @@ namespace OoOVisual
 						std::make_unique<Store_Reorder_Buffer_Entry>(
 							store_instruction->flow(),
                             fetch_element.timestamp,
-                            speculation_id,
                             fetch_element.timestamp
 						)
 					)
@@ -296,7 +290,6 @@ namespace OoOVisual
         DISPATCH_FEEDBACK Dispatcher::dispatch_branch_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
-            const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* branch_instruction{ dynamic_cast<FrontEnd::Branch_Instruction*>(instruction.get()) }) {
                 if (station.full())
                     return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
@@ -307,7 +300,6 @@ namespace OoOVisual
                 temp_reservation_station_entry.reorder_buffer_entry_index = Reorder_Buffer::allocate(
                     std::make_unique<Branch_Conditional_Reorder_Buffer_Entry>(
                         branch_instruction->flow(),
-                        speculation_id,
                         fetch_element.timestamp
                     )
                 );
@@ -360,7 +352,6 @@ namespace OoOVisual
 
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
-            const auto& speculation_id = fetch_element.origin_branch_timestamp;
             if (const auto* jump_instruction = dynamic_cast<FrontEnd::Jump_Instruction*>(instruction.get())) {
 
                 if (station.full())
@@ -399,7 +390,6 @@ namespace OoOVisual
                             old_alias,
                             destination_pysical_register_id,
                             true, // always mispredicted
-                            speculation_id,
 							fetch_element.timestamp
 						)
 					);
@@ -414,7 +404,6 @@ namespace OoOVisual
                             old_alias,
                             destination_pysical_register_id,
                             false, // never mispredicted
-                            speculation_id,
                             fetch_element.timestamp
 						)
 					);

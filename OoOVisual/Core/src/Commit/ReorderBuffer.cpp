@@ -7,31 +7,23 @@
 namespace OoOVisual
 {
 	namespace Core {
-
-		#define ROB_MISPREDICTION_RECOVERY(BUFFER_TYPE) {                                         \
-			auto branch_id = dynamic_cast<BUFFER_TYPE*>(entry)->self_timestamp; \
-																					   \
-			_buffer[_head].reset();                                                    \
-			_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;                                                                   \
-																					   \
-			while (                                                                    \
-				_buffer[_head] &&                                                      \
-				_buffer[_head]->origin_branch_timestamp != Constants::NOT_SPECULATIVE &&        \
-				_buffer[_head]->origin_branch_timestamp == branch_id                      \
-			) {                                                                        \
-				auto* current_entry = _buffer[_head].get();                            \
-																					   \
-				if (current_entry->flow() == FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL) { \
-					branch_id = dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(current_entry)->self_timestamp; \
-				}                                                                      \
-				else if (current_entry->flow() == FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL) { \
-					branch_id = dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(current_entry)->self_timestamp; \
-				}                                                                      \
-																					   \
-				_buffer[_head].reset();                                                \
-				_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;                                                               \
-			}                                                                          \
-			Register_File::restore_alias_table();										\
+		#define ROB_MISPREDICTION_RECOVERY(BUFFER_TYPE) {                                \
+			auto branch_timestamp = dynamic_cast<BUFFER_TYPE*>(entry)->self_timestamp; \
+			auto flush_boundary{ dynamic_cast<BUFFER_TYPE*>(entry)->flush_timestamp_boundary }; \
+			if (flush_boundary == Constants::TIME_ZERO) {                                \
+				_buffer[_head].reset();                                                  \
+				_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;                    \
+			}                                                                            \
+			else {                                                                       \
+				while (_buffer[_head] &&                                                 \
+					_buffer[_head]->self_timestamp >= branch_timestamp &&                \
+					_buffer[_head]->self_timestamp <= flush_boundary                     \
+				) {                                                                      \
+					_buffer[_head].reset();                                              \
+					_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;                \
+				}                                                                        \
+			}                                                                            \
+			Register_File::restore_alias_table();                                        \
 		}
 		std::vector<std::unique_ptr<Reorder_Buffer_Entry>> Reorder_Buffer::_buffer(Constants::REORDER_BUFFER_SIZE);
 		size_t Reorder_Buffer::_head{};
@@ -51,7 +43,7 @@ namespace OoOVisual
 			_buffer[target_entry_index]->ready = true;
 		}
 
-		void Reorder_Buffer::set_branch_evaluation(u64 target, bool was_misprediction)
+		void Reorder_Buffer::set_branch_evaluation(u64 target, bool was_misprediction,time_t flush_boundary)
 		{
 			if (target >= Constants::REORDER_BUFFER_SIZE) {
 				std::cout << "Tried to access non-existing reorder buffer entry.\n";
@@ -59,6 +51,11 @@ namespace OoOVisual
 			}
 			_buffer[target]->ready = true;
 			if (auto* branch_entry = dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(_buffer[target].get())) {
+				branch_entry->mispredicted = was_misprediction;
+				branch_entry->flush_timestamp_boundary = flush_boundary;
+			}
+			else if (auto* branch_entry = dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(_buffer[target].get())) {
+				branch_entry->flush_timestamp_boundary = flush_boundary;
 				branch_entry->mispredicted = was_misprediction;
 			}
 			else {
@@ -94,7 +91,23 @@ namespace OoOVisual
 				case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
 
 					if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->mispredicted) {
-						ROB_MISPREDICTION_RECOVERY(Branch_Conditional_Reorder_Buffer_Entry)
+						//ROB_MISPREDICTION_RECOVERY(Branch_Conditional_Reorder_Buffer_Entry)
+						auto branch_timestamp = dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->self_timestamp; 
+						auto flush_boundary{ dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->flush_timestamp_boundary };
+						if (flush_boundary == Constants::TIME_ZERO) {
+							_buffer[_head].reset(); 
+							_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE; 
+						}
+						else {
+							while (_buffer[_head] && 
+								_buffer[_head]->self_timestamp >=  branch_timestamp && 
+								_buffer[_head]->self_timestamp <= flush_boundary
+							) {
+								_buffer[_head].reset();
+								_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE; 
+							} 
+						}
+						Register_File::restore_alias_table();
 					}
 					else {
 						_buffer[_head].reset();
@@ -109,7 +122,22 @@ namespace OoOVisual
 						(entry_)->new_alias
 					);
 					if ((entry_)->mispredicted) {
-						ROB_MISPREDICTION_RECOVERY(Branch_Unconditional_Reorder_Buffer_Entry)
+						auto branch_timestamp = dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->self_timestamp; 
+						auto flush_boundary{ dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry)->flush_timestamp_boundary };
+						if (flush_boundary == Constants::TIME_ZERO) {
+							_buffer[_head].reset(); 
+							_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE; 
+						}
+						else {
+							while (_buffer[_head] && 
+								_buffer[_head]->self_timestamp >=  branch_timestamp && 
+								_buffer[_head]->self_timestamp <= flush_boundary
+							) {
+								_buffer[_head].reset();
+								_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE; 
+							} 
+						}
+						Register_File::restore_alias_table();
 					}
 					else {
 						_buffer[_head].reset();

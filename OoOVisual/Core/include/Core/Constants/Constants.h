@@ -32,7 +32,7 @@ namespace OoOVisual {
 				unsigned int constexpr PREDICTED_NOT_TAKEN{ 1 << 2 };
 				unsigned int constexpr LOAD_DOES_NOT_USE_FORWARD_FROM_STORE{ 0xFFFFFFFF };
 				unsigned int constexpr EXECUTABLE_LOAD_DOES_NOT_EXIST{ 0xFFFFFFFF};
-				unsigned int constexpr NOT_SPECULATIVE{ 0xFFFFFFFF };
+				unsigned int constexpr TIME_ZERO{ 0 }; // remember that no instruction will ever have a timestamp 0
 		} // namespace Constants
 	} // namespace Core
 } // namespace OoOVis
