@@ -427,10 +427,20 @@ namespace OoOVisual
             return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
 
         }
-        std::vector<DISPATCH_FEEDBACK> Dispatcher::dispatch_fetch_group() {
+
+        std::vector<DISPATCH_FEEDBACK> 
+        Dispatcher::_last_dispatch_feedback{ std::vector<DISPATCH_FEEDBACK>(Constants::FETCH_WIDTH,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH) };
+
+		const std::vector<OoOVisual::Core::DISPATCH_FEEDBACK>& Dispatcher::last_dispatch_feedback() {
+            return _last_dispatch_feedback;
+		}
+
+		std::vector<DISPATCH_FEEDBACK> Dispatcher::dispatch_fetch_group() {
             std::vector<DISPATCH_FEEDBACK> feedback(Constants::FETCH_WIDTH, DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH);
-            if(Fetch_Group::group.empty())
+            if (Fetch_Group::group.empty()) {
+                _last_dispatch_feedback = feedback;
                 return feedback;
+            }
             for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {
                 feedback[i] = dispatch_fetch_element(Fetch_Group::group[i]);
                 if (
@@ -440,6 +450,7 @@ namespace OoOVisual
                     break;
                 }
             }
+			_last_dispatch_feedback = feedback;
             return feedback;
         }
      

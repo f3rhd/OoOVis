@@ -56,7 +56,7 @@ namespace OoOVisual
             return _buffer;
 		}
 
-		bool Reservation_Station::full() {
+		bool Reservation_Station::full() const {
             for (auto& entry : _buffer) {
                 if (!entry.busy) {
                     return false;
