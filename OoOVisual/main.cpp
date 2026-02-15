@@ -6,6 +6,8 @@
 #include <Core/RegisterFile/RegisterFile.h>
 #include <Visualizer/App.h>
 #include <Visualizer/DrawElements.h>
+#include <chrono>
+#include <thread>
 #include <memory>
 using namespace OoOVisual;
 using namespace Core;
@@ -16,8 +18,8 @@ int main(int argc, char** argv) {
 	Fetch_Unit::init(std::move(parse_result.first));
 	Register_File::init();
     Visualizer::App app{};
-	std::unique_ptr<Visualizer::Draw_Element> element(std::make_unique<Visualizer::Draw_Element_Reservation_Station>(
-		Visualizer::DRAW_ELEMENT_ID::STATION_0,
+	std::unique_ptr<Visualizer::Draw_Element> element(std::make_unique<Visualizer::Draw_Element_Reorder_Buffer>(
+		Visualizer::DRAW_ELEMENT_ID::REORDER_BUFFER,
 		ImVec2(50,50), 
 		ImVec2(300,300 )
 	));
@@ -29,14 +31,14 @@ int main(int argc, char** argv) {
 		element->show_architectural();
 		if (element->is_hovered())
 			element->show_tooltip();
-		else if (element->is_double_clicked())
-			element->show_detailed();
+		element->show_detailed();
 		ImGui::End();
 		app.end_frame();
-		//Reorder_Buffer::commit();
-		//Execution_Stage::issue_and_execute();
-		//auto feedback(Dispatcher::dispatch_fetch_group());
-		//Fetch_Group::group = (Fetch_Unit::fetch(feedback));
+		Reorder_Buffer::commit();
+		Execution_Stage::issue_and_execute();
+		auto feedback(Dispatcher::dispatch_fetch_group());
+		Fetch_Group::group = (Fetch_Unit::fetch(feedback));
+		using namespace std::chrono_literals;
 	}
     app.cleanup();
 }

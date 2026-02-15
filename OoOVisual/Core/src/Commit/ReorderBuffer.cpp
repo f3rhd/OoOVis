@@ -121,9 +121,22 @@ namespace OoOVisual
 				}
 			}
 		}
+
+		std::vector<std::unique_ptr<OoOVisual::Core::Reorder_Buffer_Entry>>& Reorder_Buffer::buffer() {
+			return _buffer;
+		}
+
 		bool Reorder_Buffer::full() {
 			return (_tail + 1)  % Constants::REORDER_BUFFER_SIZE == _head;
 		}
 
+
+		size_t Reorder_Buffer::head()
+		{
+			return _head;
+		}
+		size_t Reorder_Buffer::tail() {
+			return _tail;
+		}
 	} // namespace Core
 } // namespace OoOVis

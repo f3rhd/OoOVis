@@ -32,6 +32,27 @@ namespace OoOVisual
 
 			}
 
+			const char* flowtype_to_str(FrontEnd::FLOW_TYPE type) {
+				switch (type)
+				{
+				case OoOVisual::FrontEnd::FLOW_TYPE::REGISTER:
+					return "REGISTER";
+				case OoOVisual::FrontEnd::FLOW_TYPE::LOAD:
+					return "LOAD";
+					break;
+				case OoOVisual::FrontEnd::FLOW_TYPE::STORE:
+					return "STORE";
+					break;
+				case OoOVisual::FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
+					return "BRANCH";
+				case OoOVisual::FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL:
+					return "JUMP";
+				case OoOVisual::FrontEnd::FLOW_TYPE::UNKNOWN:
+				default:
+					return "UNKNOWN";
+				}
+			}
+
 		}
 	}
 }
