@@ -1,5 +1,6 @@
 #pragma  once
 #include <imgui.h>
+#include <Visualizer/Camera.h>
 namespace OoOVisual
 {
 	namespace Visualizer
@@ -22,7 +23,7 @@ namespace OoOVisual
 			DIVIDER_UNIT,
 			LOAD_STORE_UNIT,
 			BRANCH_UNIT,
-			REGISTER_FILE,
+			REGISTER_MANAGER,
 			REORDER_BUFFER
 		};
 		struct Draw_Element {
@@ -30,9 +31,9 @@ namespace OoOVisual
 			virtual void show_detailed() = 0;
 			virtual void show_tooltip() = 0;
 			Draw_Element(DRAW_ELEMENT_ID id, ImVec2 position, ImVec2 dimension) : _id(id), _position(position), _dimension(dimension) {}
-			void show_architectural();
-			bool is_hovered();
-			bool is_double_clicked();
+			void show_architectural(Camera& cam);
+			bool is_hovered(const Camera& cam);
+			bool is_double_clicked(const Camera& cam);
 			DRAW_ELEMENT_ID id() const { return _id; }
 		protected:
 			ImVec2 _position{};

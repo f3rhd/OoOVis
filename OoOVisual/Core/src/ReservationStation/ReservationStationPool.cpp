@@ -1,6 +1,6 @@
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/Constants/Constants.h>
-#include <Core/RegisterFile/RegisterFile.h>
+#include <Core/RegisterManager/RegisterManager.h>
 #include <iostream>
 #include <format>
 #include <ranges>
@@ -27,7 +27,7 @@ namespace OoOVisual
 						std::cout << std::format("Dealloacted Instructions[{}] timestamp : {} from ReservationStation Entry : {} due to misprediction.\n", entry.instruction_address,entry.timestamp,entry.self_tag);
 #endif
 						if (entry.destination_register_id != Constants::INVALID_PHYSICAL_REGISTER_ID && !entry.destination_register_id_as_ofsset) {
-							Register_File::deallocate(entry.destination_register_id);
+							Register_Manager::deallocate(entry.destination_register_id);
 						}
 						auto copy_tag{ entry.self_tag };
 						flushed_entry_timestamps.push_back(entry.timestamp);

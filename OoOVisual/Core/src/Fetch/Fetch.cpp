@@ -1,5 +1,5 @@
 #include <Core/Fetch/Fetch.h>
-#include <Core/RegisterFile/RegisterFile.h>
+#include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Constants/Constants.h>
 namespace OoOVisual
 {
@@ -9,6 +9,7 @@ namespace OoOVisual
         std::vector<std::unique_ptr<FrontEnd::Instruction>> Fetch_Unit::_instruction_cache{};
         std::unordered_map<memory_addr_t, memory_addr_t>    Fetch_Unit::_branch_target_buffer{};
         std::unordered_map<u32, u32>                        Fetch_Unit::_pattern_history_table{};
+        std::vector<std::string>                            Fetch_Unit::_instruction_stream{};
         time_t                                              Fetch_Unit::_timestamp{ 0};
         bool                                                Fetch_Unit::_next_fetch_is_set{ false };
         memory_addr_t                                       Fetch_Unit::_branch_shift_register{};
@@ -88,8 +89,9 @@ namespace OoOVisual
 			return fetch_group;
         }
 
-        void Fetch_Unit::init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions) {
+        void Fetch_Unit::init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions,std::vector<std::string>&& instruction_stream) {
             _instruction_cache = std::move(instructions);
+            _instruction_stream = std::move(instruction_stream);
         }
 
         bool Fetch_Unit::get_prediction(memory_addr_t branch_instruction_id) {
@@ -107,10 +109,27 @@ namespace OoOVisual
         void Fetch_Unit::set_program_counter_flags() {
             _next_fetch_is_set = true;
         }
-        void Fetch_Unit::set_program_counter(memory_addr_t next) {
+
+		const std::unordered_map<OoOVisual::memory_addr_t, OoOVisual::memory_addr_t>& Fetch_Unit::branch_target_buffer()
+		{
+
+            return _branch_target_buffer;
+		}
+
+		const std::unordered_map<OoOVisual::u32, OoOVisual::u32>& Fetch_Unit::pattern_history_table()
+		{
+            return _pattern_history_table;
+		}
+
+        const std::vector<std::string>& Fetch_Unit::instruction_stream()
+        {
+            return _instruction_stream;
+        }
+
+		void Fetch_Unit::set_program_counter(memory_addr_t next) {
             _program_counter = next;
         }
-		memory_addr_t Fetch_Unit::get_program_counter() {
+		memory_addr_t Fetch_Unit::program_counter() {
             return _program_counter;
         }
 

@@ -1,5 +1,5 @@
 #pragma once
-#include <Core/RegisterFile/RegisterFile.h>
+#include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Constants/Constants.h>
 #include <Frontend/Parser/Lookup.h>
 #include <stdexcept>
@@ -12,11 +12,11 @@ namespace OoOVisual
 {
 	namespace Core
 	{
-		std::map<reg_id_t, Physical_Register_File_Entry> Register_File::_physical_register_file{};
-		std::map<reg_id_t, reg_id_t> Register_File::_frontend_register_alias_table{};
-		std::map<reg_id_t, reg_id_t> Register_File::_retirement_alias_table{};
+		std::map<reg_id_t, Physical_Register_File_Entry> Register_Manager::_physical_register_file{};
+		std::map<reg_id_t, reg_id_t> Register_Manager::_frontend_register_alias_table{};
+		std::map<reg_id_t, reg_id_t> Register_Manager::_retirement_alias_table{};
 
-		void Register_File::init() {
+		void Register_Manager::init() {
 			for (reg_id_t i = 0; i < Constants::PHYSICAL_REGISTER_FILE_SIZE; i++) {
 				_physical_register_file.emplace(i, Physical_Register_File_Entry());
 				if (i >= 0 && i <= 31) {
@@ -29,7 +29,7 @@ namespace OoOVisual
 			_retirement_alias_table = _frontend_register_alias_table;
 		}
 
-		bool Register_File::full() {
+		bool Register_Manager::full() {
 			for (auto const& [key, entry] : _physical_register_file) {
 				if (!entry.allocated) return false;
 			}
@@ -37,18 +37,18 @@ namespace OoOVisual
 		}
 
 
-		void Register_File::restore_alias_table() {
+		void Register_Manager::restore_alias_table() {
 			_frontend_register_alias_table = _retirement_alias_table;
 #ifdef DEBUG_PRINTS
 			std::cout << std::format("Register alias table was restored due to mis-prediction.\n");
 #endif
 		}
 
-		void Register_File::update_retirement_alias_table_with(reg_id_t architectural, reg_id_t physical) {
+		void Register_Manager::update_retirement_alias_table_with(reg_id_t architectural, reg_id_t physical) {
 			_retirement_alias_table.insert_or_assign(architectural, physical);
 		}
 
-		void Register_File::deallocate(reg_id_t physical_register_id) {
+		void Register_Manager::deallocate(reg_id_t physical_register_id) {
 			if (physical_register_id == 0)
 				return;
 			if (physical_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
@@ -67,7 +67,7 @@ namespace OoOVisual
 #endif
 		}
 
-		void Register_File::write(reg_id_t physical_register_id, data_t data) {
+		void Register_Manager::write(reg_id_t physical_register_id, data_t data) {
 			if (physical_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to write to an invalid register.\n";
 				exit(EXIT_FAILURE); // @VisitLater
@@ -86,7 +86,7 @@ namespace OoOVisual
 #endif
 		}
 
-		reg_id_t Register_File::allocate_physical_register_for(reg_id_t architectural_register_id, u32 producer_tag) {
+		reg_id_t Register_Manager::allocate_physical_register_for(reg_id_t architectural_register_id, u32 producer_tag) {
 			if (architectural_register_id == 0) {
 	#ifdef DEBUG_PRINTS
 				std::cout << Constants::BLUE <<  std::format("Register alias table was updated with zero->P0 due to register allocation.\n") << Constants::RESET;
@@ -109,7 +109,7 @@ namespace OoOVisual
 			return Constants::INVALID_PHYSICAL_REGISTER_ID;
 		}
 
-		reg_id_t Register_File::aliasof(reg_id_t architectural_register_id)
+		reg_id_t Register_Manager::aliasof(reg_id_t architectural_register_id)
 		{
 			if (architectural_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to read invalid register.";
@@ -118,11 +118,28 @@ namespace OoOVisual
 			return _frontend_register_alias_table[architectural_register_id];
 		}
 
-		Physical_Register_File_Entry Register_File::read_with_alias(reg_id_t architectural_register_id) {
+		Physical_Register_File_Entry Register_Manager::read_with_alias(reg_id_t architectural_register_id) {
 			if (architectural_register_id == 0) {
 				return {};
 			}
 			return _physical_register_file[aliasof(architectural_register_id)];
 		}
+
+
+		const std::map<OoOVisual::reg_id_t, OoOVisual::Core::Physical_Register_File_Entry>& Register_Manager::phyical_register_file() {
+			return _physical_register_file;
+		}
+
+		const std::map<OoOVisual::reg_id_t, OoOVisual::reg_id_t>& Register_Manager::frontend_alias_table()
+		{
+			return _frontend_register_alias_table;
+		}
+
+		const std::map<OoOVisual::reg_id_t, OoOVisual::reg_id_t>& Register_Manager::retirement_alias_table()
+		{
+			return _retirement_alias_table;
+
+		}
+
 	}
 }

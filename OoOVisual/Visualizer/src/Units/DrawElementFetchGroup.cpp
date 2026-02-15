@@ -1,4 +1,4 @@
-#include <Visualizer/DrawElementFetchGroup.h>
+#include <Visualizer/Units/DrawElementFetchGroup.h>
 #include <Core/Fetch/FetchElements.h>
 #include <Visualizer/Constants.h>
 namespace OoOVisual
@@ -13,8 +13,8 @@ namespace OoOVisual
 				return;
 			}
 			ImGui::BeginTooltip();
-			//ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "FETCH QUEUE CONTENTS");
-			//ImGui::Separator();
+			ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "FETCH QUEUE CONTENTS");
+			ImGui::Separator();
 
 			if (ImGui::BeginTable("FetchQueueTable", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
 				

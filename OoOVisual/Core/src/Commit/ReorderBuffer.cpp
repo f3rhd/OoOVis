@@ -1,7 +1,7 @@
 #pragma once
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Constants/Constants.h>
-#include <Core/RegisterFile/RegisterFile.h>
+#include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Execution/ExecutionUnits.h>
 #include <iostream>
 namespace OoOVisual
@@ -23,7 +23,7 @@ namespace OoOVisual
 					_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;                \
 				}                                                                        \
 			}                                                                            \
-			Register_File::restore_alias_table();                                        \
+			Register_Manager::restore_alias_table();                                        \
 		}
 		std::vector<std::unique_ptr<Reorder_Buffer_Entry>> Reorder_Buffer::_buffer(Constants::REORDER_BUFFER_SIZE);
 		size_t Reorder_Buffer::_head{};
@@ -74,8 +74,8 @@ namespace OoOVisual
 				case FrontEnd::FLOW_TYPE::REGISTER:
 				case FrontEnd::FLOW_TYPE::LOAD: {
 					auto entry_{ dynamic_cast<Register_Reorder_Buffer_Entry*>(entry) };
-					Register_File::deallocate((entry_)->old_alias);
-					Register_File::update_retirement_alias_table_with(
+					Register_Manager::deallocate((entry_)->old_alias);
+					Register_Manager::update_retirement_alias_table_with(
 						(entry_)->architectural_register_id,
 						(entry_)->new_alias
 					);
@@ -100,8 +100,8 @@ namespace OoOVisual
 					break;
 				case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL: {
 					auto* entry_{ dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry) };
-					Register_File::deallocate((entry_)->old_alias);
-					Register_File::update_retirement_alias_table_with(
+					Register_Manager::deallocate((entry_)->old_alias);
+					Register_Manager::update_retirement_alias_table_with(
 						(entry_)->architectural_register_id,
 						(entry_)->new_alias
 					);

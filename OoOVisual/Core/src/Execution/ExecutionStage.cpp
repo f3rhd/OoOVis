@@ -7,7 +7,7 @@ namespace OoOVisual
 {
 	namespace Core
 	{
-
+		std::vector<const Reservation_Station_Entry*> Execution_Stage::_last_issued_entries(Constants::RESERVATION_STATION_AMOUNT,nullptr);
 		void Execution_Stage::issue_and_execute() {
 
 			std::vector<const Reservation_Station_Entry*> issued_entries(Constants::RESERVATION_STATION_AMOUNT-1);
@@ -40,7 +40,16 @@ namespace OoOVisual
 					Reservation_Station_Pool::deallocate_entry(data.producer_tag);
 				}
 			}
+			// visualizer will use these to render stuff
+			_last_issued_entries = issued_entries;
+			_last_issued_entries.push_back(branch_execution_input);
 		}
+
+		const std::vector<const OoOVisual::Core::Reservation_Station_Entry*> Execution_Stage::issued()
+		{
+			return _last_issued_entries;
+		}
+
 	} // namespace Core
 } // namespace OoOVis
 

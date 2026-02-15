@@ -1,5 +1,5 @@
 #include <Core/Execution/ExecutionUnits.h>
-#include <Core/RegisterFile/RegisterFile.h>
+#include <Core/RegisterManager/RegisterManager.h>
 #include <Core/DCache/DCache.h>
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Fetch/Fetch.h>
@@ -30,7 +30,7 @@ namespace OoOVisual
 				data.produced_data.signed_ = source_entry->src1.signed_ - source_entry->src2.signed_;
 				break;
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_AUIPC: // immediate value lives in the source 2
-				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 20) & 0xFFFFF000 + Fetch_Unit::get_program_counter();
+				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 20) & 0xFFFFF000 + Fetch_Unit::program_counter();
 				break;
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_LOAD_UPPER:
 				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 20) & 0xFFFFF000;
@@ -42,7 +42,7 @@ namespace OoOVisual
 #ifdef DEBUG_PRINTS
 			std::cout << Constants::MAGENTA << std::format("Instructions[{}] timestamp:{} is executing.", source_entry->instruction_address, source_entry->timestamp);
 #endif
-			Register_File::write(source_entry->destination_register_id, data.produced_data);
+			Register_Manager::write(source_entry->destination_register_id, data.produced_data);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return data;
 		}
@@ -77,7 +77,7 @@ namespace OoOVisual
 				break;
 			}
 
-			Register_File::write(source_entry->destination_register_id, result.produced_data);
+			Register_Manager::write(source_entry->destination_register_id, result.produced_data);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return result;
 		}
@@ -89,7 +89,7 @@ namespace OoOVisual
 			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
 			result.produced_data.signed_ = source_entry->src1.signed_ < source_entry->src2.signed_ ? 1 : 0;
-			Register_File::write(source_entry->destination_register_id, result.produced_data);
+			Register_Manager::write(source_entry->destination_register_id, result.produced_data);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return result;
 		}
@@ -123,7 +123,7 @@ namespace OoOVisual
 				break;
 
 			}
-			Register_File::write(source_entry->destination_register_id, result.produced_data);
+			Register_Manager::write(source_entry->destination_register_id, result.produced_data);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return result;
 		}
@@ -151,7 +151,7 @@ namespace OoOVisual
 			default:
 				break;
 			}
-			Register_File::write(source_entry->destination_register_id, result.produced_data);
+			Register_Manager::write(source_entry->destination_register_id, result.produced_data);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return result;
 		}
@@ -259,7 +259,7 @@ namespace OoOVisual
 				const Buffer_Entry* bypassable_load_entry{ &_load_buffer.at(executable_load_index.first) };
 				data_t write_data{DCache::read(bypassable_load_entry->mode,bypassable_load_entry->calculated_address) };
 				//write to the physical register file
-				Register_File::write(bypassable_load_entry->register_id, write_data);
+				Register_Manager::write(bypassable_load_entry->register_id, write_data);
 				// make the rob entry ready
 				Reorder_Buffer::set_ready(bypassable_load_entry->reorder_buffer_entry_index);
 				Forwarding_Data result{ 
@@ -276,7 +276,7 @@ namespace OoOVisual
 
 			const Buffer_Entry* forwaradable_load_entry{ &_load_buffer[executable_load_index.first] };
 			const Buffer_Entry* store_buffer_entry_that_is_forwarded_from{ &_store_buffer[executable_load_index.second] };
-			Register_File::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
+			Register_Manager::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
 			Reorder_Buffer::set_ready(forwaradable_load_entry->reorder_buffer_entry_index);
 			Forwarding_Data result(
 				Constants::FORWADING_DATA_FORWARD_ONLY,
@@ -350,7 +350,7 @@ namespace OoOVisual
 				target_address = source_entry->src1.unsigned_ + source_entry->src2.unsigned_;
 				Fetch_Unit::set_program_counter(target_address);
 				Fetch_Unit::set_program_counter_flags();
-				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_address + 1 });
+				Register_Manager::write(source_entry->destination_register_id, { source_entry->instruction_address + 1 });
 				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 				time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp) };
 				time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(source_entry->timestamp) };
@@ -368,7 +368,7 @@ namespace OoOVisual
 			}
 			break;
 			case EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL_JAL: // Fetch unit already jumped so all we have to do is write the values to the registers
-				Register_File::write(source_entry->destination_register_id, { source_entry->instruction_address + 1 });
+				Register_Manager::write(source_entry->destination_register_id, { source_entry->instruction_address + 1 });
 				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 				return {
 					Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD,

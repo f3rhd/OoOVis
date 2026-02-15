@@ -12,6 +12,7 @@ namespace OoOVisual
 			Reservation_Station_Entry* allocate_entry();
 			const Reservation_Station_Entry* issue();
 			std::vector<Reservation_Station_Entry>& get();
+			const std::vector<Reservation_Station_Entry>& getc() const; // 
 			RESERVATION_STATION_ID id() const { return _id; }
 			bool full() const;
 		private:

@@ -1,5 +1,5 @@
 #include <Core/Dispatch/Dispatcher.h>
-#include <Core/RegisterFile/RegisterFile.h>
+#include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Constants/Constants.h>
 #include <Core/ReservationStation/ReservationStationPool.h>
@@ -41,7 +41,7 @@ namespace OoOVisual
                     return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
                 if (station.full()) 
                     return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
-                if (Register_File::full()) return DISPATCH_FEEDBACK::REGISTER_FILE_WAS_FULL;
+                if (Register_Manager::full()) return DISPATCH_FEEDBACK::REGISTER_FILE_WAS_FULL;
 
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (register_instruction->instruction_type()) {
@@ -105,21 +105,21 @@ namespace OoOVisual
 				default: // shouldn't happen
 					break;
                 }
-                Physical_Register_File_Entry entry(Register_File::read_with_alias(register_instruction->src1_reg()));
+                Physical_Register_File_Entry entry(Register_Manager::read_with_alias(register_instruction->src1_reg()));
 				temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
 				temp_reservation_station_entry.src1 = entry.data;
                 // store the old alias before renaming
-                auto old_alias{ Register_File::aliasof(register_instruction->dest_reg()) };
+                auto old_alias{ Register_Manager::aliasof(register_instruction->dest_reg()) };
                 Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() }; 
                 if (register_instruction->uses_immval()) {
                     temp_reservation_station_entry.src2.signed_ = register_instruction->src2().imm_val;
                     temp_reservation_station_entry.producer_tag2 = Constants::NO_PRODUCER_TAG;
                 }
                 else {
-					temp_reservation_station_entry.src2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).data;
-                    temp_reservation_station_entry.producer_tag2 = Register_File::read_with_alias(register_instruction->src2().src2_reg).producer_tag;
+					temp_reservation_station_entry.src2 = Register_Manager::read_with_alias(register_instruction->src2().src2_reg).data;
+                    temp_reservation_station_entry.producer_tag2 = Register_Manager::read_with_alias(register_instruction->src2().src2_reg).producer_tag;
                 }
-                reg_id_t destination_physical_register_id{ Register_File::allocate_physical_register_for(register_instruction->dest_reg(), allocated_reservation_station_entry->self_tag) }; // we do the fulness checking before calling this, so we good
+                reg_id_t destination_physical_register_id{ Register_Manager::allocate_physical_register_for(register_instruction->dest_reg(), allocated_reservation_station_entry->self_tag) }; // we do the fulness checking before calling this, so we good
                 // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
                 auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
 						std::make_unique<Register_Reorder_Buffer_Entry>(
@@ -159,7 +159,7 @@ namespace OoOVisual
                     return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
                 if (station.full())
                     return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
-                if (Register_File::full())
+                if (Register_Manager::full())
                     return DISPATCH_FEEDBACK::REGISTER_FILE_WAS_FULL;
                 Reservation_Station_Entry temp_reservation_station_entry;
                 switch (load_instruction->kind()) {
@@ -186,7 +186,7 @@ namespace OoOVisual
                     break;
 
                 }
-                Physical_Register_File_Entry entry(Register_File::read_with_alias(load_instruction->base_reg()));
+                Physical_Register_File_Entry entry(Register_Manager::read_with_alias(load_instruction->base_reg()));
                 temp_reservation_station_entry.src1 = entry.data;
                 temp_reservation_station_entry.producer_tag1 = entry.producer_tag;
                 temp_reservation_station_entry.destination_register_id = load_instruction->dest_reg();
@@ -194,9 +194,9 @@ namespace OoOVisual
                 temp_reservation_station_entry.producer_tag2 = Constants::NO_PRODUCER_TAG;
                 temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
 
-                auto old_alias{ Register_File::aliasof(load_instruction->dest_reg()) };
+                auto old_alias{ Register_Manager::aliasof(load_instruction->dest_reg()) };
                 Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() };
-			    reg_id_t destination_physical_register_id = Register_File::allocate_physical_register_for(load_instruction->dest_reg(),allocated_reservation_station_entry->self_tag); // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
+			    reg_id_t destination_physical_register_id = Register_Manager::allocate_physical_register_for(load_instruction->dest_reg(),allocated_reservation_station_entry->self_tag); // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
                 auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
                     std::make_unique<Register_Reorder_Buffer_Entry>(
                         load_instruction->flow(),
@@ -252,8 +252,8 @@ namespace OoOVisual
                     break;
 
                 }
-                Physical_Register_File_Entry src1_entry(Register_File::read_with_alias(store_instruction->src1()));
-                Physical_Register_File_Entry src2_entry(Register_File::read_with_alias(store_instruction->src2()));
+                Physical_Register_File_Entry src1_entry(Register_Manager::read_with_alias(store_instruction->src1()));
+                Physical_Register_File_Entry src2_entry(Register_Manager::read_with_alias(store_instruction->src2()));
                 Reservation_Station_Entry* allocated_reservation_station(station.allocate_entry());
                 temp_reservation_station_entry.producer_tag1 = src1_entry.producer_tag;
                 temp_reservation_station_entry.producer_tag2 = src2_entry.producer_tag;
@@ -261,7 +261,7 @@ namespace OoOVisual
                 temp_reservation_station_entry.src2 = src2_entry.data;
                 temp_reservation_station_entry.destination_register_id = static_cast<reg_id_t>(store_instruction->offset()); // the offset lives in destination id here
                 temp_reservation_station_entry.destination_register_id_as_ofsset = true;
-                temp_reservation_station_entry.store_source_register_id = Register_File::aliasof(store_instruction->src2());
+                temp_reservation_station_entry.store_source_register_id = Register_Manager::aliasof(store_instruction->src2());
                 temp_reservation_station_entry.self_tag = allocated_reservation_station->self_tag;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
@@ -303,8 +303,8 @@ namespace OoOVisual
                         fetch_element.timestamp
                     )
                 );
-				Physical_Register_File_Entry entry1(Register_File::read_with_alias(branch_instruction->src1()));
-				Physical_Register_File_Entry entry2(Register_File::read_with_alias(branch_instruction->src2()));
+				Physical_Register_File_Entry entry1(Register_Manager::read_with_alias(branch_instruction->src1()));
+				Physical_Register_File_Entry entry2(Register_Manager::read_with_alias(branch_instruction->src2()));
                 switch (branch_instruction->kind()) {
                 case FrontEnd::Branch_Instruction::BRANCH_INSTRUCTION_TYPE::BEQ:
                     temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_EQUAL;
@@ -371,9 +371,9 @@ namespace OoOVisual
                 temp_reservation_station_entry.self_tag = allocated_reservation_station_entry->self_tag;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.timestamp = fetch_element.timestamp;
-                reg_id_t old_alias = Register_File::aliasof(jump_instruction->dest_reg());
-                Physical_Register_File_Entry entry{ Register_File::read_with_alias(jump_instruction->src1()) };
-				reg_id_t destination_pysical_register_id = Register_File::allocate_physical_register_for(jump_instruction->dest_reg(), allocated_reservation_station_entry->self_tag);
+                reg_id_t old_alias = Register_Manager::aliasof(jump_instruction->dest_reg());
+                Physical_Register_File_Entry entry{ Register_Manager::read_with_alias(jump_instruction->src1()) };
+				reg_id_t destination_pysical_register_id = Register_Manager::allocate_physical_register_for(jump_instruction->dest_reg(), allocated_reservation_station_entry->self_tag);
 				temp_reservation_station_entry.destination_register_id = destination_pysical_register_id;
                 u64 target_reorder_buffer_entry_index{};
                 switch (jump_instruction->kind()) {

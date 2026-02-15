@@ -56,6 +56,10 @@ namespace OoOVisual
             return _buffer;
 		}
 
+		const std::vector<OoOVisual::Core::Reservation_Station_Entry>& Reservation_Station::getc() const
+		{
+            return _buffer;
+		} 
 		bool Reservation_Station::full() const {
             for (auto& entry : _buffer) {
                 if (!entry.busy) {
