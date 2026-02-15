@@ -17,28 +17,28 @@ namespace OoOVisual
 		{
 			ImGuiIO& io{ ImGui::GetIO() };
 
-			if (io.WantCaptureMouse) return;
-			if (io.MouseWheel != 0.0f) {
-				ImVec2 mouse_pos{ io.MousePos };
-				
-				ImVec2 mouse_world_pos{ (mouse_pos.x - translation.x) / zoom, 
-										(mouse_pos.y - translation.y) / zoom };
 
-				float zoom_factor{ 1.1f };
-				if (io.MouseWheel > 0) zoom *= zoom_factor;
-				else zoom /= zoom_factor;
-				if (zoom < 0.1f) zoom = 0.1f;
-				if (zoom > 5.0f) zoom = 5.0f;
+			float move_speed{ 5.0f }; 
+			if (ImGui::IsKeyDown(ImGuiKey_W)) translation.y += move_speed;
+			if (ImGui::IsKeyDown(ImGuiKey_S)) translation.y -= move_speed;
+			if (ImGui::IsKeyDown(ImGuiKey_A)) translation.x += move_speed;
+			if (ImGui::IsKeyDown(ImGuiKey_D)) translation.x -= move_speed;
 
-				translation.x = mouse_pos.x - mouse_world_pos.x * zoom;
-				translation.y = mouse_pos.y - mouse_world_pos.y * zoom;
+			float zoom_factor{ 1.02f };
+			bool zooming{ false };
+
+			if (ImGui::IsKeyDown(ImGuiKey_Equal) || ImGui::IsKeyDown(ImGuiKey_KeypadAdd)) { 
+				zoom *= zoom_factor;
+				zooming = true;
 			}
-			if (ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-
-				ImVec2 delta{ io.MouseDelta };
-				translation.x += delta.x;
-				translation.y += delta.y;
+			if (ImGui::IsKeyDown(ImGuiKey_Minus) || ImGui::IsKeyDown(ImGuiKey_KeypadSubtract)) { 
+				zoom /= zoom_factor;
+				zooming = true;
 			}
+
+			if (zoom < 0.1f) zoom = 0.1f;
+			if (zoom > 5.0f) zoom = 5.0f;
+
 		}
 
 	}

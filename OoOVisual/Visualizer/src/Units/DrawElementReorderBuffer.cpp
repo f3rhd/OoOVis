@@ -25,6 +25,8 @@ namespace OoOVisual
         }
        
 		void Draw_Element_Reorder_Buffer::show_detailed() {
+			if (!_detailed)
+				return;
 			static bool follow_head{ true };
 			ImGuiIO& io{ ImGui::GetIO() };
 

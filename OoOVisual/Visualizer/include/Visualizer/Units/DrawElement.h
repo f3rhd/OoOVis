@@ -33,12 +33,14 @@ namespace OoOVisual
 			Draw_Element(DRAW_ELEMENT_ID id, ImVec2 position, ImVec2 dimension) : _id(id), _position(position), _dimension(dimension) {}
 			void show_architectural(Camera& cam);
 			bool is_hovered(const Camera& cam);
-			bool is_double_clicked(const Camera& cam);
 			DRAW_ELEMENT_ID id() const { return _id; }
+			void set_detailed(const Camera& cam);
+			bool detailed() const { return _detailed; }
 		protected:
 			ImVec2 _position{};
 			ImVec2 _dimension{};
 			DRAW_ELEMENT_ID _id;
+			bool _detailed{ false };
 		};
 	}
 }

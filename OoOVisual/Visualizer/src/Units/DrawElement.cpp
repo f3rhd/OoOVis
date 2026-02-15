@@ -13,8 +13,14 @@ namespace OoOVisual
 			return ImGui::IsMouseHoveringRect(p1, p2);
 		}
 
-		bool Draw_Element::is_double_clicked(const Camera& cam) {
-			return is_hovered(cam) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+		void Draw_Element::set_detailed(const Camera& cam) {
+
+			if (is_hovered(cam) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+				_detailed = true;
+			}
+			if (is_hovered(cam) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right)) {
+				_detailed = false;
+			}
 		}
 
 		static bool is_on_screen(ImVec2 p1, ImVec2 p2) {

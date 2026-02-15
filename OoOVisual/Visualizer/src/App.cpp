@@ -46,7 +46,7 @@ namespace OoOVisual
 
 		void App::end_frame() {
 			ImGui::Render();
-			int display_w, display_h;
+			int display_w{}, display_h{};
 			glfwGetFramebufferSize(window, &display_w, &display_h);
 			glViewport(0, 0, display_w, display_h);
 			
