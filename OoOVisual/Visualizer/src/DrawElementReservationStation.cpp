@@ -1,4 +1,4 @@
-#include <Visualizer/Units/DrawElementReservationStation.h>
+#include <Visualizer/DrawElementReservationStation.h>
 #include <Visualizer/Constants.h>
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/ReservationStation/ReservationStationEntry.h>
@@ -9,7 +9,7 @@ namespace OoOVisual
 	{
 
 
-		Draw_Element_Reservation_Station::Draw_Element_Reservation_Station(DRAW_ELEMENT_ID id, ImVec2 position, ImVec2 dimension) : Draw_Element(id,position,dimension){
+		Draw_Element_Reservation_Station::Draw_Element_Reservation_Station(DRAW_ELEMENT_ID id, const ImVec2 &position, const ImVec2 &dimension) : Draw_Element_Core_Unit(id,position,dimension){
 			switch (_id)
 			{
 			case OoOVisual::Visualizer::DRAW_ELEMENT_ID::STATION_0:
@@ -38,27 +38,30 @@ namespace OoOVisual
 			}
 		}
 
-		void Draw_Element_Reservation_Station::show_tooltip() {
+		void Draw_Element_Reservation_Station::show_tooltip() const {
 			ImGui::BeginTooltip();
-			ImGui::Text("Reservation Station Entries");
+			ImGui::Text("reservation station entries");
 			ImGui::Separator();
 
-			// slot | busy | ready | dest | src1/tag1 | src2/tag2 | special | rob
-			if (ImGui::BeginTable("##ReservationStation", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
-				ImGui::TableSetupColumn("Slot");
-				ImGui::TableSetupColumn("Busy"); 
-				ImGui::TableSetupColumn("Ready");
-				ImGui::TableSetupColumn("Dest");
-				ImGui::TableSetupColumn("Src1/T1");
-				ImGui::TableSetupColumn("Src2/T2");
-				ImGui::TableSetupColumn("Specialized Info");
-				ImGui::TableSetupColumn("ROB Idx");
+			if (ImGui::BeginTable("##ReservationStation", 10, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+				ImGui::TableSetupColumn("slot");
+				ImGui::TableSetupColumn("time"); 
+				ImGui::TableSetupColumn("busy"); 
+				ImGui::TableSetupColumn("ready");
+				ImGui::TableSetupColumn("dest");
+				ImGui::TableSetupColumn("src1/t1");
+				ImGui::TableSetupColumn("src2/t2");
+				ImGui::TableSetupColumn("special");
+				ImGui::TableSetupColumn("rob idx");
 				ImGui::TableHeadersRow();
 
-				for (u32 i{0}; i < Core::Constants::RESERVATION_STATION_SIZE; ++i) {
-					const auto& entry{_core_station->getc()[i]};
+				for (u32 i { 0 }; i < Core::Constants::RESERVATION_STATION_SIZE; ++i) {
+					const auto& entry { _core_station->getc()[i] };
 					
-					if (entry.mode == Core::EXECUTION_UNIT_MODE::UNKNOWN) continue; 
+					// skip entries that aren't being used
+					if (entry.mode == Core::EXECUTION_UNIT_MODE::UNKNOWN) {
+						continue; 
+					}
 
 					ImGui::TableNextRow();
 
@@ -66,71 +69,76 @@ namespace OoOVisual
 					ImGui::Text("%u", i);
 
 					ImGui::TableSetColumnIndex(1);
-					if (entry.busy) {
-						ImGui::TextColored(ImVec4{1.0f, 0.4f, 0.4f, 1.0f}, "BUSY");
-					} else {
-						ImGui::TextDisabled("Idle");
-					}
+					ImGui::TextColored(ImVec4 { 0.7f, 0.7f, 1.0f, 1.0f }, "%u", entry.timestamp);
 
-					// Ready Status
 					ImGui::TableSetColumnIndex(2);
-					if (entry.ready) {
-						ImGui::TextColored(ImVec4{0.2f, 1.0f, 0.2f, 1.0f}, "READY");
+					if (entry.busy) {
+						ImGui::TextColored(ImVec4 { 1.0f, 0.4f, 0.4f, 1.0f }, "busy");
 					} else {
-						ImGui::TextColored(ImVec4{1.0f, 0.8f, 0.2f, 1.0f}, "WAIT");
+						ImGui::TextDisabled("idle");
 					}
 
-					// Destination Register
 					ImGui::TableSetColumnIndex(3);
+					if (entry.ready) {
+						ImGui::TextColored(ImVec4 { 0.2f, 1.0f, 0.2f, 1.0f }, "ready");
+					} else {
+						ImGui::TextColored(ImVec4 { 1.0f, 0.8f, 0.2f, 1.0f }, "wait");
+					}
+
+					ImGui::TableSetColumnIndex(4);
 					if (entry.destination_register_id != Core::Constants::INVALID_PHYSICAL_REGISTER_ID) {
-						ImGui::Text("P%u", entry.destination_register_id);
+						ImGui::Text("p%u", entry.destination_register_id);
 					} else {
 						ImGui::TextDisabled("-");
 					}
 
-					// Source 1 / Tag 1
-					ImGui::TableSetColumnIndex(4);
-					if (entry.producer_tag1 != Core::Constants::NO_PRODUCER_TAG) {
-						ImGui::TextColored(ImVec4{1.0f, 0.6f, 0.6f, 1.0f}, "T:%u", entry.producer_tag1);
-					} else {
-						ImGui::Text("V:%llu", entry.src1);
-					}
-
-					// Source 2 / Tag 2
 					ImGui::TableSetColumnIndex(5);
-					if (entry.producer_tag2 != Core::Constants::NO_PRODUCER_TAG) {
-						ImGui::TextColored(ImVec4{1.0f, 0.6f, 0.6f, 1.0f}, "T:%u", entry.producer_tag2);
+					if (entry.producer_tag1 != Core::Constants::NO_PRODUCER_TAG) {
+						ImGui::TextColored(ImVec4 { 1.0f, 0.6f, 0.6f, 1.0f }, "t:%u", entry.producer_tag1);
 					} else {
-						ImGui::Text("V:%llu", entry.src2);
+						ImGui::Text("v:%llu", entry.src1);
 					}
 
-					// Specialized Logic
 					ImGui::TableSetColumnIndex(6);
+					if (entry.producer_tag2 != Core::Constants::NO_PRODUCER_TAG) {
+						ImGui::TextColored(ImVec4 { 1.0f, 0.6f, 0.6f, 1.0f }, "t:%u", entry.producer_tag2);
+					} else {
+						ImGui::Text("v:%llu", entry.src2);
+					}
+
+					ImGui::TableSetColumnIndex(7);
 					if (_core_station->id() == Core::RESERVATION_STATION_ID::BRANCH) {
-						ImGui::Text("Tgt: 0x%08X", entry.branch_target);
+						ImGui::Text("tgt: 0x%08X", entry.branch_target);
 						if (entry.fetch_unit_prediction != Core::Constants::NOT_BRANCH_INSTRUCTION) {
 							ImGui::SameLine();
-							ImGui::TextColored(ImVec4{0.4f, 0.8f, 1.0f, 1.0f}, "[Pred]");
+							ImGui::TextColored(ImVec4 { 0.4f, 0.8f, 1.0f, 1.0f }, "[pred]");
 						}
 					}
 					else if (_core_station->id() == Core::RESERVATION_STATION_ID::LOAD_STORE) {
 						if (entry.store_source_register_id != Core::Constants::INVALID_PHYSICAL_REGISTER_ID) {
-							ImGui::Text("StoreSrc: P%u", entry.store_source_register_id);
+							ImGui::Text("stsrc: p%u", entry.store_source_register_id);
 						} else {
-							ImGui::Text("Mem Mode");
+							ImGui::Text("mem mode");
 						}
 					}
 					else {
-						ImGui::TextDisabled("Standard Reg");
+						ImGui::TextDisabled("std reg");
 					}
 
-					// ROB Index
-					ImGui::TableSetColumnIndex(7);
+					ImGui::TableSetColumnIndex(8);
 					ImGui::Text("#%llu", entry.reorder_buffer_entry_index);
+					ImGui::TableSetColumnIndex(9);
+					ImGui::TextColored(ImVec4 { 1.0f, 0.5f, 0.0f, 1.0f }, "tag:%u", entry.self_tag);
 				}
 				ImGui::EndTable();
 			}
 			ImGui::EndTooltip();
+		}
+		void Draw_Element_Reservation_Station::draw(const Camera& cam) {
+
+			show_architectural(cam);
+			if (is_hovered(cam))
+				show_tooltip();
 		}
 	}
 }

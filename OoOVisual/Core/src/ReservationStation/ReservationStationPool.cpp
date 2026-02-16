@@ -114,5 +114,16 @@ namespace OoOVisual
 			return _pool[0];
 		}
 
+		void Reservation_Station_Pool::reset() {
+			for (auto& station : _pool) {
+				for (auto& entry : station.get()) {
+
+					auto copy_tag{ entry.self_tag };
+					entry = Reservation_Station_Entry{};
+					entry.self_tag = copy_tag;
+				}
+			}
+		}
+
 	} // namespace Core
 } // namespace OoOVis

@@ -1,4 +1,4 @@
-#include <Visualizer/Units/DrawElementDispatcher.h>
+#include <Visualizer/DrawElementDispatcher.h>
 #include <Visualizer/Constants.h>
 #include <Core/Dispatch/Dispatcher.h>
 #include <Core/Constants/Constants.h>
@@ -6,7 +6,7 @@ namespace OoOVisual
 {
 	namespace Visualizer
 	{
-		void Draw_Element_Dispatcher::show_tooltip() {
+		void Draw_Element_Dispatcher::show_tooltip() const {
 			ImGui::BeginTooltip();
 			ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "DISPATCHER FEEDBACK ");
 			ImGui::Separator();
@@ -65,5 +65,15 @@ namespace OoOVisual
 			ImGui::EndTable();
 			ImGui::EndTooltip();
 		}
+
+		void Draw_Element_Dispatcher::draw(const Camera& cam) {
+			show_architectural(cam);
+			if (is_hovered(cam))
+				show_tooltip();
+			set_detailed(cam);
+			if (detailed())
+				show_detailed();
+		}
+
 	}
 }

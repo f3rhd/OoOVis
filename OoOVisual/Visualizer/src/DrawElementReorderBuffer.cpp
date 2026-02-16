@@ -1,4 +1,4 @@
-#include <Visualizer/Units/DrawElementReorderBuffer.h>
+#include <Visualizer/DrawElementReorderBuffer.h>
 #include <Visualizer/Constants.h>
 #include <Visualizer/Utils.h>
 #include <Core/Commit/ReorderBuffer.h>
@@ -7,7 +7,7 @@ namespace OoOVisual
     namespace Visualizer
     {
         
-        void Draw_Element_Reorder_Buffer::show_tooltip() {
+        void Draw_Element_Reorder_Buffer::show_tooltip() const{
             ImGui::BeginTooltip();
             ImGui::Text("Head: %d", Core::Reorder_Buffer::head());
             ImGui::Text("Tail: %d", Core::Reorder_Buffer::tail());
@@ -24,9 +24,7 @@ namespace OoOVisual
 			ImGui::EndTooltip();
         }
        
-		void Draw_Element_Reorder_Buffer::show_detailed() {
-			if (!_detailed)
-				return;
+		void Draw_Element_Reorder_Buffer::show_detailed() const {
 			static bool follow_head{ true };
 			ImGuiIO& io{ ImGui::GetIO() };
 
@@ -110,7 +108,7 @@ namespace OoOVisual
 			ImGui::End();
 			ImGui::PopStyleColor(); 
 		}
-		void Draw_Element_Reorder_Buffer::render_entry_details(Core::Reorder_Buffer_Entry* entry) {
+		void Draw_Element_Reorder_Buffer::render_entry_details(Core::Reorder_Buffer_Entry* entry) const {
 			if (!entry) {
 				ImGui::TextDisabled("EMPTY");
 				return;
@@ -153,6 +151,15 @@ namespace OoOVisual
 			else {
 				ImGui::Text("Base/Unknown Entry");
 			}
+		}
+		void Draw_Element_Reorder_Buffer::draw(const Camera& cam) {
+
+			if (is_hovered(cam))
+				show_tooltip();
+			show_architectural(cam);
+			set_detailed(cam);
+			if (_detailed)
+				show_detailed();
 		}
 
 	} // namespace Visualizer

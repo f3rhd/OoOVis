@@ -2,6 +2,7 @@
 
 #include <Core/ReservationStation/ReservationStation.h>
 #include <Core/Fetch/FetchElements.h>
+#include <map>
 namespace OoOVisual
 {
     namespace Core
@@ -18,8 +19,9 @@ namespace OoOVisual
 
         public:
             Dispatcher() = default;
-            static std::vector<DISPATCH_FEEDBACK>                                      dispatch_fetch_group();
-            static const std::vector<DISPATCH_FEEDBACK>&                               last_dispatch_feedback();
+            static std::vector<DISPATCH_FEEDBACK>                                                                                    dispatch_fetch_group();
+            static const std::vector<DISPATCH_FEEDBACK>&                                                                             last_dispatch_feedback();
+            static DISPATCH_FEEDBACK                                                                                                 dispatch_feedback_of(RESERVATION_STATION_ID id); // used by visualizer
         private:
             static DISPATCH_FEEDBACK                                                   dispatch_fetch_element(const Fetch_Element& fetch_element);
             static DISPATCH_FEEDBACK                                                   dispatch_register_instruction(const Fetch_Element& element, Reservation_Station& station);
@@ -29,6 +31,7 @@ namespace OoOVisual
             static DISPATCH_FEEDBACK                                                   dispatch_jump_instruction(const Fetch_Element& element,  Reservation_Station& station);
         private:
             static std::vector<DISPATCH_FEEDBACK>                                      _last_dispatch_feedback;
+            static std::map<Core::RESERVATION_STATION_ID, DISPATCH_FEEDBACK>            _station_dispatch_map; //used by visualizer
 
         };
         

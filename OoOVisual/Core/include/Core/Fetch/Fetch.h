@@ -27,19 +27,22 @@ namespace OoOVisual
             static bool                                                                             has_btb_entry(memory_addr_t branch_instruction_id);
             static void                                                                             update_pattern_history_table(memory_addr_t branch_instruction_id, bool actual);
             static void                                                                             set_program_counter_flags();
-            static const std::unordered_map<memory_addr_t, memory_addr_t>&                          branch_target_buffer();//Visualizer uses these
-            static const std::unordered_map<u32, u32>&                                              pattern_history_table();//Visualizer uses these
-            static const std::vector<std::string>&                                                  instruction_stream(); // Visualizer uses these
+            static const std::unordered_map<memory_addr_t, memory_addr_t>&                          branch_target_buffer();//Visualizer uses this
+            static const std::unordered_map<u32, u32>&                                              pattern_history_table();//Visualizer uses this
+            static const std::vector<std::string>&                                                  instruction_stream(); // Visualizer uses this
+            static bool                                                                             had_misprediction(); // Visualizer uses this 
+            static void                                                                             reset();
         private:
-            static bool                                                _next_fetch_is_set;
-            static std::vector<std::unique_ptr<FrontEnd::Instruction>> _instruction_cache;
-            static std::vector<std::string>                            _instruction_stream;
-            static std::unordered_map<memory_addr_t, memory_addr_t>    _branch_target_buffer;
-            static std::unordered_map<u32, u32>                        _pattern_history_table;
-            static memory_addr_t                                       _program_counter;
-            static memory_addr_t                                       _branch_shift_register;
-            static time_t                                              _timestamp;
-            static std::vector<Fetch_Element>                          _last_fetch_group;
+            static bool                                                                             _next_fetch_is_set;
+            static bool                                                                             _had_misprediction;
+            static std::vector<std::unique_ptr<FrontEnd::Instruction>>                              _instruction_cache;
+            static std::vector<std::string>                                                         _instruction_stream;
+            static std::unordered_map<memory_addr_t, memory_addr_t>                                 _branch_target_buffer;
+            static std::unordered_map<u32, u32>                                                     _pattern_history_table;
+            static memory_addr_t                                                                    _program_counter;
+            static memory_addr_t                                                                    _branch_shift_register;
+            static time_t                                                                           _timestamp;
+            static std::vector<Fetch_Element>                                                       _last_fetch_group;
         };
         
     } // namespace Core

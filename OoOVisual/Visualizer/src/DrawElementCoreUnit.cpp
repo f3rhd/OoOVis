@@ -1,4 +1,4 @@
-#include <Visualizer/Units/DrawElement.h>
+#include <Visualizer/DrawElementCoreUnit.h>
 #include <Visualizer/Constants.h>
 #include <Visualizer/Utils.h>
 namespace OoOVisual
@@ -6,14 +6,14 @@ namespace OoOVisual
 	namespace Visualizer
 	{
 
-		bool Draw_Element::is_hovered(const Camera& cam) {
+		bool Draw_Element_Core_Unit::is_hovered(const Camera& cam) const {
 			ImVec2 p1{ cam.world_to_screen(_position) };
 			ImVec2 p2{ cam.world_to_screen(ImVec2{ _position.x + _dimension.x, _position.y + _dimension.y }) };
 			
 			return ImGui::IsMouseHoveringRect(p1, p2);
 		}
 
-		void Draw_Element::set_detailed(const Camera& cam) {
+		void Draw_Element_Core_Unit::set_detailed(const Camera& cam) {
 
 			if (is_hovered(cam) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
 				_detailed = true;
@@ -35,7 +35,7 @@ namespace OoOVisual
 			
 			return true; 
 		}
-		void Draw_Element::show_architectural(Camera& cam) {
+		void Draw_Element_Core_Unit::show_architectural(const Camera& cam) const {
 			ImVec2 p1{ cam.world_to_screen(_position) };
 			ImVec2 p2{ cam.world_to_screen(ImVec2{ _position.x + _dimension.x, _position.y + _dimension.y }) };
 
@@ -63,9 +63,9 @@ namespace OoOVisual
 				case DRAW_ELEMENT_ID::STATION_4:             text = "STATION 4"; break;
 				case DRAW_ELEMENT_ID::STATION_5:             text = "STATION 5"; break;
 				case DRAW_ELEMENT_ID::STATION_6:             text = "STATION 6"; break;
-				case DRAW_ELEMENT_ID::ADDER_SUBTRACTOR_UNIT: text = "ADDER-SUBTRACTOR"; break;
+				case DRAW_ELEMENT_ID::ADDER_SUBTRACTOR_UNIT: text = "ADDER\nSUBTRACTOR"; break;
 				case DRAW_ELEMENT_ID::BITWISE_UNIT:          text = "BITWISE"; break;
-				case DRAW_ELEMENT_ID::LESS_THAN_SETTER_UNIT: text = "LESS-THAN-SETTER"; break;
+				case DRAW_ELEMENT_ID::LESS_THAN_SETTER_UNIT: text = "SET-LESS"; break;
 				case DRAW_ELEMENT_ID::MULTIPLIER_UNIT:       text = "MULTIPLIER"; break;
 				case DRAW_ELEMENT_ID::DIVIDER_UNIT:          text = "DIVIDER"; break;
 				case DRAW_ELEMENT_ID::LOAD_STORE_UNIT:       text = "LOAD-STORE"; break;
@@ -75,7 +75,7 @@ namespace OoOVisual
 				default: break;
 			}
 
-			float scaledFontSize{ ImGui::GetFontSize() * Constants::FETCH_UNIT_LABEL_FONT_SCALE * cam.zoom };
+			float scaledFontSize{ ImGui::GetFontSize() * 2 * cam.zoom };
 			
 			ImVec2 textSize{ ImGui::GetFont()->CalcTextSizeA(scaledFontSize, FLT_MAX, 0.0f, text) };
 

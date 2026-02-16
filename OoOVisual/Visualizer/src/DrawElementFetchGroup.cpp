@@ -1,4 +1,4 @@
-#include <Visualizer/Units/DrawElementFetchGroup.h>
+#include <Visualizer/DrawElementFetchGroup.h>
 #include <Core/Fetch/FetchElements.h>
 #include <Visualizer/Constants.h>
 namespace OoOVisual
@@ -6,7 +6,7 @@ namespace OoOVisual
 	namespace Visualizer
 	{
 
-		void Draw_Element_Fetch_Group::show_tooltip()
+		void Draw_Element_Fetch_Group::show_tooltip() const
 		{
 			if (Core::Fetch_Group::group.empty()) {
 				ImGui::SetTooltip("Fetch queue is empty.");
@@ -48,6 +48,11 @@ namespace OoOVisual
 			}
 			ImGui::EndTable();
 			ImGui::EndTooltip();
+		}
+		void Draw_Element_Fetch_Group::draw(const Camera& cam) {
+			if (is_hovered(cam))
+				show_tooltip();
+			show_architectural(cam);
 		}
 	}
 }

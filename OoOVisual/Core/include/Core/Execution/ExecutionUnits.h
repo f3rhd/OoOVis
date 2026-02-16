@@ -56,12 +56,14 @@ namespace OoOVisual
 					calculated_address(addr),
 					producer_tag(producer_tag_){}
 			};
-			static Forwarding_Data				buffer_allocation_phase(const Reservation_Station_Entry* source_entry);
-			static Forwarding_Data				execute_load();
-			static void							execute_store(memory_addr_t store_id);
-			static time_t						flush_mispredicted(time_t timestamp);
-			static bool							store_buffer_is_full() { return _store_buffer.size() >= Constants::STORE_BUFFER_SIZE; }
-			static bool							load_buffer_is_full() { return _load_buffer.size() >= Constants::LOAD_BUFFER_SIZE; }
+			static Forwarding_Data					buffer_allocation_phase(const Reservation_Station_Entry* source_entry);
+			static Forwarding_Data					execute_load();
+			static void								execute_store(memory_addr_t store_id);
+			static time_t							flush_mispredicted(time_t timestamp);
+			static bool								store_buffer_is_full() { return _store_buffer.size() >= Constants::STORE_BUFFER_SIZE; }
+			static bool								load_buffer_is_full() { return _load_buffer.size() >= Constants::LOAD_BUFFER_SIZE; }
+			static const std::vector<Buffer_Entry>& store_buffer() { return _store_buffer; } // used by visualizer
+			static const std::vector<Buffer_Entry>& load_buffer() { return _load_buffer; } // used by visualizer
 		private:
 			static std::pair<size_t,size_t>		find_load_that_is_executable(); // .first stands for executable load if it can be executed by forwarding .second will hold the store buffer entry index that is being forwarded from
 		private:

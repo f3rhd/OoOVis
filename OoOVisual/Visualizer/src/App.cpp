@@ -1,4 +1,5 @@
 #include <Visualizer/App.h>
+#include <Visualizer/Constants.h>
 #include <iostream>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
@@ -14,7 +15,7 @@ namespace OoOVisual
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-			window = glfwCreateWindow(1280, 720, "OoO CPU Visualizer", nullptr, nullptr);
+			window = glfwCreateWindow(Constants::INITIAL_WINDOW_WIDTH, Constants::INITIAL_WINDOW_HEIGHT, "OoO CPU Visualizer", nullptr, nullptr);
 			if (!window) {
 				glfwTerminate();
 				return false;
@@ -70,5 +71,15 @@ namespace OoOVisual
 			glfwDestroyWindow(window);
 			glfwTerminate();
 		}
+
+		ImVec2 App::window_size()
+		{
+
+			int width{}; 
+			int height{};
+			glfwGetWindowSize(window, &width, &height);
+			return ImVec2(static_cast<float>(width),static_cast<float>(height));
+		}
+
 	}
 }

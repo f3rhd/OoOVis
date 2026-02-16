@@ -1,4 +1,4 @@
-#include <Visualizer/Units/DrawElementRegisterManager.h>
+#include <Visualizer/DrawElementRegisterManager.h>
 #include <Core/RegisterManager/RegisterManager.h>
 #include <Frontend/Parser/Lookup.h>
 namespace OoOVisual
@@ -6,7 +6,7 @@ namespace OoOVisual
 	namespace Visualizer
 	{
 
-		void Draw_Element_Register_Manager::show_tooltip() {
+		void Draw_Element_Register_Manager::show_tooltip() const {
 			ImGui::BeginTooltip();
 			ImGui::TextColored(ImVec4{ 0.4f, 0.7f, 1.0f, 1.0f }, "Physical Register File Status");
 			ImGui::Separator();
@@ -26,7 +26,7 @@ namespace OoOVisual
 		}
 
 		
-		void Draw_Element_Register_Manager::show_detailed() {
+		void Draw_Element_Register_Manager::show_detailed() const {
 			ImGuiViewport* viewport{ ImGui::GetMainViewport() };
 			float padding{ 30.0f };
 			ImVec2 spawn_pos{ padding, viewport->WorkSize.y - 550.0f - padding }; 
@@ -129,6 +129,15 @@ namespace OoOVisual
 			}
 			ImGui::End();
 			ImGui::PopStyleColor();
+		}
+		void Draw_Element_Register_Manager::draw(const Camera& cam) {
+
+			if (is_hovered(cam))
+				show_tooltip();
+			show_architectural(cam);
+			set_detailed(cam);
+			if (_detailed)
+				show_detailed();
 		}
 	} // namespace Visualizer
 } // namespace OoOVisual

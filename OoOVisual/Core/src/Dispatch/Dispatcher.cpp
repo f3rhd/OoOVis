@@ -11,27 +11,43 @@ namespace OoOVisual
     namespace Core
     {
 		DISPATCH_FEEDBACK Dispatcher::dispatch_fetch_element(const Fetch_Element& fetch_element) {
-            if (Reorder_Buffer::full())
-                return DISPATCH_FEEDBACK::REORDER_BUFFER_WAS_FULL;
-            if (!fetch_element.instruction)
-                return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
-            switch ((*fetch_element.instruction)->flow()) {
-            case FrontEnd::FLOW_TYPE::REGISTER:
-                return dispatch_register_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::ADD_SUB));
-            case FrontEnd::FLOW_TYPE::LOAD:
-                return dispatch_load_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
-            case FrontEnd::FLOW_TYPE::STORE:
-                return dispatch_store_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
-            case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
-                return dispatch_branch_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
-            case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL:
-                return dispatch_jump_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
-            case FrontEnd::FLOW_TYPE::UNKNOWN: // @HandleThis
-            default:
-                std::cout << "Faced with unknown instruction flow type\n";
-                exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+            DISPATCH_FEEDBACK feedback{};
+            RESERVATION_STATION_ID station_id{};
+            if (!fetch_element.instruction) feedback = DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
+            else if (Reorder_Buffer::full()) {
+                feedback =  DISPATCH_FEEDBACK::REORDER_BUFFER_WAS_FULL;
+            }
+            else {
+				switch ((*fetch_element.instruction)->flow()) {
+				case FrontEnd::FLOW_TYPE::REGISTER:
+                    station_id = RESERVATION_STATION_ID::ADD_SUB;
+					feedback = dispatch_register_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::ADD_SUB));
+                    break;
+				case FrontEnd::FLOW_TYPE::LOAD:
+                    station_id = RESERVATION_STATION_ID::LOAD_STORE;
+					feedback = dispatch_load_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
+                    break;
+				case FrontEnd::FLOW_TYPE::STORE:
+                    station_id = RESERVATION_STATION_ID::LOAD_STORE;
+					feedback =  dispatch_store_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
+                    break;
+				case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
+                    station_id = RESERVATION_STATION_ID::BRANCH;
+					feedback =  dispatch_branch_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
+                    break;
+				case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL:
+                    station_id = RESERVATION_STATION_ID::BRANCH;
+					feedback =  dispatch_jump_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
+                    break;
+				case FrontEnd::FLOW_TYPE::UNKNOWN: // @HandleThis
+				default:
+					std::cout << "Faced with unknown instruction flow type\n";
+					exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+				}
             }
             
+            _station_dispatch_map.at(station_id) = feedback;
+            return feedback;
         }
 		DISPATCH_FEEDBACK Dispatcher::dispatch_register_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
@@ -431,10 +447,23 @@ namespace OoOVisual
         std::vector<DISPATCH_FEEDBACK> 
         Dispatcher::_last_dispatch_feedback{ std::vector<DISPATCH_FEEDBACK>(Constants::FETCH_WIDTH,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH) };
 
-		const std::vector<OoOVisual::Core::DISPATCH_FEEDBACK>& Dispatcher::last_dispatch_feedback() {
+		const std::vector<DISPATCH_FEEDBACK>&  Dispatcher::last_dispatch_feedback() {
             return _last_dispatch_feedback;
 		}
 
+		DISPATCH_FEEDBACK Dispatcher::dispatch_feedback_of(RESERVATION_STATION_ID id) {
+            return _station_dispatch_map.at(id);
+		}
+
+		std::map<RESERVATION_STATION_ID, DISPATCH_FEEDBACK> Dispatcher::_station_dispatch_map{
+            {RESERVATION_STATION_ID::ADD_SUB,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
+            {RESERVATION_STATION_ID::BITWISE,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
+            {RESERVATION_STATION_ID::SET_LESS,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
+            {RESERVATION_STATION_ID::MULTIPLIER,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
+            {RESERVATION_STATION_ID::DIVIDER,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
+            {RESERVATION_STATION_ID::LOAD_STORE,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
+            {RESERVATION_STATION_ID::BRANCH,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
+        };
 		std::vector<DISPATCH_FEEDBACK> Dispatcher::dispatch_fetch_group() {
             std::vector<DISPATCH_FEEDBACK> feedback(Constants::FETCH_WIDTH, DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH);
             if (Fetch_Group::group.empty()) {

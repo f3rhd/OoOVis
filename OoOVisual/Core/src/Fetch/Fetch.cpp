@@ -12,6 +12,7 @@ namespace OoOVisual
         std::vector<std::string>                            Fetch_Unit::_instruction_stream{};
         time_t                                              Fetch_Unit::_timestamp{ 0};
         bool                                                Fetch_Unit::_next_fetch_is_set{ false };
+        bool                                                Fetch_Unit::_had_misprediction{ false };
         memory_addr_t                                       Fetch_Unit::_branch_shift_register{};
         std::vector<Fetch_Element>                          Fetch_Unit::_last_fetch_group{};
         std::vector<Fetch_Element>                          Fetch_Group::group{};
@@ -41,8 +42,9 @@ namespace OoOVisual
             }
             end_of_loop:
             memory_addr_t temp_address{ _program_counter };
+			_next_fetch_is_set = false;
+            _had_misprediction = false;
             for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {
-                _next_fetch_is_set = false;
                 auto& fetch_element = fetch_group[i];
                 if (temp_address < _instruction_cache.size()) {
                     fetch_element.instruction = &_instruction_cache[temp_address];
@@ -125,6 +127,23 @@ namespace OoOVisual
         {
             return _instruction_stream;
         }
+
+		bool Fetch_Unit::had_misprediction() {
+            return _had_misprediction;
+		}
+
+		void Fetch_Unit::reset()
+		{
+            _program_counter = 0;
+            _timestamp = 0;
+            _branch_target_buffer = {};
+            _pattern_history_table = {};
+            _next_fetch_is_set = false;
+            _had_misprediction = false;
+            _branch_shift_register = 0;
+            _last_fetch_group = {};
+            Fetch_Group::group = {};
+		}
 
 		void Fetch_Unit::set_program_counter(memory_addr_t next) {
             _program_counter = next;

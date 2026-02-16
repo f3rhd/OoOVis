@@ -108,7 +108,7 @@ namespace OoOVisual
 				case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_SIGNED_UNSIGNED: {
                 // MULHSU: src1 is signed, src2 is unsigned
                 // We cast to 64-bit to ensure we don't lose the overflow
-					int64_t full_product{ static_cast<int64_t>(source_entry->src1.signed_) * static_cast<uint64_t>(source_entry->src2.unsigned_) };
+				int64_t full_product{ static_cast<int64_t>(source_entry->src1.signed_) * static_cast<uint64_t>(source_entry->src2.unsigned_) };
                 result.produced_data.signed_ = static_cast<int32_t>(full_product >> 32);
                 break;
             }

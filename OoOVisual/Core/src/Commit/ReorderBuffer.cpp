@@ -28,6 +28,8 @@ namespace OoOVisual
 		std::vector<std::unique_ptr<Reorder_Buffer_Entry>> Reorder_Buffer::_buffer(Constants::REORDER_BUFFER_SIZE);
 		size_t Reorder_Buffer::_head{};
 		size_t Reorder_Buffer::_tail{};
+		bool Reorder_Buffer::_head_moved{ false };
+		bool Reorder_Buffer::_flushed{ false };
 		size_t Reorder_Buffer::allocate(std::unique_ptr<Reorder_Buffer_Entry>&& entry) {
 			_buffer[_tail] = std::move(entry);
 			auto allocated_entry_index = _tail;
@@ -65,11 +67,36 @@ namespace OoOVisual
 
 		}
 
+		bool Reorder_Buffer::head_moved() {
+			return _head_moved;
+		}
+
+		void Reorder_Buffer::reset()
+		{
+			_head = 0;
+			_tail = 0;
+			_head_moved = false;
+			_flushed = false;
+
+			for (auto& element : _buffer) {
+				if (element)
+				{
+					element.reset();
+				}
+			}
+		}
+
+		bool Reorder_Buffer::flushed() {
+			return _flushed;
+		}
 		void Reorder_Buffer::commit() {
+			_head_moved = false;
+			_flushed = false;
 			for (size_t i{}; i < Constants::COMMIT_WIDTH; i++) {
 				auto* entry = _buffer[_head].get();
 				if (entry == nullptr) return;
 				if (!entry->ready) return;
+				_head_moved = true;
 				switch (entry->flow()) {
 				case FrontEnd::FLOW_TYPE::REGISTER:
 				case FrontEnd::FLOW_TYPE::LOAD: {
@@ -92,6 +119,7 @@ namespace OoOVisual
 
 					if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->mispredicted) {
 						ROB_MISPREDICTION_RECOVERY(Branch_Conditional_Reorder_Buffer_Entry)
+						_flushed = true;
 					}
 					else {
 						_buffer[_head].reset();
@@ -107,6 +135,7 @@ namespace OoOVisual
 					);
 					if ((entry_)->mispredicted) {
 						ROB_MISPREDICTION_RECOVERY(Branch_Unconditional_Reorder_Buffer_Entry);
+						_flushed = true;
 					}
 					else {
 						_buffer[_head].reset();

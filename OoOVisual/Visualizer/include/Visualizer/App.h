@@ -1,5 +1,6 @@
 #include <GLFW/glfw3.h>
 #include <imgui.h>
+#include <imgui_internal.h>
 namespace OoOVisual
 {
 	namespace Visualizer
@@ -12,10 +13,11 @@ namespace OoOVisual
 			void end_frame();   // The "Render" and "SwapBuffers" calls
 			bool should_close();
 			void cleanup();
+			ImVec2 window_size();
 
 		private:
 			GLFWwindow* window;
 		};
 
-	} // namesapce Visualizer
+	} // namespace Visualizer
 } // namespace OoOVisual
