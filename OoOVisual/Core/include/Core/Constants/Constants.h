@@ -7,7 +7,7 @@ namespace OoOVisual {
 				auto constexpr ARCHITECTURAL_REGISTER_AMOUNT{ 32 };
 				auto constexpr REGISTER_ALIAS_TABLE_SIZE{ 32 };
 				auto constexpr INVALID_PHYSICAL_REGISTER_ID{ PHYSICAL_REGISTER_FILE_SIZE };
-				auto constexpr RESERVATION_STATION_SIZE{ 6 };
+				auto constexpr RESERVATION_STATION_SIZE{14};
 				auto constexpr NO_PRODUCER_TAG{ 0 };
 				auto constexpr FETCH_WIDTH{ 3 };
 				auto constexpr COMMIT_WIDTH{ 3 };
