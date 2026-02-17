@@ -73,13 +73,13 @@ namespace OoOVisual
 					ImGui::TableSetColumnIndex(0);
 					ImGui::Text("Fetched at:");
 					ImGui::TableSetColumnIndex(1);
-					ImGui::TextColored(ImVec4{ 0.7f, 0.9f, 1.0f, 1.0f }, "%llu", issued_entry->timestamp);
+					ImGui::TextColored(ImVec4{ 0.7f, 0.9f, 1.0f, 1.0f }, "%u", issued_entry->timestamp);
 
 					ImGui::TableNextRow();
 					ImGui::TableSetColumnIndex(0);
 					ImGui::Text("ROB Index:");
 					ImGui::TableSetColumnIndex(1);
-					ImGui::Text("#%llu", issued_entry->reorder_buffer_entry_index);
+					ImGui::Text("#%lu", issued_entry->reorder_buffer_entry_index);
 
 					ImGui::TableNextRow();
 					ImGui::TableSetColumnIndex(0);

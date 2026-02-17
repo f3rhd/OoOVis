@@ -1,4 +1,3 @@
-#pragma once
 #include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Constants/Constants.h>
 #include <Frontend/Parser/Lookup.h>

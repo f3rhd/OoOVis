@@ -4,6 +4,7 @@
 #include <iostream>
 #include <format>
 #include <ranges>
+#include <algorithm>
 namespace OoOVisual
 {
 	namespace Core 
@@ -36,7 +37,7 @@ namespace OoOVisual
 					}
 				}
 			}
-			auto it(std::ranges::max_element(flushed_entry_timestamps));
+			auto it(std::max_element(flushed_entry_timestamps.begin(), flushed_entry_timestamps.end()));
 			if (it != flushed_entry_timestamps.end())
 				return *it;
 			return Constants::TIME_ZERO;

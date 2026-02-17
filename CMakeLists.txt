@@ -36,27 +36,31 @@ add_library(core STATIC
     OoOVisual/Core/src/Execution/ExecutionStage.cpp
     OoOVisual/Core/src/Execution/ExecutionUnits.cpp
     OoOVisual/Core/src/Fetch/Fetch.cpp
+    OoOVisual/Core/src/ReservationStation/ReservationStation.cpp
+    OoOVisual/Core/src/ReservationStation/ReservationStationPool.cpp
     OoOVisual/Core/src/RegisterManager/RegisterManager.cpp
-    OoOVisual/Core/Core.cpp
+    OoOVisual/Core/src/Core.cpp
     OoOVisual/Frontend/src/Parser/Lookup.cpp
     OoOVisual/Frontend/src/Parser/Parser.cpp
-    OoOVisual/Visualizer/App.cpp
-    OoOVisual/Visualizer/Camera.cpp
-    OoOVisual/Visualizer/DrawElementCoreUnit.cpp
-    OoOVisual/Visualizer/DrawElementDispatcher.cpp
-    OoOVisual/Visualizer/DrawElementExecutionUnit.cpp
-    OoOVisual/Visualizer/DrawElementFetchGroup.cpp
-    OoOVisual/Visualizer/DrawElementFetchUnit.cpp
-    OoOVisual/Visualizer/DrawElementRegisterManager.cpp
-    OoOVisual/Visualizer/DrawElementReorderBuffer.cpp
-    OoOVisual/Visualizer/DrawElementReservationStation.cpp
-    OoOVisual/Visualizer/DrawElementWire.cpp
-    OoOVisual/Visualizer/Scene.cpp
-    OoOVisual/Visualizer/Utils.cpp
+    OoOVisual/Visualizer/src/App.cpp
+    OoOVisual/Visualizer/src/Camera.cpp
+    OoOVisual/Visualizer/src/DrawElementCoreUnit.cpp
+    OoOVisual/Visualizer/src/DrawElementDispatcher.cpp
+    OoOVisual/Visualizer/src/DrawElementExecutionUnit.cpp
+    OoOVisual/Visualizer/src/DrawElementFetchGroup.cpp
+    OoOVisual/Visualizer/src/DrawElementFetchUnit.cpp
+    OoOVisual/Visualizer/src/DrawElementRegisterManager.cpp
+    OoOVisual/Visualizer/src/DrawElementReorderBuffer.cpp
+    OoOVisual/Visualizer/src/DrawElementReservationStation.cpp
+    OoOVisual/Visualizer/src/DrawElementWire.cpp
+    OoOVisual/Visualizer/src/Scene.cpp
+    OoOVisual/Visualizer/src/Utils.cpp
 )
 
-target_include_directories(core PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+target_include_directories(core PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/OoOVisual/Core/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/OoOVisual/Frontend/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/OoOVisual/Visualizer/include
 )
 
 target_link_libraries(core PUBLIC imgui)

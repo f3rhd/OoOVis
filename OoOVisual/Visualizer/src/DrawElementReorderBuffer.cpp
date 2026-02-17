@@ -9,8 +9,8 @@ namespace OoOVisual
         
         void Draw_Element_Reorder_Buffer::show_tooltip() const{
             ImGui::BeginTooltip();
-            ImGui::Text("Head: %d", Core::Reorder_Buffer::head());
-            ImGui::Text("Tail: %d", Core::Reorder_Buffer::tail());
+            ImGui::Text("Head: %ld", Core::Reorder_Buffer::head());
+            ImGui::Text("Tail: %ld", Core::Reorder_Buffer::tail());
             if (Core::Reorder_Buffer::full()) {
                 ImGui::PushStyleColor(ImGuiCol_Text, Constants::RED);
                 ImGui::Text("Reorder buffer is full.");
@@ -114,7 +114,7 @@ namespace OoOVisual
 				return;
 			}
 
-			ImGui::TextColored(ImVec4{0.7f, 0.7f, 0.7f, 1.0f}, "[TS: %llu]", entry->self_timestamp);
+			ImGui::TextColored(ImVec4{0.7f, 0.7f, 0.7f, 1.0f}, "[TS: %u]", entry->self_timestamp);
 			ImGui::SameLine();
 			
 			if (entry->ready) {

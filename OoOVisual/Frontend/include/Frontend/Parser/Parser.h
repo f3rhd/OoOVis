@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #include <Frontend/Parser/Instruction.h>
-#include <FrontEnd/Parser/Token.h>
+#include <Frontend/Parser/Token.h>
 
 namespace OoOVisual {
     namespace FrontEnd {

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include <memory>
+#include <vector>
 namespace OoOVisual
 {
 	namespace Core {

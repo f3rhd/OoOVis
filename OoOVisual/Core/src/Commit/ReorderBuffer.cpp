@@ -1,4 +1,3 @@
-#pragma once
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Constants/Constants.h>
 #include <Core/RegisterManager/RegisterManager.h>

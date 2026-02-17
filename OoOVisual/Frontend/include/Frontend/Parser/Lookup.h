@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include <string>   
 
-#include <FrontEnd/Parser/instruction.h>
+#include <Frontend/Parser/Instruction.h>
 
 namespace OoOVisual {
     namespace FrontEnd {

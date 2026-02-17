@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <Core/Execution/ExecutionResult.h>
-#include <core/ReservationStation/ReservationStation.h>
+#include <Core/ReservationStation/ReservationStation.h>
 namespace OoOVisual
 {
 	namespace Core

@@ -67,7 +67,7 @@ namespace OoOVisual
 								}
 
 								ImGui::TableSetColumnIndex(2);
-								ImGui::Text("0x%016llX", entry.data);
+								ImGui::Text("0x%016dX", entry.data.signed_);
 							}
 							ImGui::EndTable();
 						}

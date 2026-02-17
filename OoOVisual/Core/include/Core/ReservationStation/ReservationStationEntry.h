@@ -1,7 +1,7 @@
 #pragma once
 #include <Core/Types/Types.h>
 #include <Core/Constants/Constants.h>
-#include <core/Execution/ExecutionUnitModes.h>
+#include <Core/Execution/ExecutionUnitModes.h>
 namespace OoOVisual 
 {
     namespace Core

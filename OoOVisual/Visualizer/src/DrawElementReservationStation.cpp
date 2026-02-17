@@ -96,14 +96,14 @@ namespace OoOVisual
 					if (entry.producer_tag1 != Core::Constants::NO_PRODUCER_TAG) {
 						ImGui::TextColored(ImVec4 { 1.0f, 0.6f, 0.6f, 1.0f }, "t:%u", entry.producer_tag1);
 					} else {
-						ImGui::Text("v:%llu", entry.src1);
+						ImGui::Text("v:%d", entry.src1.signed_);
 					}
 
 					ImGui::TableSetColumnIndex(6);
 					if (entry.producer_tag2 != Core::Constants::NO_PRODUCER_TAG) {
 						ImGui::TextColored(ImVec4 { 1.0f, 0.6f, 0.6f, 1.0f }, "t:%u", entry.producer_tag2);
 					} else {
-						ImGui::Text("v:%llu", entry.src2);
+						ImGui::Text("v:%d", entry.src2.signed_);
 					}
 
 					ImGui::TableSetColumnIndex(7);
@@ -126,7 +126,7 @@ namespace OoOVisual
 					}
 
 					ImGui::TableSetColumnIndex(8);
-					ImGui::Text("#%llu", entry.reorder_buffer_entry_index);
+					ImGui::Text("#%lu", entry.reorder_buffer_entry_index);
 					ImGui::TableSetColumnIndex(9);
 					ImGui::TextColored(ImVec4 { 1.0f, 0.5f, 0.0f, 1.0f }, "tag:%u", entry.self_tag);
 				}
