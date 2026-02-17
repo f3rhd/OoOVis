@@ -34,9 +34,9 @@ add_library(core STATIC
     OoOVisual/Core/src/DCache/DCache.cpp
     OoOVisual/Core/src/Dispatch/Dispatcher.cpp
     OoOVisual/Core/src/Execution/ExecutionStage.cpp
-    OoOvisual/Core/src/Execution/ExecutionUnits.cpp
-    OoOvisual/Core/src/Fetch/Fetch.cpp
-    OoOvisual/Core/src/RegisterManager/RegisterManager.cpp
+    OoOVisual/Core/src/Execution/ExecutionUnits.cpp
+    OoOVisual/Core/src/Fetch/Fetch.cpp
+    OoOVisual/Core/src/RegisterManager/RegisterManager.cpp
     OoOVisual/Core/Core.cpp
     OoOVisual/Frontend/src/Parser/Lookup.cpp
     OoOVisual/Frontend/src/Parser/Parser.cpp

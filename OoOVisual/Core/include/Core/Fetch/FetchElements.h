@@ -8,7 +8,7 @@ namespace OoOVisual
 	namespace Core
 	{
         struct Fetch_Element {
-            std::unique_ptr<FrontEnd::Instruction>* instruction;
+            std::unique_ptr<FrontEnd::Instruction>* instruction{};
             memory_addr_t address = 0;
             u32 timestamp = 0;
             u32 branch_prediction = Constants::NOT_BRANCH_INSTRUCTION;
