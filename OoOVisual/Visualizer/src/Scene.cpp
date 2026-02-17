@@ -1,6 +1,7 @@
 #include <Visualizer/Scene.h>
 #include <Visualizer/DrawElements.h>
 #include <Visualizer/Constants.h>
+#include <Core/Core.h>
 namespace OoOVisual
 {
 	namespace Visualizer
@@ -246,6 +247,27 @@ namespace OoOVisual
 		{
 			_scene_camera.update();
 			ImGui::Begin("Pipeline Canvas", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus );
+			ImGui::SetNextItemWidth(150.0f); 
+			ImGui::SliderFloat("Speed", Core::tick_speed(), 0.0f, 1.0f, "%.2f");
+			if (ImGui::Button("Run"))
+			{
+				Core::set_core_mode(Core::CORE_MODE::RUN);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Step"))
+			{
+				Core::set_core_mode(Core::CORE_MODE::STEP);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Stop"))
+			{
+				Core::set_core_mode(Core::CORE_MODE::STOP);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Reset"))
+			{
+				Core::reset();
+			}
 			for (const auto& element : _units) {
 				element->draw(_scene_camera);
 			}

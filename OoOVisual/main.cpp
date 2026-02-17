@@ -9,21 +9,11 @@ int main(int argc, char** argv) {
 	if (!app.init())
 		return -1;
 	scene.init();
-	bool step{};
 	while (!app.should_close()) {
-		if (true) {
-			Core::tick();
-			step = false;
-		}
+		Core::run();
 		app.start_frame();
 		ImGui::SetNextWindowSize(app.window_size());
 		scene.play();
-		if (ImGui::Button("step")) {
-			step = true;
-		}
-		if (ImGui::Button("Reset")) {
-			Core::restart();
-		}
 		ImGui::End();
 		app.end_frame();
 	}

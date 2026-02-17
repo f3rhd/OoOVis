@@ -31,8 +31,6 @@ namespace OoOVisual {
             void        parse_label();
             std::string tokenize_line_text(const std::string &line_raw);
             void        advance();
-            //memory_addr_t  unique_label_id();
-            //branch_instruction_id_t unique_branch_id();
         private:
             Token*                                                               _current_token = nullptr;
             size_t                                                               _current_index = 0;

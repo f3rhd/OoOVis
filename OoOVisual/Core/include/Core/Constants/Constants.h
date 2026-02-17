@@ -24,6 +24,7 @@ namespace OoOVisual {
 				auto constexpr BLUE{ "\033[34m" };
 				auto constexpr MAGENTA{ "\033[35m" };
 				auto constexpr CYAN{ "\033[36m" };
+				auto constexpr MAX_IPS{ 60 };
 				unsigned int constexpr FORWARDING_DATA_STATION_DEALLOCATE_ONLY{ 1 << 1 };
 				unsigned int constexpr FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD{ 1 << 2 };
 				unsigned int constexpr FORWADING_DATA_FORWARD_ONLY{ 1 << 3 };
