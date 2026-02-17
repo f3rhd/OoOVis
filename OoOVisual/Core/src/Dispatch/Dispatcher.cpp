@@ -13,8 +13,11 @@ namespace OoOVisual
 		DISPATCH_FEEDBACK Dispatcher::dispatch_fetch_element(const Fetch_Element& fetch_element) {
             DISPATCH_FEEDBACK feedback{};
             RESERVATION_STATION_ID station_id{};
-            if (!fetch_element.instruction) feedback = DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
-            else if (Reorder_Buffer::full()) {
+            if (!fetch_element.instruction) {
+                feedback = DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
+                return feedback;
+            }
+            if (Reorder_Buffer::full()) {
                 feedback =  DISPATCH_FEEDBACK::REORDER_BUFFER_WAS_FULL;
             }
             else {
@@ -455,6 +458,14 @@ namespace OoOVisual
             return _station_dispatch_map.at(id);
 		}
 
+        void Dispatcher::reset()
+        {
+            _last_dispatch_feedback = std::vector<DISPATCH_FEEDBACK>(Constants::FETCH_WIDTH, DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH);
+            for (auto& [key, val] : _station_dispatch_map) {
+                val = DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
+            }
+		}
+
 		std::map<RESERVATION_STATION_ID, DISPATCH_FEEDBACK> Dispatcher::_station_dispatch_map{
             {RESERVATION_STATION_ID::ADD_SUB,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
             {RESERVATION_STATION_ID::BITWISE,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
@@ -472,11 +483,17 @@ namespace OoOVisual
             }
             for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {
                 feedback[i] = dispatch_fetch_element(Fetch_Group::group[i]);
-                if (
-                    feedback[i] != DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH &&
-                    feedback[i] != DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH
-                ) {
+            }
+            bool reset_map{ true };
+            for (auto& unit_feedback : feedback) {
+                if (unit_feedback != DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH) {
+                    reset_map = false;
                     break;
+                }
+            }
+            if (reset_map) {
+                for (auto& [key, val] : _station_dispatch_map) {
+                    val = DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
                 }
             }
 			_last_dispatch_feedback = feedback;

@@ -84,7 +84,7 @@ namespace OoOVisual
 		}
 		void DCache::reset()
 		{
-			_memory = {};
+			_memory.clear();
 		}
 	} // namespace Core
 } // namespace OoOVis

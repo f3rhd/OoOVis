@@ -1,6 +1,7 @@
 #include <Visualizer/DrawElementFetchUnit.h>
 #include <Visualizer/Constants.h>
 #include <Core/Fetch/Fetch.h>
+#include <Core/Types/Types.h>
 #include <iostream>
 namespace OoOVisual
 {
@@ -20,18 +21,50 @@ namespace OoOVisual
 
 			ImGuiWindowFlags window_flags{ ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings };
 
+			static bool follow_pc{ true };
 			if (ImGui::Begin("Fetch Unit Details", nullptr, window_flags)) {
 				
 				ImGui::TextColored(ImVec4{ 0.4f, 0.7f, 1.0f, 1.0f }, "FETCH UNIT INTERNALS");
 				ImGui::Separator();
+				ImGui::Text("Pc: %u", Core::Fetch_Unit::program_counter());
+				ImGui::Separator();
+				ImGui::Checkbox("Follow Pc", &follow_pc);
 
 				if (ImGui::CollapsingHeader("Instruction Stream", ImGuiTreeNodeFlags_DefaultOpen)) {
 					if (ImGui::BeginChild("InstructionScroll", ImVec2{ 0.0f, 150.0f }, true)) {
 						const auto& stream{ Core::Fetch_Unit::instruction_stream() };
-						for (size_t i{ 0 }; i < stream.size(); ++i) {
-							ImGui::TextDisabled("[%04zu]", i);
-							ImGui::SameLine();
-							ImGui::Text("%s", stream[i].c_str());
+						const memory_addr_t current_pc{ Core::Fetch_Unit::program_counter() };
+
+						if (follow_pc) {
+							float item_height{ ImGui::GetTextLineHeightWithSpacing() };
+							ImGui::SetScrollY(current_pc * item_height - (ImGui::GetWindowHeight() * 0.5f));
+						}
+
+						ImGuiListClipper clipper;
+						clipper.Begin(static_cast<int>(stream.size()));
+
+						while (clipper.Step()) {
+							for (int i{ clipper.DisplayStart }; i < clipper.DisplayEnd; ++i) {
+								bool is_current_line{ static_cast<memory_addr_t>(stream[i].second) == current_pc};
+
+								if (is_current_line) {
+									ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 1.0f, 0.8f, 0.0f, 1.0f });
+								}
+
+								if (stream[i].first.back() == ':') {
+									ImGui::Text("%s", stream[i].first.c_str());
+								}
+								else {
+
+									ImGui::TextDisabled("[%04d]", stream[i].second);
+									ImGui::SameLine();
+									ImGui::Text("%s", stream[i].first.c_str());
+
+									if (is_current_line) {
+										ImGui::PopStyleColor();
+									}
+								}
+							}
 						}
 					}
 					ImGui::EndChild();
@@ -85,46 +118,6 @@ namespace OoOVisual
 				"Fetch Unit\nPc: %u"
 				,current_pc
 			);
-						if (Core::Fetch_Group::group.empty()) {
-				ImGui::SetTooltip("Fetch queue is empty.");
-				return;
-			}
-			ImGui::BeginTooltip();
-			ImGui::TextColored(ImVec4(0.4f, 0.7f, 1.0f, 1.0f), "FETCH QUEUE CONTENTS");
-			ImGui::Separator();
-
-			if (ImGui::BeginTable("FetchQueueTable", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
-				
-				ImGui::TableSetupColumn("Slot");
-				ImGui::TableSetupColumn("Address");
-				ImGui::TableSetupColumn("TS");
-				ImGui::TableSetupColumn("Branch");
-				ImGui::TableHeadersRow();
-
-				for (u32 i{}; i < Core::Constants::FETCH_WIDTH; i++) {
-					const auto& element = Core::Fetch_Group::group[i];
-
-					ImGui::TableNextRow();
-
-					ImGui::TableSetColumnIndex(0);
-					ImGui::Text("%d", i);
-
-					ImGui::TableSetColumnIndex(1);
-					ImGui::Text("0x%08llX", element.address);
-
-					ImGui::TableSetColumnIndex(2);
-					ImGui::Text("%u", element.timestamp);
-
-					ImGui::TableSetColumnIndex(3);
-					if (element.branch_prediction == Core::Constants::NOT_BRANCH_INSTRUCTION) {
-						ImGui::TextDisabled("-");
-					} else {
-						ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "YES");
-					}
-				}
-			}
-			ImGui::EndTable();
-			ImGui::EndTooltip();
 		}
 		void Draw_Element_Fetch_Unit::draw(const Camera& cam) {
 			if (is_hovered(cam))

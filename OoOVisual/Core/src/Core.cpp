@@ -33,6 +33,10 @@ namespace OoOVisual
 			DCache::reset();
 			Fetch_Unit::reset();
 			Reservation_Station_Pool::reset();
+			Dispatcher::reset();
+			Execution_Unit_Load_Store::reset();
+			Execution_Stage::reset();
+			Register_Manager::reset();
 		}
 
 	}

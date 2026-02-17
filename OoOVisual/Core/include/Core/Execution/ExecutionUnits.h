@@ -64,6 +64,7 @@ namespace OoOVisual
 			static bool								load_buffer_is_full() { return _load_buffer.size() >= Constants::LOAD_BUFFER_SIZE; }
 			static const std::vector<Buffer_Entry>& store_buffer() { return _store_buffer; } // used by visualizer
 			static const std::vector<Buffer_Entry>& load_buffer() { return _load_buffer; } // used by visualizer
+			static void							    reset();
 		private:
 			static std::pair<size_t,size_t>		find_load_that_is_executable(); // .first stands for executable load if it can be executed by forwarding .second will hold the store buffer entry index that is being forwarded from
 		private:

@@ -12,10 +12,10 @@ namespace OoOVisual {
                 exit(EXIT_FAILURE);                                       \
             }                                                             \
 
-        std::pair<std::vector<std::unique_ptr<Instruction>>, std::vector<std::string>>
+        std::pair<std::vector<std::unique_ptr<Instruction>>, std::vector<std::pair<std::string,size_t>>>
         Parser::parse_instructions(const std::string & src) {
             std::ifstream file(src);
-            std::vector<std::string> instruction_strs{};
+            std::vector<std::pair<std::string,size_t>> instruction_strs{};
             if (!src.ends_with(".s")) {
                 std::cout << "\033[31m" << "Error: \033[0m" << "File name should end with *.s.\n";
                 exit(EXIT_FAILURE);
@@ -25,11 +25,18 @@ namespace OoOVisual {
                 exit(EXIT_FAILURE);
             }
             std::string line_raw{};
+            size_t instruction_index{};
             while (std::getline(file, line_raw)) {
                 _line_number++;
                 std::string line_better = tokenize_line_text(line_raw);
-                if (!line_better.empty())
-                    instruction_strs.push_back(std::move(line_better));
+                if (!line_better.empty()) {
+
+                    if (line_better.back() == ':')
+                        instruction_strs.emplace_back(std::move(line_better), -1);
+                    else {
+						instruction_strs.emplace_back(std::move(line_better), instruction_index++);
+                    }
+                }
                 _current_index = 0;
                 _current_token = &_line_tokens[0];
                 parse_instruction();
@@ -351,15 +358,7 @@ namespace OoOVisual {
             }
            
         }
-        //memory_addr_t Parser::unique_label_id() {
-        //    static memory_addr_t unique_id  {FORWARD_ADDR + 1};
-        //    return unique_id++;
-        //}
-        //branch_instruction_id_t Parser::unique_branch_id() {
-        //    static label_id_t unique_id  {0};
-        //    return unique_id++;
-        //}
-        void Parser::advance() {
+		void Parser::advance() {
 
             if (_current_token->type != TOKEN_TYPE::NEW_LINE) {
                 _current_index++;

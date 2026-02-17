@@ -24,6 +24,7 @@ namespace OoOVisual
 			static const std::map<reg_id_t,Physical_Register_File_Entry>&	phyical_register_file();
 			static const std::map<reg_id_t, reg_id_t>&						frontend_alias_table();
 			static const std::map<reg_id_t, reg_id_t>&						retirement_alias_table();
+			static void														reset();
 		private:
 			static std::map<reg_id_t, Physical_Register_File_Entry> _physical_register_file;
 			static std::map<reg_id_t, reg_id_t>					  _frontend_register_alias_table;

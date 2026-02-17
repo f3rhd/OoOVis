@@ -9,7 +9,7 @@ namespace OoOVisual
         std::vector<std::unique_ptr<FrontEnd::Instruction>> Fetch_Unit::_instruction_cache{};
         std::unordered_map<memory_addr_t, memory_addr_t>    Fetch_Unit::_branch_target_buffer{};
         std::unordered_map<u32, u32>                        Fetch_Unit::_pattern_history_table{};
-        std::vector<std::string>                            Fetch_Unit::_instruction_stream{};
+        std::vector<std::pair<std::string,size_t>>          Fetch_Unit::_instruction_stream{};
         time_t                                              Fetch_Unit::_timestamp{ 0};
         bool                                                Fetch_Unit::_next_fetch_is_set{ false };
         bool                                                Fetch_Unit::_had_misprediction{ false };
@@ -91,7 +91,7 @@ namespace OoOVisual
 			return fetch_group;
         }
 
-        void Fetch_Unit::init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions,std::vector<std::string>&& instruction_stream) {
+        void Fetch_Unit::init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions,std::vector<std::pair<std::string,size_t>>&& instruction_stream) {
             _instruction_cache = std::move(instructions);
             _instruction_stream = std::move(instruction_stream);
         }
@@ -123,7 +123,7 @@ namespace OoOVisual
             return _pattern_history_table;
 		}
 
-        const std::vector<std::string>& Fetch_Unit::instruction_stream()
+        const std::vector<std::pair<std::string,size_t>>& Fetch_Unit::instruction_stream()
         {
             return _instruction_stream;
         }
@@ -136,13 +136,13 @@ namespace OoOVisual
 		{
             _program_counter = 0;
             _timestamp = 0;
-            _branch_target_buffer = {};
-            _pattern_history_table = {};
+            _branch_target_buffer.clear();
+            _pattern_history_table.clear();
             _next_fetch_is_set = false;
             _had_misprediction = false;
             _branch_shift_register = 0;
-            _last_fetch_group = {};
-            Fetch_Group::group = {};
+            _last_fetch_group.clear();
+            Fetch_Group::group.clear();
 		}
 
 		void Fetch_Unit::set_program_counter(memory_addr_t next) {

@@ -338,6 +338,12 @@ namespace OoOVisual
 			return Constants::TIME_ZERO;
 		}
 
+		void Execution_Unit_Load_Store::reset()
+		{
+			_load_buffer.clear();
+			_store_buffer.clear();
+		}
+
 		Forwarding_Data Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)

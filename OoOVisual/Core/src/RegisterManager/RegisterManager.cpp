@@ -141,5 +141,12 @@ namespace OoOVisual
 
 		}
 
+		void Register_Manager::reset()
+		{
+			_physical_register_file.clear();
+			_frontend_register_alias_table.clear();
+			init();
+		}
+
 	}
 }

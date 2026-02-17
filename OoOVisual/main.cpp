@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 	scene.init();
 	bool step{};
 	while (!app.should_close()) {
-		if (step) {
+		if (true) {
 			Core::tick();
 			step = false;
 		}
@@ -20,6 +20,9 @@ int main(int argc, char** argv) {
 		scene.play();
 		if (ImGui::Button("step")) {
 			step = true;
+		}
+		if (ImGui::Button("Reset")) {
+			Core::restart();
 		}
 		ImGui::End();
 		app.end_frame();

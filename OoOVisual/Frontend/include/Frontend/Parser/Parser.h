@@ -18,7 +18,7 @@ namespace OoOVisual {
         class Parser {
         public:
             Parser() = default;
-            std::pair<std::vector<std::unique_ptr<Instruction>>,std::vector<std::string>>  parse_instructions(const std::string& src);
+            std::pair < std::vector<std::unique_ptr<Instruction>>,std::vector<std::pair<std::string,size_t>>> parse_instructions(const std::string& src);
             cli_args_t  parse_cli(int argc, char** argv);
         private:
             void        parse_instruction();

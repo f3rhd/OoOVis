@@ -45,6 +45,11 @@ namespace OoOVisual
 			_last_issued_entries.push_back(branch_execution_input);
 		}
 
+		void Execution_Stage::reset()
+		{
+			_last_issued_entries = std::vector<const Reservation_Station_Entry*>(Constants::RESERVATION_STATION_AMOUNT,nullptr);
+		}
+
 		const std::vector<const OoOVisual::Core::Reservation_Station_Entry*> Execution_Stage::issued()
 		{
 			return _last_issued_entries;

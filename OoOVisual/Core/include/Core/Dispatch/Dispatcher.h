@@ -19,9 +19,10 @@ namespace OoOVisual
 
         public:
             Dispatcher() = default;
-            static std::vector<DISPATCH_FEEDBACK>                                                                                    dispatch_fetch_group();
-            static const std::vector<DISPATCH_FEEDBACK>&                                                                             last_dispatch_feedback();
-            static DISPATCH_FEEDBACK                                                                                                 dispatch_feedback_of(RESERVATION_STATION_ID id); // used by visualizer
+            static std::vector<DISPATCH_FEEDBACK>                                      dispatch_fetch_group();
+            static const std::vector<DISPATCH_FEEDBACK>&                               last_dispatch_feedback();
+            static DISPATCH_FEEDBACK                                                   dispatch_feedback_of(RESERVATION_STATION_ID id); // used by visualizer
+            static void                                                                reset();
         private:
             static DISPATCH_FEEDBACK                                                   dispatch_fetch_element(const Fetch_Element& fetch_element);
             static DISPATCH_FEEDBACK                                                   dispatch_register_instruction(const Fetch_Element& element, Reservation_Station& station);

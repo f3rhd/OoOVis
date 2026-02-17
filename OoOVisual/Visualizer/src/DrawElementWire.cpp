@@ -140,7 +140,7 @@ namespace OoOVisual
 
 			case DRAW_ELEMENT_ID::WIRE_ROB_TO_REGFILE_HORIZONTAL:
 			case DRAW_ELEMENT_ID::WIRE_ROB_TO_REGFILE_VERTICAL:
-			case DRAW_ELEMENT_ID::WIRE_ROB_TO_REGFILE_TO_BOTTOM:
+			case DRAW_ELEMENT_ID::WIRE_ROB_TO_REGFILE_TO_SIDE:
 				if (Core::Reorder_Buffer::flushed())
 					wire.trigger_pulse(color_flush); 
 				else if(Core::Reorder_Buffer::head_moved())
