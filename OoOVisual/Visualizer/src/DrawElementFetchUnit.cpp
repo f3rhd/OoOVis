@@ -80,8 +80,8 @@ namespace OoOVisual
 
 						for (const auto& pair : Core::Fetch_Unit::branch_target_buffer()) {
 							ImGui::TableNextRow();
-							ImGui::TableSetColumnIndex(0); ImGui::Text("0x%08uX", pair.first);
-							ImGui::TableSetColumnIndex(1); ImGui::TextColored(ImVec4{ 0.4f, 0.8f, 1.0f, 1.0f }, "0x%08uX", pair.second);
+							ImGui::TableSetColumnIndex(0); ImGui::Text("0x%08X", pair.first);
+							ImGui::TableSetColumnIndex(1); ImGui::TextColored(ImVec4{ 0.4f, 0.8f, 1.0f, 1.0f }, "0x%08X", pair.second);
 						}
 						ImGui::EndTable();
 					}

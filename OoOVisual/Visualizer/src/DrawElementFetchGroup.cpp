@@ -33,7 +33,7 @@ namespace OoOVisual
 					ImGui::Text("%d", i);
 
 					ImGui::TableSetColumnIndex(1);
-					ImGui::Text("0x%08uX", element.address);
+					ImGui::Text("0x%08X", element.address);
 
 					ImGui::TableSetColumnIndex(2);
 					ImGui::Text("%u", element.timestamp);

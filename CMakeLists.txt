@@ -65,8 +65,8 @@ target_include_directories(core PUBLIC
 
 target_link_libraries(core PUBLIC imgui)
 
-add_executable(cpu_visual
+add_executable(OoOVisual
     OoOVisual/main.cpp
 )
 
-target_link_libraries(cpu_visual PRIVATE core)
+target_link_libraries(OoOVisual PRIVATE core)
