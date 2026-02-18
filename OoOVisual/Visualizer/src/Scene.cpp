@@ -271,6 +271,7 @@ namespace OoOVisual
 			for (const auto& element : _units) {
 				element->draw(_scene_camera);
 			}
+			ImGui::End();
 		}
 
 	}

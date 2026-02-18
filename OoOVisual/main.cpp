@@ -14,7 +14,6 @@ int main(int argc, char** argv) {
 		app.start_frame();
 		ImGui::SetNextWindowSize(app.window_size());
 		scene.play();
-		ImGui::End();
 		app.end_frame();
 	}
     app.cleanup();
