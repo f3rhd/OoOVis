@@ -237,7 +237,10 @@ namespace OoOVisual
 			for (size_t i{}; i < _load_buffer.size(); i++) {
 				time_t max_store_timestamp{};
 				for (size_t j{}; j < _store_buffer.size(); j++) {
-					if (_load_buffer[i].calculated_address == _store_buffer[j].calculated_address && _store_buffer[j].timestamp >= max_store_timestamp) { 
+					if (_load_buffer[i].timestamp >= _store_buffer[j].timestamp
+						&& _load_buffer[i].calculated_address == _store_buffer[j].calculated_address &&
+						_store_buffer[j].timestamp >= max_store_timestamp
+					) {
 						// we cant use store_buffer_entry_index_that_is_forwarded_from for comparison since its initial value is max(u32) which will never execute the loop
 						store_buffer_entry_index_that_is_forwarded_from = j;
 						max_store_timestamp = static_cast<time_t>(j);
