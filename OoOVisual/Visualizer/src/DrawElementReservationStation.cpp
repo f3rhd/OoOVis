@@ -115,10 +115,10 @@ namespace OoOVisual
 						}
 					}
 					else if (_core_station->id() == Core::RESERVATION_STATION_ID::LOAD_STORE) {
-						if (entry.store_source_register_id != Core::Constants::INVALID_PHYSICAL_REGISTER_ID) {
-							ImGui::Text("stsrc: p%u", entry.store_source_register_id);
+						if (entry.destination_register_id_as_ofsset) {
+							ImGui::Text("store");
 						} else {
-							ImGui::Text("mem mode");
+							ImGui::Text("load");
 						}
 					}
 					else {

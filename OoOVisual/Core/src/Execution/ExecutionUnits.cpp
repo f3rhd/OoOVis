@@ -158,13 +158,14 @@ namespace OoOVisual
 		}
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_store_buffer{};
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_load_buffer{};
+		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_speculative_load_buffer{};
 		Forwarding_Data Execution_Unit_Load_Store::buffer_allocation_phase(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
 			memory_addr_t address{}; ;
 			data_t        register_data{}; ;
-			if (source_entry->store_source_register_id != Constants::INVALID_PHYSICAL_REGISTER_ID) {
+			if (source_entry->destination_register_id_as_ofsset) {
 				if (store_buffer_is_full())
 					return { Constants::FORWARDING_DATA_INVALID };
 				// allocate  the entry in the store buffer
@@ -173,14 +174,16 @@ namespace OoOVisual
 				_store_buffer.emplace_back(
 					source_entry->mode,
 					source_entry->timestamp,
-					static_cast<u32>(source_entry->reorder_buffer_entry_index), 
-					source_entry->store_source_register_id,
+					Constants::INVALID_PHYSICAL_REGISTER_ID,
+					(source_entry->reorder_buffer_entry_index), 
 					register_data, 
 					address,
-					Constants::NO_PRODUCER_TAG
+					Constants::NO_PRODUCER_TAG,
+					//source_entry->instruction_address,
+					source_entry->store_id
 				);
 #ifdef DEBUG_PRINTS
-				std::cout << std::format("Created entry in the store buffer: timestamp:{}, source_id:{}, address:{}\n", source_entry->timestamp, source_entry->store_source_register_id, address);
+				std::cout << std::format("Created entry in the store buffer: timestamp:{}, address:{}\n", source_entry->timestamp, address);
 #endif
 				// tell the rob that address and the data is ready
 				Reorder_Buffer::set_ready(static_cast<u32>(source_entry->reorder_buffer_entry_index));
@@ -195,7 +198,9 @@ namespace OoOVisual
 					source_entry->reorder_buffer_entry_index,
 					register_data,
 					address,
-					source_entry->self_tag
+					source_entry->self_tag,
+					//source_entry->instruction_address,
+					source_entry->store_id
 				);
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Created entry in the load buffer buffer: timestamp:{}, destination_reg:{}, address:{}\n", source_entry->timestamp, source_entry->destination_register_id, address);
@@ -234,23 +239,27 @@ namespace OoOVisual
 			size_t forwaradable_load_entry_index{Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST};
 			size_t store_buffer_entry_index_that_is_forwarded_from{Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE};
 			// forward from the latest store instruction that writes to the same address
+
+			u32 max_store_id{};
 			for (size_t i{}; i < _load_buffer.size(); i++) {
-				time_t max_store_timestamp{};
+				const auto& load_buffer_entry = _load_buffer.at(i);
 				for (size_t j{}; j < _store_buffer.size(); j++) {
-					if (_load_buffer[i].timestamp >= _store_buffer[j].timestamp
-						&& _load_buffer[i].calculated_address == _store_buffer[j].calculated_address &&
-						_store_buffer[j].timestamp >= max_store_timestamp
+					const auto& store_buffer_entry = _store_buffer.at(j);
+					// we dont care about the stores that came after us 
+					if (store_buffer_entry.store_id > load_buffer_entry.store_id) {
+						continue;
+					}
+					if (store_buffer_entry.calculated_address == load_buffer_entry.calculated_address &&
+						store_buffer_entry.store_id >= max_store_id
 					) {
-						// we cant use store_buffer_entry_index_that_is_forwarded_from for comparison since its initial value is max(u32) which will never execute the loop
 						store_buffer_entry_index_that_is_forwarded_from = j;
-						max_store_timestamp = static_cast<time_t>(j);
+						max_store_id = store_buffer_entry.store_id;
 					}
 				}
 				if (store_buffer_entry_index_that_is_forwarded_from != Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE) {
 					return { i,store_buffer_entry_index_that_is_forwarded_from };
 				}
 			}
-
 			return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
 		}
 		Forwarding_Data Execution_Unit_Load_Store::execute_load() {
@@ -274,6 +283,11 @@ namespace OoOVisual
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Load instruction {} was executed using bypasssing.\n", bypassable_load_entry->timestamp);
 #endif
+				/* the load instruction in this buffer could be executed speculitevily or earlier than a preceding store instruction
+					so we are going to push it to the speculative load buffer
+					the erasion of the speculated load buffer entry is going to happen when the reorder buffer retires the load instruction
+				*/
+				_speculative_load_buffer.emplace_back(_load_buffer[executable_load_index.first]);
 				_load_buffer.erase(_load_buffer.begin() + executable_load_index.first);
 				return result;
 			}
@@ -290,16 +304,21 @@ namespace OoOVisual
 #ifdef DEBUG_PRINTS
 			std::cout << std::format("Load instruction {} was executed using forwarding from store instruction {}.\n", forwaradable_load_entry->timestamp,store_buffer_entry_that_is_forwarded_from->timestamp);
 #endif
+			/* the load instruction in this buffer could be executed speculitevily or earlier than a preceding store instruction
+				so we are going to push it to the speculative load buffer
+				the erasion of the speculated load buffer entry is going to happen when the reorder buffer retires the load instruction
+			*/
+			_speculative_load_buffer.emplace_back(_load_buffer[executable_load_index.first]);
 			_load_buffer.erase(_load_buffer.begin() +  executable_load_index.first);
 			return result;
 		}
 
-		void Execution_Unit_Load_Store::execute_store(memory_addr_t store_timestamp) {
+		void Execution_Unit_Load_Store::execute_store(u32 store_id) {
 #ifdef DEBUG_PRINTS
 			std::vector<size_t> commited_stores{};
 #endif
 			for (size_t i{}; i < _store_buffer.size(); i++) {
-				if (_store_buffer[i].timestamp == store_timestamp) {
+				if (_store_buffer[i].store_id == store_id) {
 					DCache::write(_store_buffer[i].mode,_store_buffer[i].calculated_address, _store_buffer[i].register_data);
 #ifdef DEBUG_PRINTS
 					commited_stores.push_back(i);
@@ -311,7 +330,7 @@ namespace OoOVisual
 				std::cout << std::format("Store instruction timestamp : {} wrote its data to the memory.\n", _store_buffer[j].timestamp);
 			}
 #endif
-			std::erase_if(_store_buffer, [&](const auto& a) {return a.timestamp == store_timestamp; });
+			std::erase_if(_store_buffer, [&](const auto& a) {return a.store_id == store_id; });
 		}
 
 		time_t Execution_Unit_Load_Store::flush_mispredicted(time_t timestamp) {
@@ -348,6 +367,36 @@ namespace OoOVisual
 			_store_buffer.clear();
 		}
 
+
+		void Execution_Unit_Load_Store::remove_speculated_load(u64 reorder_buffer_entry_index)
+		{
+			std::erase_if(
+				_speculative_load_buffer,
+				[&](const Buffer_Entry& entry) {return entry.reorder_buffer_entry_index == reorder_buffer_entry_index;}
+			);
+		}
+        void Execution_Unit_Load_Store::resolve_speculated_loads() {
+			for (const auto& speculated_load : _speculative_load_buffer) {
+				for (const auto& store_buffer_entry : _store_buffer) {
+					// resolving of the speculated instructino is done by the store instructions that precede the speculated store instruction
+					if(store_buffer_entry.store_id > speculated_load.store_id) 
+						continue;
+					// misspeculated means the load executed earlier than the preceding store
+					if (store_buffer_entry.calculated_address == speculated_load.calculated_address) {
+						#ifdef DEBUG_PRINTS
+						std::cout << std::format("Load instruction instruction timestamp:{} was misspeculated", speculated_load.timestamp);
+						#endif
+						time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(0xFFFFFFFF,speculated_load.timestamp) };
+						time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(speculated_load.timestamp)};
+						Reorder_Buffer::set_load_evaluation(
+							speculated_load.reorder_buffer_entry_index,
+							true,
+							std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
+						);
+					}
+				}
+			}
+        }
 		Forwarding_Data Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
@@ -373,7 +422,8 @@ namespace OoOVisual
 				return {
 					Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD,
 					source_entry->instruction_address + 1, // will be needed in forwarding to reservation stations
-					source_entry->self_tag, // will be needed in forwarding logic 
+					source_entry->self_tag,// will be needed in forwarding logic 
+					true // detected misprediction
 				};
 			}
 			break;
@@ -449,7 +499,7 @@ namespace OoOVisual
 					std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
 				);
 			}
-			return { Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
+			return { Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag, true };
 		}
 
 	} // namespace Core

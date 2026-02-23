@@ -3,6 +3,7 @@
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Constants/Constants.h>
 #include <Core/ReservationStation/ReservationStationPool.h>
+#include <Core/Constants/Constants.h>
 #include <iostream>
 #include <unordered_map>
 #include <format>
@@ -68,13 +69,13 @@ namespace OoOVisual
 					temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::ADD_SUB_UNIT_ADD ;
 					break;
 				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SUB:
-					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::ADD_SUB_UNIT_SUB;
-						break;
+					temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::ADD_SUB_UNIT_SUB;
+					break;
 				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::LOAD_UPPER:
 					temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::ADD_SUB_UNIT_LOAD_UPPER;
 					break;
 				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::AUIPC:
-					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::ADD_SUB_UNIT_AUIPC;
+					temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::ADD_SUB_UNIT_AUIPC;
 					break;
 				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::DIV:
 					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_SIGNED ;
@@ -104,7 +105,7 @@ namespace OoOVisual
                     temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BITWISE_AND;
 					break;
 				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::OR:
-					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BITWISE_XOR;
+					temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::BITWISE_XOR;
 					break;
 				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::XOR:
 					 temp_reservation_station_entry.mode = EXECUTION_UNIT_MODE::LOGICAL_XOR;
@@ -216,13 +217,14 @@ namespace OoOVisual
                 auto old_alias{ Register_Manager::aliasof(load_instruction->dest_reg()) };
                 Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() };
 			    reg_id_t destination_physical_register_id = Register_Manager::allocate_physical_register_for(load_instruction->dest_reg(),allocated_reservation_station_entry->self_tag); // allocate reorder buffer before renaming the destination register, this function call is invoked in the case where Reorder_Buffer is not full
+                static u32 load_id{};
                 auto target_reorder_buffer_entry_index{ Reorder_Buffer::allocate(
-                    std::make_unique<Register_Reorder_Buffer_Entry>(
+                    std::make_unique<Load_Reorder_Buffer_Entry>(
                         load_instruction->flow(),
                         load_instruction->dest_reg(),
                         old_alias,
                         destination_physical_register_id,
-						fetch_element.timestamp
+                        fetch_element.timestamp
                     )
                 )
                 };
@@ -232,6 +234,7 @@ namespace OoOVisual
                 temp_reservation_station_entry.destination_register_id = destination_physical_register_id;
                 temp_reservation_station_entry.instruction_address = instruction_id;
                 temp_reservation_station_entry.timestamp = fetch_element.timestamp;
+                temp_reservation_station_entry.store_id = _last_store_id;
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
 				#ifdef DEBUG_PRINTS
                 std::cout << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}].\n", instruction_id,temp_reservation_station_entry.timestamp,temp_reservation_station_entry.self_tag);
@@ -246,6 +249,7 @@ namespace OoOVisual
             }
             return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
         }
+        u32 Dispatcher::_last_store_id = 0;
         DISPATCH_FEEDBACK Dispatcher::dispatch_store_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
             const auto& instruction_id = fetch_element.address;
@@ -280,16 +284,16 @@ namespace OoOVisual
                 temp_reservation_station_entry.src2 = src2_entry.data;
                 temp_reservation_station_entry.destination_register_id = static_cast<reg_id_t>(store_instruction->offset()); // the offset lives in destination id here
                 temp_reservation_station_entry.destination_register_id_as_ofsset = true;
-                temp_reservation_station_entry.store_source_register_id = Register_Manager::aliasof(store_instruction->src2());
                 temp_reservation_station_entry.self_tag = allocated_reservation_station->self_tag;
                 temp_reservation_station_entry.busy = true;
                 temp_reservation_station_entry.ready = temp_reservation_station_entry.producer_tag1 == Constants::NO_PRODUCER_TAG && temp_reservation_station_entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
                 temp_reservation_station_entry.timestamp = fetch_element.timestamp;
+                temp_reservation_station_entry.store_id = _last_store_id++;
                 // when the store instruction is in the store buffer it will wait a signal from reorder buffer to finish its execution architecturally, that is why we need store_id
                 temp_reservation_station_entry.reorder_buffer_entry_index = static_cast<u32>(Reorder_Buffer::allocate(
 						std::make_unique<Store_Reorder_Buffer_Entry>(
 							store_instruction->flow(),
-                            fetch_element.timestamp,
+                            temp_reservation_station_entry.store_id,
                             fetch_element.timestamp
 						)
 					)

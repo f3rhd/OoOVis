@@ -2,6 +2,8 @@
 #include <Core/Execution/ExecutionUnits.h>
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/Constants/Constants.h>
+#include <Core/Commit/ReorderBuffer.h>
+#include <Core/Fetch/FetchElements.h>
 
 namespace OoOVisual
 {
@@ -25,8 +27,28 @@ namespace OoOVisual
 			forwarding_data.push_back(Execution_Unit_Divider::execute(issued_entries[4]));
 			forwarding_data.push_back(Execution_Unit_Load_Store::execute_load());
 			forwarding_data.push_back(Execution_Unit_Load_Store::buffer_allocation_phase(issued_entries[5]));
-			// forward the data to reservation stations
 
+			/* upon misprediciton stall the frontend pipeline and drain the OoO core
+			   this is needed because we need to recover the register alias table as soon as possible
+			   there could be a possibility where once a misprediction is detected the branch instruction is not 
+			   at the head of the reorder buffer which means it will take multiple cycles to restore the alias table
+			   which may cause incoming instructions to use a wrong alias table
+			*/
+			static bool drain_OoO{ false };
+			if (forwarding_data[0].misprediction_was_detected && !Reorder_Buffer::empty()) {
+
+				/* we dont do Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH); here because
+				   when misprediction is detected execution unit flushed the current fetchgroup
+				*/
+				drain_OoO = true;
+			}
+			else if (drain_OoO && !Reorder_Buffer::empty()) {
+				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
+			}
+			else {
+				drain_OoO = false;
+			}
+			// forward the data to reservation stations
 			for (const auto& data : forwarding_data) {
 
 				if (data.kind & Constants::FORWADING_DATA_FORWARD_ONLY) {

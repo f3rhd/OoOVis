@@ -12,7 +12,6 @@ namespace OoOVisual
         std::vector<std::pair<std::string,size_t>>          Fetch_Unit::_instruction_stream{};
         time_t                                              Fetch_Unit::_timestamp{ 0};
         bool                                                Fetch_Unit::_next_fetch_is_set{ false };
-        bool                                                Fetch_Unit::_had_misprediction{ false };
         memory_addr_t                                       Fetch_Unit::_branch_shift_register{};
         std::vector<Fetch_Element>                          Fetch_Unit::_last_fetch_group{};
         std::vector<Fetch_Element>                          Fetch_Group::group{};
@@ -43,7 +42,6 @@ namespace OoOVisual
             end_of_loop:
             memory_addr_t temp_address{ _program_counter };
 			_next_fetch_is_set = false;
-            _had_misprediction = false;
             for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {
                 auto& fetch_element = fetch_group[i];
                 if (temp_address < _instruction_cache.size()) {
@@ -128,10 +126,6 @@ namespace OoOVisual
             return _instruction_stream;
         }
 
-		bool Fetch_Unit::had_misprediction() {
-            return _had_misprediction;
-		}
-
 		void Fetch_Unit::reset()
 		{
             _program_counter = 0;
@@ -139,7 +133,6 @@ namespace OoOVisual
             _branch_target_buffer.clear();
             _pattern_history_table.clear();
             _next_fetch_is_set = false;
-            _had_misprediction = false;
             _branch_shift_register = 0;
             _last_fetch_group.clear();
             Fetch_Group::group.clear();

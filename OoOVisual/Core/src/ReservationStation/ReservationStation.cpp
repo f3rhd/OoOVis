@@ -42,7 +42,7 @@ namespace OoOVisual
 			}
             if (best && best->ready) {
                 if (_id == RESERVATION_STATION_ID::LOAD_STORE) {
-                    if (best->store_source_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) { // it is a load instruction
+                    if (!best->destination_register_id_as_ofsset) { // it is a load instruction
                         return Execution_Unit_Load_Store::load_buffer_is_full() ? nullptr : best;
                     }
                     return Execution_Unit_Load_Store::store_buffer_is_full() ? nullptr : best;

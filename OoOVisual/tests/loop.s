@@ -1,4 +1,4 @@
-li x2,3
+li x2,100
 loop:
 	addi x1,x1,1
 	bne  x1,x2,loop

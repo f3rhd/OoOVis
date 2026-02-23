@@ -34,6 +34,19 @@ namespace OoOVisual
 			u32 store_id;
 			Store_Reorder_Buffer_Entry(FrontEnd::FLOW_TYPE flow, u32 id_,time_t self_timestamp) : store_id(id_), Reorder_Buffer_Entry(flow,self_timestamp) {}
 		};
+		struct Load_Reorder_Buffer_Entry : Register_Reorder_Buffer_Entry {
+			time_t flush_timestamp_boundary = Constants::TIME_ZERO;
+			bool   misspeculated = false;
+			Load_Reorder_Buffer_Entry(
+				FrontEnd::FLOW_TYPE flow,
+				reg_id_t architectural,
+				reg_id_t old,
+				reg_id_t new_,
+				time_t self_timestamp_
+			) : Register_Reorder_Buffer_Entry(flow, architectural, old, new_, self_timestamp_)
+			{
+			}
+		};
 		struct Branch_Conditional_Reorder_Buffer_Entry : Reorder_Buffer_Entry {
 
 			bool mispredicted = false;

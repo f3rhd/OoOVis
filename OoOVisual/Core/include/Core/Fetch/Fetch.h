@@ -30,12 +30,10 @@ namespace OoOVisual
             static const std::unordered_map<memory_addr_t, memory_addr_t>&                          branch_target_buffer();//Visualizer uses this
             static const std::unordered_map<u32, u32>&                                              pattern_history_table();//Visualizer uses this
             static const std::vector<std::pair<std::string,size_t>>&                                instruction_stream(); // Visualizer uses this
-            static bool                                                                             had_misprediction(); // Visualizer uses this 
             static void                                                                             reset();
             static const std::vector<std::unique_ptr<FrontEnd::Instruction>>&                       instruction_cache() { return _instruction_cache; }
         private:
             static bool                                                                             _next_fetch_is_set;
-            static bool                                                                             _had_misprediction;
             static std::vector<std::unique_ptr<FrontEnd::Instruction>>                              _instruction_cache;
             static std::vector<std::pair<std::string,size_t>>                                        _instruction_stream;
             static std::unordered_map<memory_addr_t, memory_addr_t>                                 _branch_target_buffer;

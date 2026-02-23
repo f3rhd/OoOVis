@@ -95,10 +95,7 @@ namespace OoOVisual
 				{
 					auto idx { u32(id) - u32(DRAW_ELEMENT_ID::WIRE_ADDER_TO_ROB) }; 
 					if (Core::Execution_Stage::issued()[idx] != nullptr) {
-						if (id == DRAW_ELEMENT_ID::WIRE_BRANCH_TO_ROB && Core::Fetch_Unit::had_misprediction())
-							wire.trigger_pulse(color_error);
-						else 
-							wire.trigger_pulse(color_success);
+						wire.trigger_pulse(color_success);
 					}
 					break;
 				}

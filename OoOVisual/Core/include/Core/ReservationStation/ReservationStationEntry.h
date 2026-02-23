@@ -17,6 +17,7 @@ namespace OoOVisual
 			UNKNOWN
 		};
 		struct Reservation_Station_Entry {
+			/* elementary station entry fields */
 			u64	   reorder_buffer_entry_index = 0;
 			data_t src1 = {};
 			data_t src2 = {};
@@ -25,13 +26,22 @@ namespace OoOVisual
 			u32    self_tag = Constants::NO_PRODUCER_TAG;
 			u32    instruction_address = 0;
 			reg_id_t destination_register_id = Constants::INVALID_PHYSICAL_REGISTER_ID;
-			reg_id_t store_source_register_id = Constants::INVALID_PHYSICAL_REGISTER_ID; // will need this in load forwarding and bypassing
+			/* branch target addres of branch instructions*/
 			memory_addr_t branch_target = 0;
+			/*timestamp given to any instruction when it was fetched */
 			u32 timestamp = Constants::TIME_ZERO;
+			/* for load instruction it implies the last store_id 
+			   for store instructin it implies the self_store_id
+			*/
+			u32 store_id = Constants::NOT_STORE; 
+			/* prediction made by fetch unit when it saw a branch instruction */
 			u8 fetch_unit_prediction = Constants::NOT_BRANCH_INSTRUCTION;
+			/* elementary station fields */
 			bool   ready = false;
 			bool   busy = false;
+			/* boolean to indicate that the instruction uses destination register field as offset */
 			bool   destination_register_id_as_ofsset = false;
+			/* execution unit mode */
 			EXECUTION_UNIT_MODE mode = EXECUTION_UNIT_MODE::UNKNOWN;
 		};
 

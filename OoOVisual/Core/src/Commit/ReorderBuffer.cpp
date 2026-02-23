@@ -2,6 +2,7 @@
 #include <Core/Constants/Constants.h>
 #include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Execution/ExecutionUnits.h>
+#include <format>
 #include <iostream>
 namespace OoOVisual
 {
@@ -66,6 +67,20 @@ namespace OoOVisual
 
 		}
 
+        void Reorder_Buffer::set_load_evaluation(u64 target, bool was_misprediction, time_t flush_boundary) {
+			if (target >= Constants::REORDER_BUFFER_SIZE) {
+				std::cout << "Tried to access non-existing reorder buffer entry.\n";
+				exit(EXIT_FAILURE);
+			}
+			if (auto* branch_entry = dynamic_cast<Load_Reorder_Buffer_Entry*>(_buffer[target].get())) {
+				branch_entry->misspeculated = was_misprediction;
+				branch_entry->flush_timestamp_boundary = flush_boundary;
+			}
+			else {
+				std::cout << "Tried to access branch reorder buffer with wrong index.\n";
+				exit(EXIT_FAILURE);
+			}
+		}
 		bool Reorder_Buffer::head_moved() {
 			return _head_moved;
 		}
@@ -85,6 +100,11 @@ namespace OoOVisual
 			}
 		}
 
+
+		bool Reorder_Buffer::empty()
+		{
+			return _head == _tail;
+		}
 		bool Reorder_Buffer::flushed() {
 			return _flushed;
 		}
@@ -97,8 +117,7 @@ namespace OoOVisual
 				if (!entry->ready) return;
 				_head_moved = true;
 				switch (entry->flow()) {
-				case FrontEnd::FLOW_TYPE::REGISTER:
-				case FrontEnd::FLOW_TYPE::LOAD: {
+				case FrontEnd::FLOW_TYPE::REGISTER: {
 					auto entry_{ dynamic_cast<Register_Reorder_Buffer_Entry*>(entry) };
 					Register_Manager::deallocate((entry_)->old_alias);
 					Register_Manager::update_retirement_alias_table_with(
@@ -109,6 +128,29 @@ namespace OoOVisual
 					_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
 					break;
 				}
+				case FrontEnd::FLOW_TYPE::LOAD: {
+					auto entry_{ dynamic_cast<Load_Reorder_Buffer_Entry*>(entry) };
+					Register_Manager::deallocate((entry_)->old_alias);
+					if (entry_->misspeculated) {
+						_buffer[_head].reset();
+						_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
+						ROB_MISPREDICTION_RECOVERY(Load_Reorder_Buffer_Entry);
+					}
+					else {
+						Register_Manager::deallocate((entry_)->old_alias);
+						Register_Manager::update_retirement_alias_table_with(
+							(entry_)->architectural_register_id,
+							(entry_)->new_alias
+						);
+						#ifdef DEBUG_PRINTS
+						std::cout << std::format("Load instruction timestamp: {} was speculated correctly", entry_->self_timestamp);
+						#endif
+						_buffer[_head].reset();
+						_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
+					}
+					Execution_Unit_Load_Store::remove_speculated_load(_head);
+					break;
+				}
 				case FrontEnd::FLOW_TYPE::STORE:
 					Execution_Unit_Load_Store::execute_store(dynamic_cast<Store_Reorder_Buffer_Entry*>(entry)->store_id);
 					_buffer[_head].reset();
@@ -117,7 +159,7 @@ namespace OoOVisual
 				case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
 
 					if (dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(entry)->mispredicted) {
-						ROB_MISPREDICTION_RECOVERY(Branch_Conditional_Reorder_Buffer_Entry)
+						ROB_MISPREDICTION_RECOVERY(Branch_Conditional_Reorder_Buffer_Entry);
 						_flushed = true;
 					}
 					else {

@@ -13,6 +13,7 @@ namespace OoOVisual
 			u32			kind = Constants::FORWARDING_DATA_INVALID;
 			data_t		produced_data{};
 			u32			producer_tag{};
+			bool 		misprediction_was_detected{false};
 		};
 	 } // namespace Core
 } // namespace OoOVis
