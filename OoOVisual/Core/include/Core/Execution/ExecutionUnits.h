@@ -10,26 +10,26 @@ namespace OoOVisual
 
 		class Execution_Unit_Adder { // does subtracting too.
 		public:
-			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
+			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
 		};
 		class Execution_Unit_Bitwise {
 		public:
-			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
+			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
 		};
 
 		// in real hardware designs having a seperate unit just for this bitch ass instruction is very nooby thing to do  but we gon do it in software anyway 
 		class Execution_Unit_Set_Less_Than {
 		public:
-			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
+			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
 
 		};
 		class Execution_Unit_Multiplier {
 		public:
-			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
+			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
 		};
 		class Execution_Unit_Divider {
 		public:
-			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
+			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
 		};
 
 		class Execution_Unit_Load_Store {
@@ -53,6 +53,8 @@ namespace OoOVisual
 					load_buffer_entry : last store id
 				*/
 				u32 store_id;
+				/* instruction address is used to recover from the misspeculation */
+				memory_addr_t  instruction_address;
 				Buffer_Entry(
 					EXECUTION_UNIT_MODE mode_,
 					u32 id_,
@@ -61,7 +63,7 @@ namespace OoOVisual
 					data_t data, 
 					memory_addr_t addr,
 					u32 producer_tag_,
-					//memory_addr_t instr_addr,
+					memory_addr_t instr_addr,
 					u32  store_id_ = Constants::NOT_STORE
 				) : mode(mode_),
 					timestamp(id_), 
@@ -70,11 +72,12 @@ namespace OoOVisual
 					register_data(data), 
 					calculated_address(addr),
 					producer_tag(producer_tag_),
+					instruction_address(instr_addr),
 					store_id(store_id_)
 				{}
 			};
-			static Forwarding_Data					buffer_allocation_phase(const Reservation_Station_Entry* source_entry);
-			static Forwarding_Data					execute_load();
+			static Execution_Result					buffer_allocation_phase(const Reservation_Station_Entry* source_entry);
+			static Execution_Result					execute_load();
 			static void								execute_store(u32 store_id);
 			static time_t							flush_mispredicted(time_t timestamp);
 			static bool								store_buffer_is_full() { return _store_buffer.size() >= Constants::STORE_BUFFER_SIZE; }
@@ -83,7 +86,7 @@ namespace OoOVisual
 			static const std::vector<Buffer_Entry>& load_buffer() { return _load_buffer; } // used by visualizer
 			static void							    reset();
 			static void 						    remove_speculated_load(u64 reorder_buffer_entry_index);
-			static void 							resolve_speculated_loads();
+			static Execution_Result 				resolve_speculated_loads(u32 store_id_that_is_going_to_be_architecturally_completed);
 		private:
 			static std::pair<size_t,size_t>		find_load_that_is_executable(); // .first stands for executable load if it can be executed by forwarding .second will hold the store buffer entry index that is being forwarded from
 		private:
@@ -93,7 +96,7 @@ namespace OoOVisual
 		};
 		class Execution_Unit_Branch {
 		public:
-			static Forwarding_Data execute(const Reservation_Station_Entry* source_entry);
+			static Execution_Result execute(const Reservation_Station_Entry* source_entry);
 		};
 	} // namespace Core
 } // namespace OooVis

@@ -25,10 +25,10 @@ namespace OoOVisual {
 				auto constexpr MAGENTA{ "\033[35m" };
 				auto constexpr CYAN{ "\033[36m" };
 				auto constexpr MAX_IPS{ 60 };
-				unsigned int constexpr FORWARDING_DATA_STATION_DEALLOCATE_ONLY{ 1 << 1 };
+				unsigned int constexpr EXECUTION_RESULT_STATION_DEALLOCATE_ONLY{ 1 << 1 };
 				unsigned int constexpr NOT_STORE{ 0xFFFFFFFF };
-				unsigned int constexpr FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD{ 1 << 2 };
-				unsigned int constexpr FORWADING_DATA_FORWARD_ONLY{ 1 << 3 };
+				unsigned int constexpr EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD{ 1 << 2 };
+				unsigned int constexpr EXECUTION_RESULT_FORWARD_ONLY{ 1 << 3 };
 				unsigned int constexpr NOT_BRANCH_INSTRUCTION{ 0 };
 				unsigned int constexpr PREDICTED_TAKEN{ 1 << 1 };
 				unsigned int constexpr PREDICTED_NOT_TAKEN{ 1 << 2 };

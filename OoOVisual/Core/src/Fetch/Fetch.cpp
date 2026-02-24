@@ -1,6 +1,7 @@
 #include <Core/Fetch/Fetch.h>
 #include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Constants/Constants.h>
+#include <Core/Commit/ReorderBuffer.h>
 namespace OoOVisual
 {
     namespace Core
@@ -12,6 +13,7 @@ namespace OoOVisual
         std::vector<std::pair<std::string,size_t>>          Fetch_Unit::_instruction_stream{};
         time_t                                              Fetch_Unit::_timestamp{ 0};
         bool                                                Fetch_Unit::_next_fetch_is_set{ false };
+        bool                                                Fetch_Unit::_stalled{ false };
         memory_addr_t                                       Fetch_Unit::_branch_shift_register{};
         std::vector<Fetch_Element>                          Fetch_Unit::_last_fetch_group{};
         std::vector<Fetch_Element>                          Fetch_Group::group{};
@@ -19,6 +21,12 @@ namespace OoOVisual
         std::vector<Fetch_Element> Fetch_Unit::fetch(const std::vector<DISPATCH_FEEDBACK>& dispatch_feedback) {
 			_timestamp += Constants::UNIT_TIME;
             std::vector<Fetch_Element> fetch_group(Constants::FETCH_WIDTH);
+			if (_stalled && !Reorder_Buffer::empty()) {
+                return fetch_group;
+			}
+			else {
+				_stalled = false;
+			}
             if (_program_counter >= _instruction_cache.size())
                 return fetch_group;
             for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {
@@ -82,6 +90,9 @@ namespace OoOVisual
                         so when they are in the same fetch group later instructions will get different timestamp*/
 						_timestamp += Constants::UNIT_TIME;;
                     }
+                    else if (fetch_element.instruction->get()->flow() == FrontEnd::FLOW_TYPE::LOAD) {
+						_timestamp += Constants::UNIT_TIME; 
+                    }
                 }
                 temp_address++;
             }
@@ -136,6 +147,10 @@ namespace OoOVisual
             _branch_shift_register = 0;
             _last_fetch_group.clear();
             Fetch_Group::group.clear();
+		}
+
+		void Fetch_Unit::stall() {
+            _stalled = true;
 		}
 
 		void Fetch_Unit::set_program_counter(memory_addr_t next) {

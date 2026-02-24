@@ -247,7 +247,7 @@ namespace OoOVisual {
             )
 			);
             auto branch_instruction_ptr(branch_instruction.get());
-            _program.push_back(std::move(branch_instruction));
+            _program.emplace_back(std::move(branch_instruction));
             // couldnt find the label identifier save it for later
             if (memory_addr == FORWARD_ADDR) {
                 _unresolved_branch_instructions.emplace_back(branch_instruction_ptr, _current_token->word);
@@ -279,7 +279,7 @@ namespace OoOVisual {
                 )
                 };
                 auto jump_instruction_ptr( jump_instruction.get());
-                _program.push_back(
+                _program.emplace_back(
                     std::move(jump_instruction)
                 );
                 // we werent able to find the label maybe we will next time
@@ -515,7 +515,7 @@ namespace OoOVisual {
                 if (target_label_id == FORWARD_ADDR)
                     _unresolved_jump_instructions.emplace_back(jump_instruction_ptr, _current_token->word);
 
-                _program.push_back(std::move(jump_instruction));
+                _program.emplace_back(std::move(jump_instruction));
                 return;
             }
             // li rd, imm
@@ -788,7 +788,7 @@ namespace OoOVisual {
                 branch_instruction_ptr = branch_instruction.get();
                 if (target_addr == FORWARD_ADDR)
                     _unresolved_branch_instructions.emplace_back(branch_instruction_ptr, _current_token->word);
-                _program.push_back(std::move(branch_instruction));
+                _program.emplace_back(std::move(branch_instruction));
                 return;
             }  // pseudo_branch0
             if
@@ -858,7 +858,7 @@ namespace OoOVisual {
                 if (target_addr == FORWARD_ADDR)
                     _unresolved_branch_instructions.emplace_back(branch_instruction_ptr, _current_token->word);
 
-                _program.push_back(std::move(branch_instruction));
+                _program.emplace_back(std::move(branch_instruction));
                 return;
             }
 

@@ -31,7 +31,7 @@ namespace OoOVisual
 							Register_Manager::deallocate(entry.destination_register_id);
 						}
 						auto copy_tag{ entry.self_tag };
-						flushed_entry_timestamps.push_back(entry.timestamp);
+						flushed_entry_timestamps.emplace_back(entry.timestamp);
 						entry = Reservation_Station_Entry{};
 						entry.self_tag = copy_tag;
 					}

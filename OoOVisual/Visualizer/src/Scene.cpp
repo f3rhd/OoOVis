@@ -81,12 +81,12 @@ namespace OoOVisual
 			for (int i{ 0 }; i < 7; i++) {
 				float station_x{ stations_start_x + (i * (station_size.x + station_spacing)) };
 				ImVec2 station_pos{ station_x, stations_start_y };
-				station_positions.push_back(station_pos);
+				station_positions.emplace_back(station_pos);
 
 				ImVec2 top_center{ station_pos.x + (station_size.x / 2.0f), station_pos.y };
 				ImVec2 bottom_center{ station_pos.x + (station_size.x / 2.0f), station_pos.y + station_size.y };
-				station_top_centers.push_back(top_center);
-				station_bottom_centers.push_back(bottom_center);
+				station_top_centers.emplace_back(top_center);
+				station_bottom_centers.emplace_back(bottom_center);
 
 				Visualizer::DRAW_ELEMENT_ID station_id{ static_cast<Visualizer::DRAW_ELEMENT_ID>(
 					static_cast<int>(Visualizer::DRAW_ELEMENT_ID::STATION_0) + i
@@ -167,10 +167,10 @@ namespace OoOVisual
 			// create execution units and wires from stations
 			for (int i{ 0 }; i < 7; i++) {
 				ImVec2 exec_unit_pos{ station_positions[i].x, exec_units_y };
-				exec_unit_positions.push_back(exec_unit_pos);
+				exec_unit_positions.emplace_back(exec_unit_pos);
 
 				ImVec2 bottom_center{ exec_unit_pos.x + (exec_unit_size.x / 2.0f), exec_unit_pos.y + exec_unit_size.y };
-				exec_unit_bottom_centers.push_back(bottom_center);
+				exec_unit_bottom_centers.emplace_back(bottom_center);
 
 				_units.emplace_back(std::make_unique<Visualizer::Draw_Element_Execution_Unit>(
 					exec_unit_ids[i], exec_unit_pos, exec_unit_size

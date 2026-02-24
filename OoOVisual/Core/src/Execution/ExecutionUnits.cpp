@@ -16,12 +16,12 @@ namespace OoOVisual
 	{
 
 
-		Forwarding_Data Execution_Unit_Adder::execute(const Reservation_Station_Entry* source_entry)
+		Execution_Result Execution_Unit_Adder::execute(const Reservation_Station_Entry* source_entry)
 		{
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
-			Forwarding_Data data{};
-			data.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
+			Execution_Result data{};
+			data.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			data.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_ADD:
@@ -48,11 +48,11 @@ namespace OoOVisual
 			return data;
 		}
 
-		Forwarding_Data Execution_Unit_Bitwise::execute(const Reservation_Station_Entry* source_entry) {
+		Execution_Result Execution_Unit_Bitwise::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
-			Forwarding_Data result{};
-			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
+			Execution_Result result{};
+			result.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::BITWISE_AND:
@@ -83,11 +83,11 @@ namespace OoOVisual
 			return result;
 		}
 
-		Forwarding_Data Execution_Unit_Set_Less_Than::execute(const Reservation_Station_Entry* source_entry) {
+		Execution_Result Execution_Unit_Set_Less_Than::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
-			Forwarding_Data result{};
-			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
+			Execution_Result result{};
+			result.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
 			result.produced_data.signed_ = source_entry->src1.signed_ < source_entry->src2.signed_ ? 1 : 0;
 			Register_Manager::write(source_entry->destination_register_id, result.produced_data);
@@ -95,11 +95,11 @@ namespace OoOVisual
 			return result;
 		}
 
-		Forwarding_Data Execution_Unit_Multiplier::execute(const Reservation_Station_Entry* source_entry) {
+		Execution_Result Execution_Unit_Multiplier::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
-			Forwarding_Data result{};
-			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
+			Execution_Result result{};
+			result.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_SIGNED:
@@ -129,11 +129,11 @@ namespace OoOVisual
 			return result;
 		}
 
-		Forwarding_Data Execution_Unit_Divider::execute(const Reservation_Station_Entry* source_entry) {
+		Execution_Result Execution_Unit_Divider::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
-			Forwarding_Data result{};
-			result.kind = Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD;
+			Execution_Result result{};
+			result.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_SIGNED:
@@ -159,7 +159,7 @@ namespace OoOVisual
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_store_buffer{};
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_load_buffer{};
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_speculative_load_buffer{};
-		Forwarding_Data Execution_Unit_Load_Store::buffer_allocation_phase(const Reservation_Station_Entry* source_entry) {
+		Execution_Result Execution_Unit_Load_Store::buffer_allocation_phase(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
@@ -179,7 +179,7 @@ namespace OoOVisual
 					register_data, 
 					address,
 					Constants::NO_PRODUCER_TAG,
-					//source_entry->instruction_address,
+					source_entry->instruction_address,
 					source_entry->store_id
 				);
 #ifdef DEBUG_PRINTS
@@ -187,7 +187,7 @@ namespace OoOVisual
 #endif
 				// tell the rob that address and the data is ready
 				Reorder_Buffer::set_ready(static_cast<u32>(source_entry->reorder_buffer_entry_index));
-				return {Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
+				return {Constants::EXECUTION_RESULT_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 			}
 			if (!load_buffer_is_full()) {
 				address = source_entry->src1.signed_ + source_entry->src2.signed_;
@@ -199,13 +199,13 @@ namespace OoOVisual
 					register_data,
 					address,
 					source_entry->self_tag,
-					//source_entry->instruction_address,
+					source_entry->instruction_address,
 					source_entry->store_id
 				);
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Created entry in the load buffer buffer: timestamp:{}, destination_reg:{}, address:{}\n", source_entry->timestamp, source_entry->destination_register_id, address);
 #endif
-				return {Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
+				return {Constants::EXECUTION_RESULT_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 			}
 			return { Constants::FORWARDING_DATA_INVALID };
 		}
@@ -262,7 +262,7 @@ namespace OoOVisual
 			}
 			return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
 		}
-		Forwarding_Data Execution_Unit_Load_Store::execute_load() {
+		Execution_Result Execution_Unit_Load_Store::execute_load() {
 
 			auto executable_load_index(find_load_that_is_executable());
 			if (executable_load_index.first == Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST)
@@ -275,8 +275,8 @@ namespace OoOVisual
 				Register_Manager::write(bypassable_load_entry->register_id, write_data);
 				// make the rob entry ready
 				Reorder_Buffer::set_ready(bypassable_load_entry->reorder_buffer_entry_index);
-				Forwarding_Data result{ 
-					Constants::FORWADING_DATA_FORWARD_ONLY, // if we are in the load buffer we are already deallocated from the reservation station 
+				Execution_Result result{ 
+					Constants::EXECUTION_RESULT_FORWARD_ONLY, // if we are in the load buffer we are already deallocated from the reservation station 
 					write_data, // will be needed in forwarding to reservation stations
 					bypassable_load_entry->producer_tag, // will be needed in forwarding logic 
 				};
@@ -296,8 +296,8 @@ namespace OoOVisual
 			const Buffer_Entry* store_buffer_entry_that_is_forwarded_from{ &_store_buffer[executable_load_index.second] };
 			Register_Manager::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
 			Reorder_Buffer::set_ready(forwaradable_load_entry->reorder_buffer_entry_index);
-			Forwarding_Data result(
-				Constants::FORWADING_DATA_FORWARD_ONLY,
+			Execution_Result result(
+				Constants::EXECUTION_RESULT_FORWARD_ONLY,
 				store_buffer_entry_that_is_forwarded_from->register_data, // will be needed in forwarding to reservation stations
 				forwaradable_load_entry->producer_tag // will be needed in forwarding logic 
 			);
@@ -321,7 +321,7 @@ namespace OoOVisual
 				if (_store_buffer[i].store_id == store_id) {
 					DCache::write(_store_buffer[i].mode,_store_buffer[i].calculated_address, _store_buffer[i].register_data);
 #ifdef DEBUG_PRINTS
-					commited_stores.push_back(i);
+					commited_stores.emplace_back(i);
 #endif
 				}
 			}
@@ -339,7 +339,18 @@ namespace OoOVisual
 				_load_buffer, 
 				[&](const Execution_Unit_Load_Store::Buffer_Entry& a) { 
 					if (a.timestamp > timestamp) {
-						erased_entry_timestamps.push_back(a.timestamp);
+						erased_entry_timestamps.emplace_back(a.timestamp);
+						return true;
+					}
+					return false;
+				}
+			);
+
+			std::erase_if(
+				_speculative_load_buffer,
+				[&](const Execution_Unit_Load_Store::Buffer_Entry& a) {
+					if (a.timestamp > timestamp) {
+						erased_entry_timestamps.emplace_back(a.timestamp);
 						return true;
 					}
 					return false;
@@ -349,7 +360,7 @@ namespace OoOVisual
 				_store_buffer, 
 				[&](const Execution_Unit_Load_Store::Buffer_Entry& a) { 
 					if (a.timestamp > timestamp) {
-						erased_entry_timestamps.push_back(a.timestamp);
+						erased_entry_timestamps.emplace_back(a.timestamp);
 						return true;
 					}
 					return false;
@@ -375,29 +386,42 @@ namespace OoOVisual
 				[&](const Buffer_Entry& entry) {return entry.reorder_buffer_entry_index == reorder_buffer_entry_index;}
 			);
 		}
-        void Execution_Unit_Load_Store::resolve_speculated_loads() {
-			for (const auto& speculated_load : _speculative_load_buffer) {
-				for (const auto& store_buffer_entry : _store_buffer) {
-					// resolving of the speculated instructino is done by the store instructions that precede the speculated store instruction
-					if(store_buffer_entry.store_id > speculated_load.store_id) 
-						continue;
-					// misspeculated means the load executed earlier than the preceding store
-					if (store_buffer_entry.calculated_address == speculated_load.calculated_address) {
-						#ifdef DEBUG_PRINTS
-						std::cout << std::format("Load instruction instruction timestamp:{} was misspeculated", speculated_load.timestamp);
-						#endif
-						time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(0xFFFFFFFF,speculated_load.timestamp) };
-						time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(speculated_load.timestamp)};
-						Reorder_Buffer::set_load_evaluation(
-							speculated_load.reorder_buffer_entry_index,
-							true,
-							std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
-						);
+        Execution_Result Execution_Unit_Load_Store::resolve_speculated_loads(u32 store_id_that_is_going_to_be_architecturally_completed) {
+			bool misspeculated{ false };
+			const auto& store_buffer_entry{
+				std::ranges::find_if(
+					_store_buffer,
+					[&](const auto& entry) {
+						return entry.store_id == store_id_that_is_going_to_be_architecturally_completed;
 					}
+				)
+			};
+			for (const auto& speculated_load : _speculative_load_buffer) {
+				// resolving of the speculated instruction is done by the store instructions that precede the speculated store instruction
+				if(store_buffer_entry->store_id > speculated_load.store_id) 
+					continue;
+				// misspeculated means the load executed earlier than the preceding store
+				if (store_buffer_entry->calculated_address == speculated_load.calculated_address) {
+					#ifdef DEBUG_PRINTS
+					std::cout << Constants::RED <<std::format("Load instruction instruction timestamp:{} was misspeculated\n", speculated_load.timestamp) << Constants::RESET;
+					#endif
+					time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(0xFFFFFFFF,speculated_load.timestamp) };
+					time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(speculated_load.timestamp)};
+					Reorder_Buffer::set_load_evaluation(
+						speculated_load.reorder_buffer_entry_index,
+						true,
+						std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
+					);
+					misspeculated = true;
+					Fetch_Unit::set_program_counter(speculated_load.instruction_address);
+					Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
+					Fetch_Unit::stall();
+					break;
 				}
 			}
+			return { Constants::FORWARDING_DATA_INVALID, {},Constants::NO_PRODUCER_TAG, misspeculated };
         }
-		Forwarding_Data Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
+		Execution_Result Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
 				return { Constants::FORWARDING_DATA_INVALID };
@@ -420,7 +444,7 @@ namespace OoOVisual
 				);
 				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
 				return {
-					Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD,
+					Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD,
 					source_entry->instruction_address + 1, // will be needed in forwarding to reservation stations
 					source_entry->self_tag,// will be needed in forwarding logic 
 					true // detected misprediction
@@ -431,7 +455,7 @@ namespace OoOVisual
 				Register_Manager::write(source_entry->destination_register_id, { source_entry->instruction_address + 1 });
 				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 				return {
-					Constants::FORWARDING_DATA_STATION_DEALLOCATE_AND_FORWARD,
+					Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD,
 					source_entry->instruction_address + 1, // will be needed in forwarding to reservation stations
 					source_entry->self_tag, // will be needed in forwarding logic 
 				};
@@ -465,10 +489,8 @@ namespace OoOVisual
 				break;
 
 			}
+		    bool prediction(source_entry->fetch_unit_prediction & Constants::PREDICTED_TAKEN);
 			// update pht
-			bool prediction{ false };
-			if (source_entry->fetch_unit_prediction & Constants::PREDICTED_TAKEN)
-				prediction = true;
 			Fetch_Unit::update_pattern_history_table(source_entry->instruction_address, actual_taken);
 			target_address = source_entry->branch_target;
 			Fetch_Unit::create_btb_entry(source_entry->instruction_address, target_address);
@@ -499,7 +521,7 @@ namespace OoOVisual
 					std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
 				);
 			}
-			return { Constants::FORWARDING_DATA_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag, true };
+			return { Constants::EXECUTION_RESULT_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag, true };
 		}
 
 	} // namespace Core
