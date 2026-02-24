@@ -465,6 +465,7 @@ namespace OoOVisual
         void Dispatcher::reset()
         {
             _last_dispatch_feedback = std::vector<DISPATCH_FEEDBACK>(Constants::FETCH_WIDTH, DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH);
+            _last_store_id = 0;
             for (auto& [key, val] : _station_dispatch_map) {
                 val = DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
             }

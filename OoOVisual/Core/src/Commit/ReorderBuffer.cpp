@@ -73,7 +73,6 @@ namespace OoOVisual
 					break;
 				}
 				case FrontEnd::FLOW_TYPE::STORE: {
-
 					Execution_Unit_Load_Store::resolve_speculated_loads(dynamic_cast<Store_Reorder_Buffer_Entry*>(entry)->store_id);
 					Execution_Unit_Load_Store::execute_store(dynamic_cast<Store_Reorder_Buffer_Entry*>(entry)->store_id);
 					_buffer[_head].reset();
@@ -133,7 +132,7 @@ namespace OoOVisual
 			_buffer[target_entry_index]->ready = true;
 		}
 
-		void Reorder_Buffer::set_branch_evaluation(u64 target, bool was_misprediction,time_t flush_boundary)
+		void Reorder_Buffer::set_speculation_evaluation(u64 target, bool was_misprediction,time_t flush_boundary)
 		{
 			if (target >= Constants::REORDER_BUFFER_SIZE) {
 				std::cout << "Tried to access non-existing reorder buffer entry.\n";
@@ -148,26 +147,15 @@ namespace OoOVisual
 				branch_entry->flush_timestamp_boundary = flush_boundary;
 				branch_entry->mispredicted = was_misprediction;
 			}
-			else {
-				std::cout << "Tried to access branch reorder buffer with wrong index.\n";
-				exit(EXIT_FAILURE);
-			}
-
-		}
-
-        void Reorder_Buffer::set_load_evaluation(u64 target, bool was_misprediction, time_t flush_boundary) {
-			if (target >= Constants::REORDER_BUFFER_SIZE) {
-				std::cout << "Tried to access non-existing reorder buffer entry.\n";
-				exit(EXIT_FAILURE);
-			}
-			if (auto* branch_entry = dynamic_cast<Load_Reorder_Buffer_Entry*>(_buffer[target].get())) {
-				branch_entry->misspeculated = was_misprediction;
-				branch_entry->flush_timestamp_boundary = flush_boundary;
+			else if (auto* load_entry = dynamic_cast<Load_Reorder_Buffer_Entry*>(_buffer[target].get())) {
+				load_entry->flush_timestamp_boundary = flush_boundary;
+				load_entry->misspeculated = was_misprediction;
 			}
 			else {
 				std::cout << "Tried to access branch reorder buffer with wrong index.\n";
 				exit(EXIT_FAILURE);
 			}
+
 		}
 		bool Reorder_Buffer::head_moved() {
 			return _head_moved;

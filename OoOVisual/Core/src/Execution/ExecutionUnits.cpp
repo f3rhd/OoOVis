@@ -31,10 +31,10 @@ namespace OoOVisual
 				data.produced_data.signed_ = source_entry->src1.signed_ - source_entry->src2.signed_;
 				break;
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_AUIPC: // immediate value lives in the source 2
-				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 20) & 0xFFFFF000 + Fetch_Unit::program_counter();
+				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 12) & 0xFFFFF000 + Fetch_Unit::program_counter();
 				break;
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_LOAD_UPPER:
-				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 20) & 0xFFFFF000;
+				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 12) & 0xFFFFF000;
 				break;
 			// shouldnt happen
 			default:
@@ -405,12 +405,12 @@ namespace OoOVisual
 					#ifdef DEBUG_PRINTS
 					std::cout << Constants::RED <<std::format("Load instruction instruction timestamp:{} was misspeculated\n", speculated_load.timestamp) << Constants::RESET;
 					#endif
-					time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(0xFFFFFFFF,speculated_load.timestamp) };
-					time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(speculated_load.timestamp)};
-					Reorder_Buffer::set_load_evaluation(
+					Reservation_Station_Pool::flush_mispredicted(0xFFFFFFFF, speculated_load.timestamp);
+					Execution_Unit_Load_Store::flush_mispredicted(speculated_load.timestamp);
+					Reorder_Buffer::set_speculation_evaluation(
 						speculated_load.reorder_buffer_entry_index,
 						true,
-						std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
+						Constants::END_OF_TIME
 					);
 					misspeculated = true;
 					Fetch_Unit::set_program_counter(speculated_load.instruction_address);
@@ -437,7 +437,7 @@ namespace OoOVisual
 				Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 				time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp) };
 				time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(source_entry->timestamp) };
-				Reorder_Buffer::set_branch_evaluation(
+				Reorder_Buffer::set_speculation_evaluation(
 					source_entry->reorder_buffer_entry_index,
 					true,
 					std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
@@ -496,7 +496,7 @@ namespace OoOVisual
 			Fetch_Unit::create_btb_entry(source_entry->instruction_address, target_address);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			if (prediction == actual_taken) {
-				Reorder_Buffer::set_branch_evaluation(source_entry->reorder_buffer_entry_index, false,Constants::TIME_ZERO);
+				Reorder_Buffer::set_speculation_evaluation(source_entry->reorder_buffer_entry_index, false,Constants::TIME_ZERO);
 #ifdef DEBUG_PRINTS
 				std::cout << Constants::GREEN << "Instructions[" << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was predicted correctly\n" << Constants::RESET;
 #endif
@@ -515,7 +515,7 @@ namespace OoOVisual
 				Fetch_Unit::set_program_counter_flags();
 				time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp) };
 				time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(source_entry->timestamp)};
-				Reorder_Buffer::set_branch_evaluation(
+				Reorder_Buffer::set_speculation_evaluation(
 					source_entry->reorder_buffer_entry_index,
 					true,
 					std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)

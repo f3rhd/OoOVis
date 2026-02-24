@@ -25,6 +25,7 @@ namespace OoOVisual {
 				auto constexpr MAGENTA{ "\033[35m" };
 				auto constexpr CYAN{ "\033[36m" };
 				auto constexpr MAX_IPS{ 60 };
+				unsigned int constexpr END_OF_TIME { 0xFFFFFFFF };
 				unsigned int constexpr EXECUTION_RESULT_STATION_DEALLOCATE_ONLY{ 1 << 1 };
 				unsigned int constexpr NOT_STORE{ 0xFFFFFFFF };
 				unsigned int constexpr EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD{ 1 << 2 };

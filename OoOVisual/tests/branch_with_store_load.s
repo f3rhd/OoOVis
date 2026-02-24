@@ -11,4 +11,4 @@ loop:
 	bne t0,t1,loop #8
 	j go_end #9
 end:
-	li x31,3160 #10
+	li x31,3169 #10

@@ -130,6 +130,14 @@ namespace OoOVisual
 				ImGui::Text("Arch Reg: %d | Alias: %d -> %d", 
 							reg->architectural_register_id, reg->old_alias, reg->new_alias);
 			} 
+			else if (const auto* load{ dynamic_cast<Core::Load_Reorder_Buffer_Entry*>(entry) }) {
+				ImGui::Text("Arch Reg: %d | Alias: %d -> %d", 
+							load->architectural_register_id, load->old_alias, load->new_alias);
+				if (load->misspeculated) {
+					ImGui::SameLine();
+					ImGui::TextColored(ImVec4{1.0f, 0.4f, 0.4f, 1.0f}, "MISPREDICTED!");
+				}
+			}
 			else if (const auto* store{ dynamic_cast<Core::Store_Reorder_Buffer_Entry*>(entry) }) {
 				ImGui::Text("Store ID: %u", store->store_id);
 			} 
@@ -145,7 +153,7 @@ namespace OoOVisual
 							uncond_br->architectural_register_id, uncond_br->new_alias);
 				if (uncond_br->mispredicted) {
 					ImGui::SameLine();
-					ImGui::TextColored(ImVec4{1.0f, 0.4f, 0.4f, 1.0f}, "[MISPRED]");
+					ImGui::TextColored(ImVec4{1.0f, 0.4f, 0.4f, 1.0f}, "MISPREDICTED!");
 				}
 			} 
 			else {

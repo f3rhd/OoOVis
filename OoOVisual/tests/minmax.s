@@ -150,7 +150,7 @@ jal     x0,.L18              # 118
 addi    x0,x0,0              # 119
 
 .L18:
-addi    x31,x0,1000          # 120
+addi    x31,x0,3169          # 120
 jal     x0,.L14              # 121
 addi    x0,x0,0              # 122
 addi    x0,x0,0              # 123
