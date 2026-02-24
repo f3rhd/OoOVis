@@ -27,7 +27,7 @@ namespace OoOVisual
         }
 
         const Reservation_Station_Entry* Reservation_Station::issue() {
-            const Reservation_Station_Entry* best = nullptr;
+            Reservation_Station_Entry* best = nullptr;
 			for (auto& e : _buffer) {
                 if (_id == RESERVATION_STATION_ID::BRANCH) { 
                     if (!e.busy) // for branches we have to issue in order 
@@ -40,10 +40,13 @@ namespace OoOVisual
 				if (!best || e.timestamp < best->timestamp)
 					best = &e;
 			}
-            if (best && best->ready) {
+            if (best && best->ready && !best->issued_to_load_buffer) {
                 if (_id == RESERVATION_STATION_ID::LOAD_STORE) {
                     if (!best->destination_register_id_as_ofsset) { // it is a load instruction
-                        return Execution_Unit_Load_Store::load_buffer_is_full() ? nullptr : best;
+                        if (Execution_Unit_Load_Store::load_buffer_is_full())
+                            return nullptr;
+                        best->issued_to_load_buffer = true;
+                        return best;
                     }
                     return Execution_Unit_Load_Store::store_buffer_is_full() ? nullptr : best;
                 }

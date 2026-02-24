@@ -19,7 +19,7 @@ namespace OoOVisual
 		Execution_Result Execution_Unit_Adder::execute(const Reservation_Station_Entry* source_entry)
 		{
 			if (!source_entry)
-				return { Constants::FORWARDING_DATA_INVALID };
+				return { Constants::EXECUTION_RESULT_INVALID };
 			Execution_Result data{};
 			data.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			data.producer_tag = source_entry->self_tag;
@@ -50,7 +50,7 @@ namespace OoOVisual
 
 		Execution_Result Execution_Unit_Bitwise::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
-				return { Constants::FORWARDING_DATA_INVALID };
+				return { Constants::EXECUTION_RESULT_INVALID };
 			Execution_Result result{};
 			result.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
@@ -85,7 +85,7 @@ namespace OoOVisual
 
 		Execution_Result Execution_Unit_Set_Less_Than::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
-				return { Constants::FORWARDING_DATA_INVALID };
+				return { Constants::EXECUTION_RESULT_INVALID };
 			Execution_Result result{};
 			result.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
@@ -97,7 +97,7 @@ namespace OoOVisual
 
 		Execution_Result Execution_Unit_Multiplier::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
-				return { Constants::FORWARDING_DATA_INVALID };
+				return { Constants::EXECUTION_RESULT_INVALID };
 			Execution_Result result{};
 			result.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
@@ -131,7 +131,7 @@ namespace OoOVisual
 
 		Execution_Result Execution_Unit_Divider::execute(const Reservation_Station_Entry* source_entry) {
 			if (!source_entry)
-				return { Constants::FORWARDING_DATA_INVALID };
+				return { Constants::EXECUTION_RESULT_INVALID };
 			Execution_Result result{};
 			result.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
@@ -162,12 +162,12 @@ namespace OoOVisual
 		Execution_Result Execution_Unit_Load_Store::buffer_allocation_phase(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
-				return { Constants::FORWARDING_DATA_INVALID };
+				return { Constants::EXECUTION_RESULT_INVALID };
 			memory_addr_t address{}; ;
 			data_t        register_data{}; ;
 			if (source_entry->destination_register_id_as_ofsset) {
 				if (store_buffer_is_full())
-					return { Constants::FORWARDING_DATA_INVALID };
+					return { Constants::EXECUTION_RESULT_INVALID };
 				// allocate  the entry in the store buffer
 				address = source_entry->src1.signed_ + static_cast<offset_t>(source_entry->destination_register_id);
 				register_data = source_entry->src2 ;
@@ -205,9 +205,9 @@ namespace OoOVisual
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Created entry in the load buffer buffer: timestamp:{}, destination_reg:{}, address:{}\n", source_entry->timestamp, source_entry->destination_register_id, address);
 #endif
-				return {Constants::EXECUTION_RESULT_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
+				return {Constants::EXECUTION_RESULT_INVALID,0,source_entry->self_tag };
 			}
-			return { Constants::FORWARDING_DATA_INVALID };
+			return { Constants::EXECUTION_RESULT_INVALID };
 		}
 
 		std::pair<size_t,size_t> Execution_Unit_Load_Store::find_load_that_is_executable() {
@@ -266,7 +266,7 @@ namespace OoOVisual
 
 			auto executable_load_index(find_load_that_is_executable());
 			if (executable_load_index.first == Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST)
-				return { Constants::FORWARDING_DATA_INVALID };
+				return { Constants::EXECUTION_RESULT_INVALID };
 
 			if (executable_load_index.second == Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE) { // it is a bypassable load
 				const Buffer_Entry* bypassable_load_entry{ &_load_buffer.at(executable_load_index.first) };
@@ -276,14 +276,14 @@ namespace OoOVisual
 				// make the rob entry ready
 				Reorder_Buffer::set_ready(bypassable_load_entry->reorder_buffer_entry_index);
 				Execution_Result result{ 
-					Constants::EXECUTION_RESULT_FORWARD_ONLY, // if we are in the load buffer we are already deallocated from the reservation station 
+					Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD, 
 					write_data, // will be needed in forwarding to reservation stations
 					bypassable_load_entry->producer_tag, // will be needed in forwarding logic 
 				};
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Load instruction {} was executed using bypasssing.\n", bypassable_load_entry->timestamp);
 #endif
-				/* the load instruction in this buffer could be executed speculitevily or earlier than a preceding store instruction
+				/* the load instruction in this buffer could be executed speculatively or earlier than a preceding store instruction
 					so we are going to push it to the speculative load buffer
 					the erasion of the speculated load buffer entry is going to happen when the reorder buffer retires the load instruction
 				*/
@@ -297,14 +297,14 @@ namespace OoOVisual
 			Register_Manager::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
 			Reorder_Buffer::set_ready(forwaradable_load_entry->reorder_buffer_entry_index);
 			Execution_Result result(
-				Constants::EXECUTION_RESULT_FORWARD_ONLY,
+				Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD,
 				store_buffer_entry_that_is_forwarded_from->register_data, // will be needed in forwarding to reservation stations
 				forwaradable_load_entry->producer_tag // will be needed in forwarding logic 
 			);
 #ifdef DEBUG_PRINTS
 			std::cout << std::format("Load instruction {} was executed using forwarding from store instruction {}.\n", forwaradable_load_entry->timestamp,store_buffer_entry_that_is_forwarded_from->timestamp);
 #endif
-			/* the load instruction in this buffer could be executed speculitevily or earlier than a preceding store instruction
+			/* the load instruction in this buffer could be executed speculatively or earlier than a preceding store instruction
 				so we are going to push it to the speculative load buffer
 				the erasion of the speculated load buffer entry is going to happen when the reorder buffer retires the load instruction
 			*/
@@ -419,12 +419,12 @@ namespace OoOVisual
 					break;
 				}
 			}
-			return { Constants::FORWARDING_DATA_INVALID, {},Constants::NO_PRODUCER_TAG, misspeculated };
+			return { Constants::EXECUTION_RESULT_INVALID, {},Constants::NO_PRODUCER_TAG, misspeculated };
         }
 		Execution_Result Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
-				return { Constants::FORWARDING_DATA_INVALID };
+				return { Constants::EXECUTION_RESULT_INVALID };
 			memory_addr_t target_address{};
 			bool actual_taken{ false };
 			switch (source_entry->mode) { 

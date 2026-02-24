@@ -15,7 +15,7 @@ namespace OoOVisual {
 				auto constexpr STORE_BUFFER_SIZE{ 6 };
 				auto constexpr BRANCH_SHIFT_REGISTER_SIZE{ 8 };
 				auto constexpr RESERVATION_STATION_AMOUNT{ 7 };
-				auto constexpr FORWARDING_DATA_INVALID{ 0 };
+				auto constexpr EXECUTION_RESULT_INVALID{ 0 };
 				auto constexpr UNIT_TIME{ 10ull };
 				auto constexpr RESET{ "\033[0m" };
 				auto constexpr RED{ "\033[31m" };

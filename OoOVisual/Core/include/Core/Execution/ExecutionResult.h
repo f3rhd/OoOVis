@@ -10,7 +10,7 @@ namespace OoOVisual
 		at the same time set the respectful rob entry ready
 		*/
 		struct Execution_Result {
-			u32			kind = Constants::FORWARDING_DATA_INVALID;
+			u32			kind = Constants::EXECUTION_RESULT_INVALID;
 			data_t		produced_data{};
 			u32			producer_tag{};
 			bool 		misprediction_was_detected{false};
