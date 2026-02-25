@@ -3,10 +3,10 @@
 #include <Core/Core.h>
 using namespace OoOVisual;
 int main(int argc, char** argv) {
-	Core::init(argc, argv);
 	Visualizer::Scene scene{};
 	if (!Visualizer::App::init())
 		return -1;
+	Core::init(argc, argv);
 	scene.init();
 	while (!Visualizer::App::should_close()) {
 		Core::run();

@@ -3,6 +3,7 @@
 #include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Execution/ExecutionUnits.h>
 #include <Core/Fetch/Fetch.h>
+#include <Visualizer/App.h>
 #include <format>
 #include <iostream>
 namespace OoOVisual
@@ -127,7 +128,7 @@ namespace OoOVisual
 		void Reorder_Buffer::set_ready(u64 target_entry_index) {
 			if (target_entry_index >= Constants::REORDER_BUFFER_SIZE) {
 				std::cout << "Tried to access non-existing reorder buffer entry.\n";
-				exit(EXIT_FAILURE);
+				Visualizer::App::close(); return;	
 			}
 			_buffer[target_entry_index]->ready = true;
 		}
@@ -136,7 +137,7 @@ namespace OoOVisual
 		{
 			if (target >= Constants::REORDER_BUFFER_SIZE) {
 				std::cout << "Tried to access non-existing reorder buffer entry.\n";
-				exit(EXIT_FAILURE);
+				Visualizer::App::close(); return;	
 			}
 			_buffer[target]->ready = true;
 			if (auto* branch_entry = dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(_buffer[target].get())) {
@@ -153,7 +154,7 @@ namespace OoOVisual
 			}
 			else {
 				std::cout << "Tried to access branch reorder buffer with wrong index.\n";
-				exit(EXIT_FAILURE);
+				Visualizer::App::close(); return;	
 			}
 
 		}

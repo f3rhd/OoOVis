@@ -19,7 +19,6 @@ namespace OoOVisual
 		static CORE_MODE _mode{ CORE_MODE::STOP };
 		static double _accumulator{};
 		FrontEnd::cli_args_t init(int argc, char** argv) {
-			// std::atexit(nullptr);
 			FrontEnd::Parser parser;
 			auto cli_args(parser.parse_cli(argc, argv));
 			auto parse_result(parser.parse_instructions(cli_args.input_file));
