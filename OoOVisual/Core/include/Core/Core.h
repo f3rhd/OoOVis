@@ -10,7 +10,7 @@ namespace OoOVisual
 			STEP,
 			STOP,
 		};
-		FrontEnd::cli_args_t init(int argc, char** argv);
+		bool init(int argc, char** argv);
 		void run();
 		float* tick_speed();
 		void reset();

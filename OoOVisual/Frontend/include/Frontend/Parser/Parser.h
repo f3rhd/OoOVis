@@ -20,6 +20,7 @@ namespace OoOVisual {
             Parser() = default;
             std::pair < std::vector<std::unique_ptr<Instruction>>,std::vector<std::pair<std::string,size_t>>> parse_instructions(const std::string& src);
             cli_args_t  parse_cli(int argc, char** argv);
+            bool        was_successful() { return _successful_parse; }
         private:
             void        parse_instruction();
             void        parse_pseudo_instruction();
@@ -41,6 +42,7 @@ namespace OoOVisual {
             std::vector<std::unique_ptr<Instruction>>                            _program;
             size_t                                                               _line_number = 0;
             size_t                                                               _column = 0;
+            bool                                                                 _successful_parse{ true };
         };
    } // namespace Frontend
 } // namespace OooVis

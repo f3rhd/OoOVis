@@ -18,13 +18,15 @@ namespace OoOVisual
 		static float _tick_speed{};
 		static CORE_MODE _mode{ CORE_MODE::STOP };
 		static double _accumulator{};
-		FrontEnd::cli_args_t init(int argc, char** argv) {
+		bool init(int argc, char** argv) {
 			FrontEnd::Parser parser;
 			auto cli_args(parser.parse_cli(argc, argv));
 			auto parse_result(parser.parse_instructions(cli_args.input_file));
+			if (!parser.was_successful())
+				return false;
 			Fetch_Unit::init(std::move(parse_result.first),std::move(parse_result.second));
 			Register_Manager::init();
-			return cli_args;
+			return true;
 		}
 		static void tick() {
 			Reorder_Buffer::commit();

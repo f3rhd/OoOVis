@@ -5,24 +5,28 @@
 namespace OoOVisual {
     namespace FrontEnd
     {
-        #define EXPECT(EXPECTED_TOKEN_TYPE)                   \
+#define EXPECT(EXPECTED_TOKEN_TYPE)                   \
             if (_current_token->type != EXPECTED_TOKEN_TYPE)   \
             {                                                 \
                 std::cout << "\033[31m" << "Error(" << _current_token->row << "," <<  _current_token->column << ")\033[0m: " << "Token " << "'" << _current_token->word << "' did not meet the expected type"  << "\n" ;               \
-                exit(EXIT_FAILURE);                                       \
+                _successful_parse  = false; \
+                return;  \
             }                                                             \
 
+		#define FAILED_PARSE_RETURN() std::pair<std::vector<std::unique_ptr<Instruction>>, std::vector<std::pair<std::string,size_t>>>()
         std::pair<std::vector<std::unique_ptr<Instruction>>, std::vector<std::pair<std::string,size_t>>>
         Parser::parse_instructions(const std::string & src) {
             std::ifstream file(src);
             std::vector<std::pair<std::string,size_t>> instruction_strs{};
             if (!src.ends_with(".s")) {
                 std::cout << "\033[31m" << "Error: \033[0m" << "File name should end with *.s.\n";
-                exit(EXIT_FAILURE);
+                _successful_parse = false;
+                return FAILED_PARSE_RETURN();
             }
             if (!file.is_open()) {
                 std::cout << "\033[31m" << "Error: \033[0m" << "File path " << src << " doesn't exist.\n";
-                exit(EXIT_FAILURE);
+                _successful_parse = false;
+                return FAILED_PARSE_RETURN();
             }
             std::string line_raw{};
             size_t instruction_index{};
@@ -41,14 +45,16 @@ namespace OoOVisual {
                 _current_token = &_line_tokens[0];
                 parse_instruction();
             }
+            if (!_successful_parse)
+                return FAILED_PARSE_RETURN();
             // resolve the unresolved instructions
             for (auto& branch_instruction_data : _unresolved_branch_instructions) {
                 if (_label_map.find(branch_instruction_data.second) != _label_map.end()) {
                     branch_instruction_data.first->set_target_addr(_label_map.at(branch_instruction_data.second));
                 }
                 else {
-					std::cout << "\033[31m" << "Error: \033[0m: " << "Cause: " << "'" << branch_instruction_data.second << "' Unknown label identifier was found"  << "\n" ;               \
-                    exit(EXIT_FAILURE);
+                    std::cout << "\033[31m" << "Error: \033[0m: " << "Cause: " << "'" << branch_instruction_data.second << "' Unknown label identifier was found" << "\n";               \
+                    _successful_parse = false;
                 }
             }
             for (auto& jump_instruction_data : _unresolved_jump_instructions) {
@@ -57,7 +63,7 @@ namespace OoOVisual {
                 }
                 else {
 					std::cout << "\033[31m" << "Error: \033[0m: " << "Cause: " << "'" << jump_instruction_data.second << "' Unknown label identifier was found"  << "\n" ;               \
-                    exit(EXIT_FAILURE);
+                    _successful_parse = false;
                 }
             }
             file.close();
@@ -327,7 +333,8 @@ namespace OoOVisual {
                 imm = std::stoi(_current_token->word);
             if (!(imm >= -524288 && imm < 524277)) {
                 std::cout << "\033[31m" << "Error(" << _current_token->row << "," << _current_token->column << ")\033[0m: " << "Token " << "'" << _current_token->word << "should live in 20 bit range." << "\n";               \
-				exit(EXIT_FAILURE);
+                _successful_parse = false;
+                return;
             }
             if (tmp.word == "lui")
                 _program.emplace_back(std::make_unique<Register_Instruction>(
