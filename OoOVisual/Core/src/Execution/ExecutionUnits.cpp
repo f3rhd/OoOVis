@@ -396,6 +396,8 @@ namespace OoOVisual
 					}
 				)
 			};
+			std::vector<const Buffer_Entry*> misspeculated_loads;
+			misspeculated_loads.reserve(_speculative_load_buffer.size());
 			for (const auto& speculated_load : _speculative_load_buffer) {
 				// resolving of the speculated instruction is done by the store instructions that precede the speculated store instruction
 				if(store_buffer_entry->store_id > speculated_load.store_id) 
@@ -412,12 +414,27 @@ namespace OoOVisual
 						true,
 						Constants::END_OF_TIME
 					);
+					misspeculated_loads.push_back(&speculated_load);
 					misspeculated = true;
-					Fetch_Unit::set_program_counter(speculated_load.instruction_address);
-					Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
-					Fetch_Unit::stall();
-					break;
 				}
+			}
+			if (misspeculated) {
+				/* out of misspeculated loads we gotta set the program counter to the earliest instruction by timestamp 
+					one might ask what if the misspeculated load instructions have the same timestamp?
+					The answer is they dont! when a load instruction is fetched the timestamp of the next instruction is immediately updated
+				*/
+				auto earliest_load_it{
+					std::min_element(
+						misspeculated_loads.begin(),
+						misspeculated_loads.end(),
+						[](const auto& a, const auto& b) {
+							return a->timestamp < b->timestamp;
+						}
+					)
+				};
+				Fetch_Unit::set_program_counter((*earliest_load_it)->instruction_address);
+				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
+				Fetch_Unit::stall();
 			}
 			return { Constants::EXECUTION_RESULT_INVALID, {},Constants::NO_PRODUCER_TAG, misspeculated };
         }
