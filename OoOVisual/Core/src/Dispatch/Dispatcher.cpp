@@ -7,6 +7,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <format>
+#include <Visualizer/App.h>
 namespace OoOVisual
 {
     namespace Core
@@ -43,10 +44,10 @@ namespace OoOVisual
                     station_id = RESERVATION_STATION_ID::BRANCH;
 					feedback =  dispatch_jump_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
                     break;
-				case FrontEnd::FLOW_TYPE::UNKNOWN: // @HandleThis
+				case FrontEnd::FLOW_TYPE::UNKNOWN: 
 				default:
 					std::cout << "Faced with unknown instruction flow type\n";
-					exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+					Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH; 
 				}
             }
             
@@ -163,11 +164,9 @@ namespace OoOVisual
 				#endif
                 *allocated_reservation_station_entry = temp_reservation_station_entry;
             }
-            // again shouldnt happen but...
-            // @HandleThis
             else {
                 std::cout << "Dynamic cast of Instruction -> Register_Instruction failed.\n";
-				exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+                Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
             }        
             return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
         }
@@ -202,7 +201,7 @@ namespace OoOVisual
                 default:
                     // shouldnt happen
                     std::cout << "Faced with unkown load instruction type while dispatching.\n";
-                    exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+                    Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
                     break;
 
                 }
@@ -244,7 +243,7 @@ namespace OoOVisual
             // shouldnt happennnn but again..
             else {
                 std::cout << "Dynamic cast of Instruction -> Load_Instruction failed\n";
-                exit(EXIT_FAILURE);
+                Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
 
             }
             return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
@@ -271,7 +270,7 @@ namespace OoOVisual
                 case FrontEnd::Store_Instruction::STORE_INSTRUCTION_TYPE::UNKNOWN:
                 default:
                     std::cout << "Faced with an unknown store instruction type while dispatching.\n";
-					exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+					Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
                     break;
 
                 }
@@ -306,7 +305,7 @@ namespace OoOVisual
             }
             else {
                 std::cout << "Dynamic cast of Instruction -> Store_Instruction failed\n";
-                exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+                Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
             }        
             return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
         }
@@ -367,7 +366,7 @@ namespace OoOVisual
             }
             else {
                 std::cout << "Dynamic cast of Instruction -> Branch_Instruction failed\n";
-                exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+                Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
             }
             return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
         }
@@ -434,7 +433,7 @@ namespace OoOVisual
                     break;
                 default:
 					std::cout << "Faced with unknown jump instruction type while dispatching.\n";
-					exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+					Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
                     break;
                 }
                 temp_reservation_station_entry.instruction_address = instruction_id;
@@ -445,7 +444,7 @@ namespace OoOVisual
             }
             else {
                 std::cout << "Dynamic cast of Instruction -> Jump_Instruction failed\n";
-                exit(EXIT_FAILURE); // @VisitLater : Make the termination of the program cleaner.
+                Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
             }
             return DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH;
 

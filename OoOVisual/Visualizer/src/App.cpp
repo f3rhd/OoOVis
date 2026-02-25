@@ -8,6 +8,7 @@ namespace OoOVisual
 	namespace Visualizer
 	{
 
+		GLFWwindow* App::_window{ nullptr };
 		bool App::init() {
 			if (!glfwInit()) return false;
 
@@ -15,13 +16,13 @@ namespace OoOVisual
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-			window = glfwCreateWindow(Constants::INITIAL_WINDOW_WIDTH, Constants::INITIAL_WINDOW_HEIGHT, "OoO CPU Visualizer", nullptr, nullptr);
-			if (!window) {
+			_window = glfwCreateWindow(Constants::INITIAL_WINDOW_WIDTH, Constants::INITIAL_WINDOW_HEIGHT, "OoO CPU Visualizer", nullptr, nullptr);
+			if (!_window) {
 				glfwTerminate();
 				return false;
 			}
 
-			glfwMakeContextCurrent(window);
+			glfwMakeContextCurrent(_window);
 			glfwSwapInterval(1); 
 
 			IMGUI_CHECKVERSION();
@@ -31,13 +32,14 @@ namespace OoOVisual
 
 			ImGui::StyleColorsDark();
 
-			ImGui_ImplGlfw_InitForOpenGL(window, true);
+			ImGui_ImplGlfw_InitForOpenGL(_window, true);
 			ImGui_ImplOpenGL3_Init("#version 330");
 
 			return true;
 		}
 
 		void App::start_frame() {
+			ImGui::SetNextWindowSize(window_size());
 			glfwPollEvents();
 			
 			ImGui_ImplOpenGL3_NewFrame();
@@ -48,7 +50,7 @@ namespace OoOVisual
 		void App::end_frame() {
 			ImGui::Render();
 			int display_w{}, display_h{};
-			glfwGetFramebufferSize(window, &display_w, &display_h);
+			glfwGetFramebufferSize(_window, &display_w, &display_h);
 			glViewport(0, 0, display_w, display_h);
 			
 			glClearColor(0.1f, 0.1f, 0.12f, 1.0f); 
@@ -56,19 +58,21 @@ namespace OoOVisual
 
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 			
-			glfwSwapBuffers(window);
+			glfwSwapBuffers(_window);
 		}
 
 		bool App::should_close() {
-			return glfwWindowShouldClose(window);
+			return glfwWindowShouldClose(_window);
 		}
-
+		void App::close() {
+			glfwSetWindowShouldClose(_window, 1);
+		}
 		void App::cleanup() {
 			ImGui_ImplOpenGL3_Shutdown();
 			ImGui_ImplGlfw_Shutdown();
 			ImGui::DestroyContext();
 
-			glfwDestroyWindow(window);
+			glfwDestroyWindow(_window);
 			glfwTerminate();
 		}
 
@@ -77,7 +81,7 @@ namespace OoOVisual
 
 			int width{}; 
 			int height{};
-			glfwGetWindowSize(window, &width, &height);
+			glfwGetWindowSize(_window, &width, &height);
 			return ImVec2(static_cast<float>(width),static_cast<float>(height));
 		}
 

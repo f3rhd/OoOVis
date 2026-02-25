@@ -3,18 +3,16 @@
 #include <Core/Core.h>
 using namespace OoOVisual;
 int main(int argc, char** argv) {
-	Core::init(argc,argv);
-	Visualizer::App app{};
+	Core::init(argc, argv);
 	Visualizer::Scene scene{};
-	if (!app.init())
+	if (!Visualizer::App::init())
 		return -1;
 	scene.init();
-	while (!app.should_close()) {
+	while (!Visualizer::App::should_close()) {
 		Core::run();
-		app.start_frame();
-		ImGui::SetNextWindowSize(app.window_size());
+		Visualizer::App::start_frame();
 		scene.play();
-		app.end_frame();
+		Visualizer::App::end_frame();
 	}
-    app.cleanup();
+	Visualizer::App::cleanup();
 }

@@ -1,6 +1,7 @@
 #include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Constants/Constants.h>
 #include <Frontend/Parser/Lookup.h>
+#include <Visualizer/App.h>
 #include <stdexcept>
 #include <format>
 #include <iomanip>
@@ -52,12 +53,12 @@ namespace OoOVisual
 				return;
 			if (physical_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to deallocate invalid register.\n"; 
-				exit(EXIT_FAILURE); // @VisitLater
+				Visualizer::App::close(); return;
 			}
 				
 			if (!_physical_register_file[physical_register_id].allocated) {
 				std::cout << "Tried to deallocate an already deallocated register.\n";
-				exit(EXIT_FAILURE); // @VisitLater
+				Visualizer::App::close(); return;
 			}
 			_physical_register_file[physical_register_id].allocated = false;
 			_physical_register_file[physical_register_id].producer_tag = Constants::NO_PRODUCER_TAG;
@@ -69,7 +70,7 @@ namespace OoOVisual
 		void Register_Manager::write(reg_id_t physical_register_id, data_t data) {
 			if (physical_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to write to an invalid register.\n";
-				exit(EXIT_FAILURE); // @VisitLater
+				Visualizer::App::close(); return;
 			}
 			if (physical_register_id == 0) {
 				return;
@@ -112,7 +113,7 @@ namespace OoOVisual
 		{
 			if (architectural_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to read invalid register.";
-				exit(EXIT_FAILURE); // @VisitLater
+				Visualizer::App::close(); return;
 			}
 			return _frontend_register_alias_table[architectural_register_id];
 		}

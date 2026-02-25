@@ -8,15 +8,16 @@ namespace OoOVisual
 		class App {
 		public:
 			App() = default;
-			bool init();     // All the GLFW & ImGui setup goes here
-			void start_frame(); // The "NewFrame" calls
-			void end_frame();   // The "Render" and "SwapBuffers" calls
-			bool should_close();
-			void cleanup();
-			ImVec2 window_size();
+			static bool init();     // All the GLFW & ImGui setup goes here
+			static void start_frame(); // The "NewFrame" calls
+			static void end_frame();   // The "Render" and "SwapBuffers" calls
+			static bool should_close();
+			static void  close();
+			static void cleanup();
+			static ImVec2 window_size();
 
 		private:
-			GLFWwindow* window;
+			static GLFWwindow* _window;
 		};
 
 	} // namespace Visualizer
