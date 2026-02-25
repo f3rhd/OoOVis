@@ -113,7 +113,7 @@ namespace OoOVisual
 		{
 			if (architectural_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to read invalid register.";
-				Visualizer::App::close(); return;
+				Visualizer::App::close(); return Constants::INVALID_PHYSICAL_REGISTER_ID;
 			}
 			return _frontend_register_alias_table[architectural_register_id];
 		}
