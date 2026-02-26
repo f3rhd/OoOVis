@@ -436,6 +436,7 @@ namespace OoOVisual
 				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
 				Fetch_Unit::stall();
 			}
+			misspeculated_loads.shrink_to_fit();
 			return { Constants::EXECUTION_RESULT_INVALID, {},Constants::NO_PRODUCER_TAG, misspeculated };
         }
 		Execution_Result Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {

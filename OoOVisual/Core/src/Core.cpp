@@ -8,6 +8,7 @@
 #include <Core/RegisterManager/RegisterManager.h>
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/Constants/Constants.h>
+#include <chrono>
 #include <imgui_internal.h>
 
 namespace OoOVisual
@@ -37,14 +38,14 @@ namespace OoOVisual
 
 		void run()
 		{
-			static auto _last_time{ ImGui::GetTime() };
-			auto now{ ImGui::GetTime() };
+			static auto _last_time{ std::chrono::high_resolution_clock::now()};
+			auto now{ std::chrono::high_resolution_clock::now()};
 			auto delta{ now - _last_time };
 			_last_time = now;
 			switch (_mode)
 			{
 			case OoOVisual::Core::CORE_MODE::RUN:
-				_accumulator += _tick_speed * Constants::MAX_IPS * delta;
+				_accumulator += _tick_speed * Constants::MAX_IPS * delta.count();
 				while (_accumulator >= 1.0f) {
 					tick();
 					_accumulator -= 1.0f;

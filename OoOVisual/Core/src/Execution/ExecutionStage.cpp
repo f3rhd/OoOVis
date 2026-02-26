@@ -17,6 +17,7 @@ namespace OoOVisual
 			std::vector<Execution_Result> execution_results;
 			auto branch_execution_input = Reservation_Station_Pool::get_reservation_station(static_cast<RESERVATION_STATION_ID>(6)).issue();
 			// upon misprediction execution unit may flush the instructions that are ready to execute.
+			execution_results.reserve(Constants::RESERVATION_STATION_AMOUNT + 1); 
 			auto branch_execution_result{ execution_results.emplace_back(Execution_Unit_Branch::execute(branch_execution_input)) };
 			for (size_t i{}; i < Constants::RESERVATION_STATION_AMOUNT - 1; i++) {
 				issued_entries[i] = Reservation_Station_Pool::get_reservation_station(static_cast<RESERVATION_STATION_ID>(i)).issue();
