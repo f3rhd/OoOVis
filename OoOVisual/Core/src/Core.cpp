@@ -40,7 +40,7 @@ namespace OoOVisual
 		{
 			static auto _last_time{ std::chrono::high_resolution_clock::now()};
 			auto now{ std::chrono::high_resolution_clock::now()};
-			auto delta{ now - _last_time };
+			std::chrono::duration<double> delta{ now - _last_time };
 			_last_time = now;
 			switch (_mode)
 			{
