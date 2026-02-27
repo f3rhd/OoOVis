@@ -143,6 +143,7 @@ namespace OoOVisual
             _timestamp = 0;
             _branch_target_buffer.clear();
             _pattern_history_table.clear();
+            _stalled = false;
             _next_fetch_is_set = false;
             _branch_shift_register = 0;
             _last_fetch_group.clear();
