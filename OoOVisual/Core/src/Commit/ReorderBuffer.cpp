@@ -9,9 +9,9 @@
 namespace OoOVisual
 {
 	namespace Core {
-		#define ROB_MISPREDICTION_RECOVERY(BUFFER_TYPE) {                                \
-			auto branch_timestamp = dynamic_cast<BUFFER_TYPE*>(entry)->self_timestamp; \
-			auto flush_boundary{ dynamic_cast<BUFFER_TYPE*>(entry)->flush_timestamp_boundary }; \
+		#define ROB_MISPREDICTION_RECOVERY(ENTRY_TYPE) {                                \
+			auto branch_timestamp = dynamic_cast<ENTRY_TYPE*>(entry)->self_timestamp; \
+			auto flush_boundary{ dynamic_cast<ENTRY_TYPE*>(entry)->flush_timestamp_boundary }; \
 			if (flush_boundary == Constants::TIME_ZERO) {                                \
 				_buffer[_head].reset();                                                  \
 				_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;                    \
