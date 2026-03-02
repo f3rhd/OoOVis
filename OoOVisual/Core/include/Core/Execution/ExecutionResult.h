@@ -6,7 +6,7 @@ namespace OoOVisual
 	namespace Core
 	{
 		/*
-		instructions will generate this kind of layout upon execution and will be sent to common data bus, 
+		instructions will generate this kind of layout upon execution and will be sent to reservation stations, 
 		at the same time set the respectful rob entry ready
 		*/
 		struct Execution_Result {
