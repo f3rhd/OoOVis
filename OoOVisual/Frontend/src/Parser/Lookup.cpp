@@ -62,6 +62,7 @@ namespace OoOVisual {
 		const std::unordered_map<std::string,Register_Instruction::REGISTER_INSTRUCTION_TYPE>         
 		Lookup::_alur_instructions  {
 			{"add", Register_Instruction::REGISTER_INSTRUCTION_TYPE::ADD},
+			{"sub", Register_Instruction::REGISTER_INSTRUCTION_TYPE::SUB},
 			{"sll", Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLL},
 			{"slt", Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLT},
 			{"sltu", Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLTU},
