@@ -25,34 +25,71 @@ namespace OoOVisual
             else {
 				switch ((*fetch_element.instruction)->flow()) {
 				case FrontEnd::FLOW_TYPE::REGISTER:
-                    station_id = RESERVATION_STATION_ID::ADD_SUB;
-					feedback = dispatch_register_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::ADD_SUB));
+                    station_id = get_register_instruction_reservation_station_id((*fetch_element.instruction).get());
+                    feedback = dispatch_register_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(station_id));
                     break;
-				case FrontEnd::FLOW_TYPE::LOAD:
+                case FrontEnd::FLOW_TYPE::LOAD:
                     station_id = RESERVATION_STATION_ID::LOAD_STORE;
-					feedback = dispatch_load_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
+                    feedback = dispatch_load_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
                     break;
-				case FrontEnd::FLOW_TYPE::STORE:
+                case FrontEnd::FLOW_TYPE::STORE:
                     station_id = RESERVATION_STATION_ID::LOAD_STORE;
-					feedback =  dispatch_store_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
+                    feedback = dispatch_store_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::LOAD_STORE));
                     break;
-				case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
+                case FrontEnd::FLOW_TYPE::BRANCH_CONDITIONAL:
                     station_id = RESERVATION_STATION_ID::BRANCH;
-					feedback =  dispatch_branch_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
+                    feedback = dispatch_branch_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
                     break;
-				case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL:
+                case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL:
                     station_id = RESERVATION_STATION_ID::BRANCH;
-					feedback =  dispatch_jump_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
+                    feedback = dispatch_jump_instruction(fetch_element, Reservation_Station_Pool::get_reservation_station(RESERVATION_STATION_ID::BRANCH));
                     break;
-				case FrontEnd::FLOW_TYPE::UNKNOWN: 
-				default:
-					std::cout << "Faced with unknown instruction flow type\n";
-					Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH; 
-				}
+                case FrontEnd::FLOW_TYPE::UNKNOWN:
+                default:
+                    std::cout << "Faced with unknown instruction flow type\n";
+                    Visualizer::App::close(); return DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
+                }
             }
-            
+
             _station_dispatch_map.at(station_id) = feedback;
             return feedback;
+        }
+        RESERVATION_STATION_ID Dispatcher::get_register_instruction_reservation_station_id(FrontEnd::Instruction* instruction) {
+            if (const auto* register_instruction = dynamic_cast<FrontEnd::Register_Instruction*>(instruction)) {
+				switch (register_instruction->instruction_type()) {
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::ADD:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SUB:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::LOAD_UPPER:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::AUIPC:
+					return RESERVATION_STATION_ID::ADD_SUB;
+					break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::DIV:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::DIVU:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::REM:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::REMU:
+					return RESERVATION_STATION_ID::DIVIDER;
+					break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MUL:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MULH:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MULHSU:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::MULHU:
+					return RESERVATION_STATION_ID::MULTIPLIER;
+					break;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::AND:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::OR:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::XOR:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLL:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SRL:
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SRA:
+					return RESERVATION_STATION_ID::BITWISE;
+				case FrontEnd::Register_Instruction::REGISTER_INSTRUCTION_TYPE::SLT:
+					return RESERVATION_STATION_ID::SET_LESS;
+					break;
+				default: // shouldn't happen
+					break;
+				}
+			}
+            return RESERVATION_STATION_ID::UNKNOWN;
         }
 		DISPATCH_FEEDBACK Dispatcher::dispatch_register_instruction(const Fetch_Element& fetch_element, Reservation_Station& station) {
             const auto& instruction = *fetch_element.instruction;
@@ -361,7 +398,10 @@ namespace OoOVisual
                 temp_reservation_station_entry.fetch_unit_prediction = fetch_element.branch_prediction;
 				*allocated_reservation_station_entry = temp_reservation_station_entry;
 				#ifdef DEBUG_PRINTS
-                std::cout << Constants::YELLOW << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}] Fetch_Unit_Prediction : {}  .\n", instruction_id,temp_reservation_station_entry.timestamp,temp_reservation_station_entry.self_tag,temp_reservation_station_entry.fetch_unit_prediction) <<Constants::RESET;
+                if(temp_reservation_station_entry.fetch_unit_prediction == Constants::PREDICTED_NOT_TAKEN)
+					std::cout << Constants::YELLOW << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}] Fetch_Unit_Prediction : NOT_TAKEN  .\n", instruction_id,temp_reservation_station_entry.timestamp,temp_reservation_station_entry.self_tag) << Constants::RESET;
+				else if(temp_reservation_station_entry.fetch_unit_prediction == Constants::PREDICTED_TAKEN)
+					std::cout << Constants::YELLOW << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}] Fetch_Unit_Prediction : TAKEN  .\n", instruction_id,temp_reservation_station_entry.timestamp,temp_reservation_station_entry.self_tag) << Constants::RESET;
 				#endif
             }
             else {

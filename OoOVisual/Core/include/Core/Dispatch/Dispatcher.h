@@ -30,6 +30,7 @@ namespace OoOVisual
             static DISPATCH_FEEDBACK                                                   dispatch_store_instruction(const Fetch_Element& element, Reservation_Station& station);
             static DISPATCH_FEEDBACK                                                   dispatch_branch_instruction(const Fetch_Element& element, Reservation_Station& station);
             static DISPATCH_FEEDBACK                                                   dispatch_jump_instruction(const Fetch_Element& element,  Reservation_Station& station);
+            static RESERVATION_STATION_ID                                              get_register_instruction_reservation_station_id(FrontEnd::Instruction* instruction);
         private:
             static std::vector<DISPATCH_FEEDBACK>                                       _last_dispatch_feedback;
             static std::map<Core::RESERVATION_STATION_ID, DISPATCH_FEEDBACK>            _station_dispatch_map; //used by visualizer
