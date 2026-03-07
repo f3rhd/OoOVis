@@ -44,12 +44,16 @@ namespace OoOVisual
 			data_t result{};
 
 			switch (mode) {
-			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_WORD:
-				result.unsigned_ = (static_cast<u32>(_memory[addr])) |
+			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_WORD: {
+				i32 word = static_cast<i32>(
+					(static_cast<u32>(_memory[addr])) |
 					(static_cast<u32>(_memory[addr + 1]) << 8) |
 					(static_cast<u32>(_memory[addr + 2]) << 16) |
-					(static_cast<u32>(_memory[addr + 3]) << 24);
+					(static_cast<u32>(_memory[addr + 3]) << 24)
+				);
+				result.signed_ = word;
 				break;
+			}
 
 			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF:
 			{
