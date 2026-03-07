@@ -31,87 +31,75 @@ namespace OoOVisual
 				ImGui::Checkbox("Follow Pc", &follow_pc);
 
 				if (ImGui::CollapsingHeader("Instruction Stream", ImGuiTreeNodeFlags_DefaultOpen)) {
-					if (ImGui::BeginChild("InstructionScroll", ImVec2{ 0.0f, 150.0f }, true)) {
+					
+					ImGuiWindowFlags child_flags = ImGuiWindowFlags_HorizontalScrollbar;
+					if (ImGui::BeginChild("InstructionScroll", ImVec2{ 350.0f, 250.0f }, true, child_flags)) {
 						const auto& stream{ Core::Fetch_Unit::instruction_stream() };
 						const memory_addr_t current_pc{ Core::Fetch_Unit::program_counter() };
 
 						if (follow_pc) {
-							float item_height{ ImGui::GetTextLineHeightWithSpacing() };
-							ImGui::SetScrollY(current_pc * item_height - (ImGui::GetWindowHeight() * 0.5f));
+							const auto& stream{ Core::Fetch_Unit::instruction_stream() };
+							const memory_addr_t current_pc{ Core::Fetch_Unit::program_counter() };
+
+							int pc_row_index{ -1 };
+							for (size_t i{ 0 }; i < stream.size(); ++i) {
+								if (static_cast<memory_addr_t>(stream[i].second) == current_pc) {
+									pc_row_index = static_cast<int>(i);
+									break;
+								}
+							}
+
+							if (follow_pc && pc_row_index != -1) {
+								float item_height{ ImGui::GetTextLineHeightWithSpacing() };
+								
+								float target_scroll_y{ (pc_row_index * item_height) - (ImGui::GetWindowHeight() * 0.5f) + (item_height * 0.5f) };
+								
+								ImGui::SetScrollY(target_scroll_y);
+							}
 						}
 
-						ImGuiListClipper clipper;
-						clipper.Begin(static_cast<int>(stream.size()));
+						if (ImGui::BeginTable("InstructionTable", 2, ImGuiTableFlags_SizingFixedFit)) {
+							ImGui::TableSetupColumn("Address", ImGuiTableColumnFlags_WidthFixed, 50.0f);
+							ImGui::TableSetupColumn("Code", ImGuiTableColumnFlags_WidthStretch);
 
-						while (clipper.Step()) {
-							for (int i{ clipper.DisplayStart }; i < clipper.DisplayEnd; ++i) {
-								bool is_current_line{ static_cast<memory_addr_t>(stream[i].second) == current_pc};
+							ImGuiListClipper clipper;
+							clipper.Begin(static_cast<int>(stream.size()));
 
-								if (is_current_line) {
-									ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 1.0f, 0.8f, 0.0f, 1.0f });
-								}
+							while (clipper.Step()) {
+								for (int i{ clipper.DisplayStart }; i < clipper.DisplayEnd; ++i) {
+									ImGui::TableNextRow(); // Start a new row for the table
 
-								if (stream[i].first.back() == ':') {
-									ImGui::Text("%s", stream[i].first.c_str());
-								}
-								else {
+									bool is_current_line{ static_cast<memory_addr_t>(stream[i].second) == current_pc};
 
-									ImGui::TextDisabled("[%04ld]", stream[i].second);
-									ImGui::SameLine();
-									ImGui::Text("%s", stream[i].first.c_str());
+									if (is_current_line) {
+										ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 1.0f, 0.8f, 0.0f, 1.0f });
+									}
+
+									if (stream[i].first.back() == ':') { 
+										ImGui::TableSetColumnIndex(1); 
+										ImGui::Text("%s", stream[i].first.c_str());
+									}
+									else { 
+										ImGui::TableSetColumnIndex(0);
+										ImGui::TextDisabled("[%04ld]", stream[i].second);
+										
+										ImGui::TableSetColumnIndex(1);
+										ImGui::Text("%s", stream[i].first.c_str());
+									}
 
 									if (is_current_line) {
 										ImGui::PopStyleColor();
 									}
 								}
 							}
+							ImGui::EndTable();
 						}
 					}
 					ImGui::EndChild();
 				}
-
-				if (ImGui::CollapsingHeader("Branch Target Buffer (BTB)")) {
-					ImGuiTableFlags btb_flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY };
-					if (ImGui::BeginTable("##BTBTable", 2, btb_flags, ImVec2{ 0.0f, 120.0f })) {
-						ImGui::TableSetupScrollFreeze(0, 1);
-						ImGui::TableSetupColumn("PC");
-						ImGui::TableSetupColumn("Target");
-						ImGui::TableHeadersRow();
-
-						for (const auto& pair : Core::Fetch_Unit::branch_target_buffer()) {
-							ImGui::TableNextRow();
-							ImGui::TableSetColumnIndex(0); ImGui::Text("0x%08X", pair.first);
-							ImGui::TableSetColumnIndex(1); ImGui::TextColored(ImVec4{ 0.4f, 0.8f, 1.0f, 1.0f }, "0x%08X", pair.second);
-						}
-						ImGui::EndTable();
-					}
-				}
-				
-				if (ImGui::CollapsingHeader("Pattern History Table (PHT)")) {
-					ImGuiTableFlags pht_flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY };
-					if (ImGui::BeginTable("##PHTTable", 2, pht_flags, ImVec2{ 0.0f, 120.0f })) {
-						ImGui::TableSetupScrollFreeze(0, 1);
-						ImGui::TableSetupColumn("Hash");
-						ImGui::TableSetupColumn("State");
-						ImGui::TableHeadersRow();
-
-						for (const auto& pair : Core::Fetch_Unit::pattern_history_table()) {
-							ImGui::TableNextRow();
-							ImGui::TableSetColumnIndex(0); ImGui::Text("0x%04X", pair.first);
-							ImGui::TableSetColumnIndex(1);
-							u32 counter{ pair.second };
-							if (counter >= 2) {
-								ImGui::TextColored(ImVec4{ 0.2f, 1.0f, 0.2f, 1.0f }, "T (%u)", counter);
-							} else {
-								ImGui::TextColored(ImVec4{ 1.0f, 0.4f, 0.4f, 1.0f }, "NT (%u)", counter);
-							}
-						}
-						ImGui::EndTable();
-					}
-				}
 			}
-			ImGui::End();
-		}
+			ImGui::End(); 
+}
 		void Draw_Element_Fetch_Unit::show_tooltip() const {
 			auto current_pc{ Core::Fetch_Unit::program_counter() };
 			ImGui::SetTooltip(
