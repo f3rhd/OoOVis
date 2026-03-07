@@ -518,27 +518,27 @@ namespace OoOVisual
 #ifdef DEBUG_PRINTS
 				std::cout << Constants::GREEN << "Instructions[" << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was predicted correctly\n" << Constants::RESET;
 #endif
+				return { Constants::EXECUTION_RESULT_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag, false};
 			}
-			else { // misprediction recovery
+			 // misprediction recovery
 
 #ifdef DEBUG_PRINTS
-				std::cout << Constants::RED << "Instructions[ " << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was mispredicted\n" << Constants::RESET;
+			std::cout << Constants::RED << "Instructions[ " << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was mispredicted\n" << Constants::RESET;
 #endif
-				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
-				if (actual_taken == true && prediction == false) {
-					Fetch_Unit::set_program_counter(target_address);
-				}
-				else 
-					Fetch_Unit::set_program_counter(source_entry->instruction_address + 1);
-				Fetch_Unit::set_program_counter_flags();
-				time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp) };
-				time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(source_entry->timestamp)};
-				Reorder_Buffer::set_speculation_evaluation(
-					source_entry->reorder_buffer_entry_index,
-					true,
-					std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
-				);
+			Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
+			if (actual_taken == true && prediction == false) {
+				Fetch_Unit::set_program_counter(target_address);
 			}
+			else 
+				Fetch_Unit::set_program_counter(source_entry->instruction_address + 1);
+			Fetch_Unit::set_program_counter_flags();
+			time_t latest_flushed_reservation_station_entry_timestamp{ Reservation_Station_Pool::flush_mispredicted(source_entry->self_tag,source_entry->timestamp) };
+			time_t latest_flushed_load_store_buffer_entry_timestamp{ Execution_Unit_Load_Store::flush_mispredicted(source_entry->timestamp)};
+			Reorder_Buffer::set_speculation_evaluation(
+				source_entry->reorder_buffer_entry_index,
+				true,
+				std::max(latest_flushed_reservation_station_entry_timestamp, latest_flushed_load_store_buffer_entry_timestamp)
+			);
 			return { Constants::EXECUTION_RESULT_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag, true };
 		}
 
