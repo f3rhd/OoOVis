@@ -145,9 +145,9 @@ namespace OoOVisual {
             EXPECT(TOKEN_TYPE::IMMEDIATE);
             offset_t offset{};
 			if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
-				offset = std::stoi(_current_token->word, nullptr, 16);
+				offset = std::stoul(_current_token->word, nullptr, 16);
 			else
-				offset = std::stoi(_current_token->word);
+				offset = std::stoul(_current_token->word);
 
             advance();
             // we should be left paranthesis
@@ -203,9 +203,9 @@ namespace OoOVisual {
                 EXPECT(TOKEN_TYPE::IMMEDIATE);
                 is_imm = true;
                 if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
-                    src2_val = std::stoi(_current_token->word, nullptr, 16);
+                    src2_val = std::stoul(_current_token->word, nullptr, 16);
                 else
-                    src2_val = std::stoi(_current_token->word);
+                    src2_val = std::stoul(_current_token->word);
             }
             else if (Lookup::alur_type(tmp.word) != Register_Instruction::REGISTER_INSTRUCTION_TYPE::UNKNOWN) {
                 type = Lookup::alur_type(tmp.word);
@@ -301,9 +301,9 @@ namespace OoOVisual {
             EXPECT(TOKEN_TYPE::IMMEDIATE);
             i32 imm{};
             if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
-                imm = std::stoi(_current_token->word, nullptr, 16);
+                imm = std::stoul(_current_token->word, nullptr, 16);
             else
-                imm = std::stoi(_current_token->word);
+                imm = std::stoul(_current_token->word);
             // here we dont care about the label_id field
             _program.emplace_back(
                 std::make_unique<Jump_Instruction>(
@@ -328,10 +328,10 @@ namespace OoOVisual {
             int32_t imm{};
             if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
 
-                imm = std::stoi(_current_token->word, nullptr, 16);
+                imm = std::stoul(_current_token->word, nullptr, 16);
             else
-                imm = std::stoi(_current_token->word);
-            if (!(imm >= -524288 && imm < 524277)) {
+                imm = std::stoul(_current_token->word);
+            if (!(static_cast<uint32_t>(imm) < 1048576)) {
                 std::cout << "\033[31m" << "Error(" << _current_token->row << "," << _current_token->column << ")\033[0m: " << "Token " << "'" << _current_token->word << "should live in 20 bit range." << "\n";               \
                 _successful_parse = false;
                 return;
@@ -540,14 +540,14 @@ namespace OoOVisual {
 
                 int32_t imm_val{};
 				if (_current_token->word[0] == '0' && _current_token->word[1] == 'x')
-					imm_val = std::stoi(_current_token->word, nullptr, 16);
+					imm_val = std::stoul(_current_token->word, nullptr, 16);
 				else
-					imm_val = std::stoi(_current_token->word);
+					imm_val = std::stoul(_current_token->word);
 
                 int32_t low{ imm_val & 0xFFF };
                 int32_t high(static_cast<uint32_t>(imm_val) >> 12);
 
-                if (-2048 <= imm_val && (imm_val) <= 2047) {
+                if (static_cast<uint32_t>(imm_val) < 4096) {
                     _program.emplace_back(
                         std::make_unique<Register_Instruction>(
                             Register_Instruction::REGISTER_INSTRUCTION_TYPE::ADD,
