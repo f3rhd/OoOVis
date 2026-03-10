@@ -8,7 +8,7 @@ namespace OoOVisual {
 				auto constexpr ARCHITECTURAL_REGISTER_AMOUNT{ 32 };
 				auto constexpr REGISTER_ALIAS_TABLE_SIZE{ 32 };
 				auto constexpr INVALID_PHYSICAL_REGISTER_ID{ PHYSICAL_REGISTER_FILE_SIZE };
-				auto constexpr RESERVATION_STATION_SIZE{14};
+				auto constexpr RESERVATION_STATION_SIZE{30};
 				auto constexpr NO_PRODUCER_TAG{ 0 };
 				auto constexpr FETCH_WIDTH{ 3 };
 				auto constexpr COMMIT_WIDTH{ 3 };
@@ -38,9 +38,23 @@ namespace OoOVisual {
 				auto constexpr EXECUTABLE_LOAD_DOES_NOT_EXIST{ 0xFFFFFFFFu};
 				// remember that no instruction will ever have a timestamp 0
 				auto constexpr TIME_ZERO{ 0u }; 
-				auto constexpr CORE_SCREEN_WIDTH{ 350u };
-				auto constexpr CORE_SCREEN_HEIGHT{ 260u };
+				auto constexpr CORE_SCREEN_WIDTH{ 350 };
+				auto constexpr CORE_SCREEN_HEIGHT{ 260 };
 				auto constexpr CORE_SCREEN_SIZE{ CORE_SCREEN_HEIGHT * CORE_SCREEN_WIDTH };
+				// Command registers for screen
+				auto constexpr CMD_TYPE_ADDR{ 0x0 };
+				// starting x coordinate
+				auto constexpr PARAM_X1_ADDR{ 0x4 };
+				// starting y coordinate
+				auto constexpr PARAM_Y1_ADDR{ 0x8 };
+				// ending x coordinate
+				auto constexpr PARAM_X2_ADDR{ 0xC };
+				// ending y coordinate
+				auto constexpr PARAM_Y2_ADDR{ 0x10 };
+				// color
+				auto constexpr PARAM_COL_ADDR{ 0x14 };
+				// start signal
+				auto constexpr START_ADDR{ 0x18 };
 		} // namespace Constants
 	} // namespace Core
 } // namespace OoOVis

@@ -1,5 +1,5 @@
 #include <Visualizer/DrawElementScreen.h>
-#include <Core/FrameBuffer/FrameBuffer.h>
+#include <Core/MMIO/ScreenMMIO.h>
 #include <imgui_impl_opengl3_loader.h>
 namespace OoOVisual
 {
@@ -44,9 +44,9 @@ namespace OoOVisual
 				GL_TEXTURE_2D, 0, 0, 0, 
 				Core::Constants::CORE_SCREEN_WIDTH, 
 				Core::Constants::CORE_SCREEN_HEIGHT, 
-				GL_RGBA,           
+				GL_RGBA,
 				GL_UNSIGNED_BYTE,  
-				Core::Frame_Buffer::buffer.data()
+				Core::Screen_MMIO::buffer().data()
 			);
             draw_list->AddImage(
                 (ImTextureID)(intptr_t)_texture_id,

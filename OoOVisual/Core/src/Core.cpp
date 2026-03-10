@@ -8,6 +8,7 @@
 #include <Core/RegisterManager/RegisterManager.h>
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/Constants/Constants.h>
+#include <Core/MMIO/ScreenMMIO.h>
 #include <chrono>
 #include <imgui_internal.h>
 
@@ -75,6 +76,7 @@ namespace OoOVisual
 			Execution_Unit_Load_Store::reset();
 			Execution_Stage::reset();
 			Register_Manager::reset();
+			Screen_MMIO::clear_screen();
 		}
 
 		void set_core_mode(CORE_MODE mode)

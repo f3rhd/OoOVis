@@ -242,7 +242,7 @@ namespace OoOVisual
 				ImVec2{ rob_to_reg_corner_x, reg_file_right_center.y },
 				reg_file_right_center
 			));
-			ImVec2 screen_pos{ reg_file_pos.x + reg_file_size.x + 30, reg_file_pos.y + reg_file_size.y };
+			ImVec2 screen_pos{ reg_file_pos.x + reg_file_size.x + 100, reg_file_pos.y };
 			ImVec2 screen_size{ Core::Constants::CORE_SCREEN_WIDTH, Core::Constants::CORE_SCREEN_HEIGHT }; 
 
 			_units.emplace_back(std::make_unique<Visualizer::Draw_Element_Screen>(
