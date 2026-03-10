@@ -3,7 +3,7 @@ namespace OoOVisual
 {
 	namespace Core
 	{
-		std::array<u32, Constants::CORE_SCREEN_SIZE> Screen_MMIO::_buffer{0xFFFFFFFF};
+		std::array<u32, Constants::CORE_SCREEN_SIZE> Screen_MMIO::_buffer{};
 		Screen_MMIO::CMD_TYPE	Screen_MMIO::_command_type;
 		i32		Screen_MMIO::_param_x1;
 		i32		Screen_MMIO::_param_y1;
