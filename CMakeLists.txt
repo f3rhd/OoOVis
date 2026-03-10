@@ -54,6 +54,7 @@ add_library(core STATIC
     OoOVisual/Visualizer/src/DrawElementReorderBuffer.cpp
     OoOVisual/Visualizer/src/DrawElementReservationStation.cpp
     OoOVisual/Visualizer/src/DrawElementWire.cpp
+    OoOVisual/Visualizer/src/DrawElementScreen.cpp
     OoOVisual/Visualizer/src/Scene.cpp
     OoOVisual/Visualizer/src/Utils.cpp
 )
