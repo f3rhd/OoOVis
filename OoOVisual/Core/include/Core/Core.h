@@ -13,8 +13,8 @@ namespace OoOVisual
 		bool init(int argc, char** argv);
 		void run();
 		float* tick_speed();
-		void reset();
 		void set_core_mode(CORE_MODE mode);
+		void reset();
 	}
 
 }

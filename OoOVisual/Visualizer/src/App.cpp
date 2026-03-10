@@ -67,7 +67,8 @@ namespace OoOVisual
 		void App::close() {
 			glfwSetWindowShouldClose(_window, 1);
 		}
-		void App::cleanup() {
+		void App::cleanup(Scene& scene) {
+			scene.clear();
 			ImGui_ImplOpenGL3_Shutdown();
 			ImGui_ImplGlfw_Shutdown();
 			ImGui::DestroyContext();

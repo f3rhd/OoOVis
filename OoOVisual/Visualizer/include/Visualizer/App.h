@@ -1,6 +1,7 @@
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <Visualizer/Scene.h>
 namespace OoOVisual
 {
 	namespace Visualizer
@@ -13,7 +14,7 @@ namespace OoOVisual
 			static void end_frame();   // The "Render" and "SwapBuffers" calls
 			static bool should_close();
 			static void  close();
-			static void cleanup();
+			static void cleanup(Scene& scene);
 			static ImVec2 window_size();
 
 		private:

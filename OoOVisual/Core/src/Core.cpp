@@ -36,6 +36,9 @@ namespace OoOVisual
 			Fetch_Group::group = (Fetch_Unit::fetch(feedback));
 		}
 
+		float* tick_speed() {
+			return &_tick_speed;
+		}
 		void run()
 		{
 			static auto _last_time{ std::chrono::high_resolution_clock::now()};
@@ -60,11 +63,6 @@ namespace OoOVisual
 				break;
 			}
 
-		}
-
-
-		float* tick_speed() {
-			return &_tick_speed;
 		}
 
 		void reset() {

@@ -10,6 +10,7 @@ namespace OoOVisual
 		struct Scene {
 			void init();
 			void play();
+			void clear();
 		private:
 			std::vector<std::unique_ptr<Draw_Element>> _units;
 			Camera									  _scene_camera{};
