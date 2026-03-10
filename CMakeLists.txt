@@ -39,6 +39,7 @@ add_library(core STATIC
     OoOVisual/Core/src/ReservationStation/ReservationStation.cpp
     OoOVisual/Core/src/ReservationStation/ReservationStationPool.cpp
     OoOVisual/Core/src/RegisterManager/RegisterManager.cpp
+    OoOVisual/Core/src/MMIO/ScreenMMIO.cpp
     OoOVisual/Core/src/Core.cpp
     OoOVisual/Frontend/src/Parser/Lookup.cpp
     OoOVisual/Frontend/src/Parser/Parser.cpp
