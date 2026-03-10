@@ -1,4 +1,5 @@
 #pragma  once
+#include <utility>
 namespace OoOVisual {
 	namespace Core {
 		namespace Constants {
@@ -7,7 +8,7 @@ namespace OoOVisual {
 				auto constexpr ARCHITECTURAL_REGISTER_AMOUNT{ 32 };
 				auto constexpr REGISTER_ALIAS_TABLE_SIZE{ 32 };
 				auto constexpr INVALID_PHYSICAL_REGISTER_ID{ PHYSICAL_REGISTER_FILE_SIZE };
-				auto constexpr RESERVATION_STATION_SIZE{14};
+				auto constexpr RESERVATION_STATION_SIZE{30};
 				auto constexpr NO_PRODUCER_TAG{ 0 };
 				auto constexpr FETCH_WIDTH{ 3 };
 				auto constexpr COMMIT_WIDTH{ 3 };
@@ -25,17 +26,35 @@ namespace OoOVisual {
 				auto constexpr MAGENTA{ "\033[35m" };
 				auto constexpr CYAN{ "\033[36m" };
 				auto constexpr MAX_IPS{ 60 };
-				unsigned int constexpr END_OF_TIME { 0xFFFFFFFF };
-				unsigned int constexpr EXECUTION_RESULT_STATION_DEALLOCATE_ONLY{ 1 << 1 };
-				unsigned int constexpr NOT_STORE{ 0xFFFFFFFF };
-				unsigned int constexpr EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD{ 1 << 2 };
-				unsigned int constexpr EXECUTION_RESULT_FORWARD_ONLY{ 1 << 3 };
-				unsigned int constexpr NOT_BRANCH_INSTRUCTION{ 0 };
-				unsigned int constexpr PREDICTED_TAKEN{ 1 << 1 };
-				unsigned int constexpr PREDICTED_NOT_TAKEN{ 1 << 2 };
-				unsigned int constexpr LOAD_DOES_NOT_USE_FORWARD_FROM_STORE{ 0xFFFFFFFF };
-				unsigned int constexpr EXECUTABLE_LOAD_DOES_NOT_EXIST{ 0xFFFFFFFF};
-				unsigned int constexpr TIME_ZERO{ 0 }; // remember that no instruction will ever have a timestamp 0
+				auto constexpr END_OF_TIME { 0xFFFFFFFFu };
+				auto constexpr EXECUTION_RESULT_STATION_DEALLOCATE_ONLY{ 1u << 1 };
+				auto constexpr NOT_STORE{ 0xFFFFFFFF };
+				auto constexpr EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD{ 1u << 2 };
+				auto constexpr EXECUTION_RESULT_FORWARD_ONLY{ 1u << 3 };
+				auto constexpr NOT_BRANCH_INSTRUCTION{ 0u };
+				auto constexpr PREDICTED_TAKEN{ 1u << 1 };
+				auto constexpr PREDICTED_NOT_TAKEN{ 1u << 2 };
+				auto constexpr LOAD_DOES_NOT_USE_FORWARD_FROM_STORE{ 0xFFFFFFFFu };
+				auto constexpr EXECUTABLE_LOAD_DOES_NOT_EXIST{ 0xFFFFFFFFu};
+				// remember that no instruction will ever have a timestamp 0
+				auto constexpr TIME_ZERO{ 0u }; 
+				auto constexpr CORE_SCREEN_WIDTH{ 350 };
+				auto constexpr CORE_SCREEN_HEIGHT{ 260 };
+				auto constexpr CORE_SCREEN_SIZE{ CORE_SCREEN_HEIGHT * CORE_SCREEN_WIDTH };
+				// Command registers for screen
+				auto constexpr CMD_TYPE_ADDR{ 0x0 };
+				// starting x coordinate
+				auto constexpr PARAM_X1_ADDR{ 0x4 };
+				// starting y coordinate
+				auto constexpr PARAM_Y1_ADDR{ 0x8 };
+				// ending x coordinate
+				auto constexpr PARAM_X2_ADDR{ 0xC };
+				// ending y coordinate
+				auto constexpr PARAM_Y2_ADDR{ 0x10 };
+				// color
+				auto constexpr PARAM_COL_ADDR{ 0x14 };
+				// start signal
+				auto constexpr START_ADDR{ 0x18 };
 		} // namespace Constants
 	} // namespace Core
 } // namespace OoOVis

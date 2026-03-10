@@ -7,3 +7,4 @@
 #include <Visualizer/DrawElementExecutionUnit.h>
 #include <Visualizer/DrawElementRegisterManager.h>
 #include <Visualizer/DrawElementWire.h>
+#include <Visualizer/DrawElementScreen.h>

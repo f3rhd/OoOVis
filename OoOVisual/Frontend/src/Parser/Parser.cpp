@@ -331,7 +331,7 @@ namespace OoOVisual {
                 imm = std::stoul(_current_token->word, nullptr, 16);
             else
                 imm = std::stoul(_current_token->word);
-            if (!(static_cast<uint32_t>(imm) < 1048576)) {
+            if (!(static_cast<uint32_t>(imm) >= 1048576)) {
                 std::cout << "\033[31m" << "Error(" << _current_token->row << "," << _current_token->column << ")\033[0m: " << "Token " << "'" << _current_token->word << "should live in 20 bit range." << "\n";               \
                 _successful_parse = false;
                 return;

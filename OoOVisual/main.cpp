@@ -15,5 +15,5 @@ int main(int argc, char** argv) {
 		scene.play();
 		Visualizer::App::end_frame();
 	}
-	Visualizer::App::cleanup();
+	Visualizer::App::cleanup(scene);
 }

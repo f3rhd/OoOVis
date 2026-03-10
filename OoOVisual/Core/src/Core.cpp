@@ -8,6 +8,7 @@
 #include <Core/RegisterManager/RegisterManager.h>
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/Constants/Constants.h>
+#include <Core/MMIO/ScreenMMIO.h>
 #include <chrono>
 #include <imgui_internal.h>
 
@@ -36,6 +37,9 @@ namespace OoOVisual
 			Fetch_Group::group = (Fetch_Unit::fetch(feedback));
 		}
 
+		float* tick_speed() {
+			return &_tick_speed;
+		}
 		void run()
 		{
 			static auto _last_time{ std::chrono::high_resolution_clock::now()};
@@ -62,11 +66,6 @@ namespace OoOVisual
 
 		}
 
-
-		float* tick_speed() {
-			return &_tick_speed;
-		}
-
 		void reset() {
 
 			Reorder_Buffer::reset();
@@ -77,6 +76,7 @@ namespace OoOVisual
 			Execution_Unit_Load_Store::reset();
 			Execution_Stage::reset();
 			Register_Manager::reset();
+			Screen_MMIO::clear_screen();
 		}
 
 		void set_core_mode(CORE_MODE mode)

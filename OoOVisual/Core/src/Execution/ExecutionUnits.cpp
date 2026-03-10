@@ -5,6 +5,7 @@
 #include <Core/Fetch/Fetch.h>
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/Constants/Constants.h>
+#include <Core/MMIO/ScreenMMIO.h>
 #include <iostream>
 #include <format>
 #include <ranges>
@@ -319,7 +320,8 @@ namespace OoOVisual
 #endif
 			for (size_t i{}; i < _store_buffer.size(); i++) {
 				if (_store_buffer[i].store_id == store_id) {
-					DCache::write(_store_buffer[i].mode,_store_buffer[i].calculated_address, _store_buffer[i].register_data);
+					if(!(Screen_MMIO::handle_write(_store_buffer[i].calculated_address, _store_buffer[i].register_data.signed_)))
+						DCache::write(_store_buffer[i].mode,_store_buffer[i].calculated_address, _store_buffer[i].register_data);
 #ifdef DEBUG_PRINTS
 					commited_stores.emplace_back(i);
 #endif
