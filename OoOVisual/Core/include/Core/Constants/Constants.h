@@ -7,9 +7,9 @@ namespace OoOVisual {
 				auto constexpr ARCHITECTURAL_REGISTER_AMOUNT{ 32 };
 				auto constexpr REGISTER_ALIAS_TABLE_SIZE{ 32 };
 				auto constexpr INVALID_PHYSICAL_REGISTER_ID{ PHYSICAL_REGISTER_FILE_SIZE };
-				auto constexpr RESERVATION_STATION_SIZE{14};
-				auto constexpr LOAD_BUFFER_SIZE{ 6 };
-				auto constexpr STORE_BUFFER_SIZE{ 6 };
+				auto constexpr RESERVATION_STATION_SIZE{30};
+				auto constexpr LOAD_BUFFER_SIZE{ 15 };
+				auto constexpr STORE_BUFFER_SIZE{ 15 };
 				auto constexpr NO_PRODUCER_TAG{ 0 };
 				auto constexpr FETCH_WIDTH{ 3 };
 				auto constexpr COMMIT_WIDTH{ 3 };
@@ -17,6 +17,7 @@ namespace OoOVisual {
 				auto constexpr RESERVATION_STATION_AMOUNT{ 7 };
 				auto constexpr EXECUTION_RESULT_INVALID{ 0 };
 				auto constexpr UNIT_TIME{ 10ull };
+#ifdef DEBUG_RPINTS
 				auto constexpr RESET{ "\033[0m" };
 				auto constexpr RED{ "\033[31m" };
 				auto constexpr GREEN{ "\033[32m" };
@@ -24,6 +25,7 @@ namespace OoOVisual {
 				auto constexpr BLUE{ "\033[34m" };
 				auto constexpr MAGENTA{ "\033[35m" };
 				auto constexpr CYAN{ "\033[36m" };
+#endif
 				auto constexpr MAX_IPS{ 60 };
 				auto constexpr END_OF_TIME { 0xFFFFFFFFu };
 				auto constexpr EXECUTION_RESULT_STATION_DEALLOCATE_ONLY{ 1u << 1 };
