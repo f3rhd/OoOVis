@@ -107,7 +107,7 @@ namespace OoOVisual
 			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH:
 				result.produced_data.signed_ = source_entry->src1.signed_ * source_entry->src2.signed_;
 				break;
-				case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_SIGNED_UNSIGNED: {
+			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_SIGNED_UNSIGNED: {
                 // MULHSU: src1 is signed, src2 is unsigned
                 // We cast to 64-bit to ensure we don't lose the overflow
 				int64_t full_product(static_cast<int64_t>(source_entry->src1.signed_) * static_cast<uint64_t>(source_entry->src2.unsigned_));
@@ -143,6 +143,7 @@ namespace OoOVisual
 			case EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_UNSIGNED:
 				result.produced_data.unsigned_ = source_entry->src1.unsigned_ / source_entry->src2.unsigned_;
 				break;
+
 			case EXECUTION_UNIT_MODE::DIVIDER_REMAINDER_SIGNED:
 				result.produced_data.signed_ = source_entry->src1.signed_ % source_entry->src2.signed_;
 				break;
@@ -179,7 +180,7 @@ namespace OoOVisual
 					(source_entry->reorder_buffer_entry_index), 
 					register_data, 
 					address,
-					Constants::NO_PRODUCER_TAG,
+					source_entry->self_tag,
 					source_entry->instruction_address,
 					source_entry->store_id
 				);

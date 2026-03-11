@@ -49,7 +49,7 @@ namespace OoOVisual
 				u32			  producer_tag; 
 				//memory_addr_t instruction_address;
 				EXECUTION_UNIT_MODE mode{EXECUTION_UNIT_MODE::UNKNOWN};
-				/* store_buffer_entry : store_id is used by reorder buffer to tell the store to write to the memory
+				/*  store_buffer_entry : store_id is used by reorder buffer to tell the store to write to the memory
 					load_buffer_entry : last store id
 				*/
 				u32 store_id;

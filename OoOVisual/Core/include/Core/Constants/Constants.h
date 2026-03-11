@@ -8,12 +8,12 @@ namespace OoOVisual {
 				auto constexpr ARCHITECTURAL_REGISTER_AMOUNT{ 32 };
 				auto constexpr REGISTER_ALIAS_TABLE_SIZE{ 32 };
 				auto constexpr INVALID_PHYSICAL_REGISTER_ID{ PHYSICAL_REGISTER_FILE_SIZE };
-				auto constexpr RESERVATION_STATION_SIZE{30};
+				auto constexpr RESERVATION_STATION_SIZE{15};
 				auto constexpr NO_PRODUCER_TAG{ 0 };
 				auto constexpr FETCH_WIDTH{ 3 };
 				auto constexpr COMMIT_WIDTH{ 3 };
-				auto constexpr LOAD_BUFFER_SIZE{ 6 };
-				auto constexpr STORE_BUFFER_SIZE{ 6 };
+				auto constexpr LOAD_BUFFER_SIZE{ 20 };
+				auto constexpr STORE_BUFFER_SIZE{ 20 };
 				auto constexpr BRANCH_SHIFT_REGISTER_SIZE{ 8 };
 				auto constexpr RESERVATION_STATION_AMOUNT{ 7 };
 				auto constexpr EXECUTION_RESULT_INVALID{ 0 };
@@ -55,6 +55,9 @@ namespace OoOVisual {
 				auto constexpr PARAM_COL_ADDR{ 0x14 };
 				// start signal
 				auto constexpr START_ADDR{ 0x18 };
+				// could be used for drawing triangles 
+				auto constexpr PARAM_X3_ADDR{ 0x1C };
+				auto constexpr PARAM_Y3_ADDR{ 0x20 };
 		} // namespace Constants
 	} // namespace Core
 } // namespace OoOVis
