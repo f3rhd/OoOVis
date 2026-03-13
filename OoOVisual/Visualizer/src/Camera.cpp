@@ -15,8 +15,6 @@ namespace OoOVisual
 
 		void Camera::update()
 		{
-			ImGuiIO& io{ ImGui::GetIO() };
-
 
 			float move_speed{ 5.0f }; 
 			if (ImGui::IsKeyDown(ImGuiKey_W)) translation.y += move_speed;

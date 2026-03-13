@@ -773,7 +773,7 @@ main_loop:
     rem s0, s0, t0
 
 # Frame delay
-    li t0, 10
+    li t0, 2
 frame_delay:
     addi t0, t0, -1
     bnez t0, frame_delay

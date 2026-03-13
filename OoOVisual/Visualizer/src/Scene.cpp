@@ -9,7 +9,6 @@ namespace OoOVisual
 
 		void Scene::init() {
 			float screen_width{ 1400 };
-			float screen_height{ 900 };
 			float center_x{ screen_width / 2.0f };
 
 			// top section: frontend pipeline (vertical spine) 

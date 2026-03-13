@@ -161,29 +161,37 @@ namespace OoOVisual
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_store_buffer{};
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_load_buffer{};
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_speculative_load_buffer{};
-		Execution_Result Execution_Unit_Load_Store::buffer_allocation_phase(const Reservation_Station_Entry* source_entry) {
+		Execution_Result Execution_Unit_Load_Store::address_generation_phase(const Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
 				return { Constants::EXECUTION_RESULT_INVALID };
 			memory_addr_t address{}; ;
 			data_t        register_data{}; ;
 			if (source_entry->destination_register_id_as_ofsset) {
-				if (store_buffer_is_full())
-					return { Constants::EXECUTION_RESULT_INVALID };
-				// allocate  the entry in the store buffer
 				address = source_entry->src1.signed_ + static_cast<offset_t>(source_entry->destination_register_id);
 				register_data = source_entry->src2 ;
-				_store_buffer.emplace_back(
-					source_entry->mode,
-					source_entry->timestamp,
-					Constants::INVALID_PHYSICAL_REGISTER_ID,
-					(source_entry->reorder_buffer_entry_index), 
-					register_data, 
-					address,
-					source_entry->self_tag,
-					source_entry->instruction_address,
-					source_entry->store_id
-				);
+				/* if a store instruction is issued to a reservation station an entry in store buffer is allocated for it during dispatch stage*/
+				auto store_it { 
+					std::find_if(
+						_store_buffer.begin(),
+						_store_buffer.end(),
+						[&](const Buffer_Entry& entry) {
+							return entry.reorder_buffer_entry_index == source_entry->reorder_buffer_entry_index;
+						}
+					)
+				};
+				if (store_it == _store_buffer.end()) {
+					std::cout << "STORE GIRL THIS SHOULDNT HAPPEN\n";
+					exit(1); // @VisitLater :  better termination
+				}
+				store_it->mode = source_entry->mode;
+				store_it->timestamp = source_entry->timestamp;
+				store_it->register_id = Constants::INVALID_PHYSICAL_REGISTER_ID;
+				store_it->register_data = register_data;
+				store_it->calculated_address = address;
+				store_it->producer_tag = source_entry->self_tag;
+				store_it->instruction_address = source_entry->instruction_address;
+				store_it->store_id = source_entry->store_id;
 #ifdef DEBUG_PRINTS
 				std::cout << std::format("Created entry in the store buffer: timestamp:{}, address:{}\n", source_entry->timestamp, address);
 #endif
@@ -191,62 +199,71 @@ namespace OoOVisual
 				Reorder_Buffer::set_ready(static_cast<u32>(source_entry->reorder_buffer_entry_index));
 				return {Constants::EXECUTION_RESULT_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 			}
-			if (!load_buffer_is_full()) {
-				address = source_entry->src1.signed_ + source_entry->src2.signed_;
-				_load_buffer.emplace_back(
-					source_entry->mode,
-					source_entry->timestamp,
-					source_entry->destination_register_id,
-					source_entry->reorder_buffer_entry_index,
-					register_data,
-					address,
-					source_entry->self_tag,
-					source_entry->instruction_address,
-					source_entry->store_id
-				);
-#ifdef DEBUG_PRINTS
-				std::cout << std::format("Created entry in the load buffer buffer: timestamp:{}, destination_reg:{}, address:{}\n", source_entry->timestamp, source_entry->destination_register_id, address);
-#endif
-				return {Constants::EXECUTION_RESULT_INVALID,0,source_entry->self_tag };
+			address = source_entry->src1.signed_ + source_entry->src2.signed_;
+			auto load_it {
+				std::find_if(
+					_load_buffer.begin(),
+					_load_buffer.end(),
+					[&](const Buffer_Entry& entry) {
+						return entry.reorder_buffer_entry_index == source_entry->reorder_buffer_entry_index;
+					}
+				)
+			};
+			if (load_it == _load_buffer.end()) {
+				std::cout << "LOAD GIRL THIS SHOULDNT HAPPEN\n";
+				exit(1); // @VisitLater :  better termination
 			}
-			return { Constants::EXECUTION_RESULT_INVALID };
+			load_it->mode = source_entry->mode;
+			load_it->timestamp = source_entry->timestamp;
+			load_it->register_id = source_entry->destination_register_id;
+			load_it->register_data = register_data;
+			load_it->calculated_address = address;
+			load_it->producer_tag = source_entry->self_tag;
+			load_it->instruction_address = source_entry->instruction_address;
+			load_it->store_id = source_entry->store_id;
+#ifdef DEBUG_PRINTS
+			std::cout << std::format("Created entry in the load buffer buffer: timestamp:{}, destination_reg:{}, address:{}\n", source_entry->timestamp, source_entry->destination_register_id, address);
+#endif
+			return {Constants::EXECUTION_RESULT_INVALID,0,source_entry->self_tag };
 		}
 
 		std::pair<size_t,size_t> Execution_Unit_Load_Store::find_load_that_is_executable() {
-			if (_load_buffer.empty()) return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
+			if (
+				std::all_of(
+				_load_buffer.begin(),
+				_load_buffer.end(),
+				[](const Buffer_Entry& entry) {
+					return entry.mode == EXECUTION_UNIT_MODE::UNKNOWN;
+				}
+				)
+			)
+			{
+				return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
+			}
+
 			// maybe store buffer is empty?
-			if (_store_buffer.empty()) {
+			if (
+				std::all_of(
+				_store_buffer.begin(),
+				_store_buffer.end(),
+				[](const Buffer_Entry& entry) {
+					return entry.mode == EXECUTION_UNIT_MODE::UNKNOWN;
+				}
+				)
+			) {
 				return { 0,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE }; // select the first entry in the load buffer ( implied by 0 ) 
 			}
-			// maybe we can bypass?
-			size_t bypassable_load_entry_index{};
-			bool can_bypass{ false };
-			for (size_t i{ 0 }; i < _load_buffer.size(); i++) {
-				for (const auto& entry : _store_buffer) {
-					if (_load_buffer.at(bypassable_load_entry_index).calculated_address != entry.calculated_address)
-						can_bypass = true;
-					else
-						can_bypass = false;
-				}
-				if (can_bypass) {
-					bypassable_load_entry_index = i;
-					break;
-				}
-
-			}
-			if (can_bypass)
-				return { bypassable_load_entry_index,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
-
 			// maybe we can forward anything?
-			size_t forwaradable_load_entry_index{Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST};
 			size_t store_buffer_entry_index_that_is_forwarded_from{Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE};
-			// forward from the latest store instruction that writes to the same address
 
+			// forward from the latest store instruction that writes to the same address
 			u32 max_store_id{};
 			for (size_t i{}; i < _load_buffer.size(); i++) {
 				const auto& load_buffer_entry = _load_buffer.at(i);
+				if(load_buffer_entry.mode == EXECUTION_UNIT_MODE::UNKNOWN) continue; // address is not generated yet
 				for (size_t j{}; j < _store_buffer.size(); j++) {
 					const auto& store_buffer_entry = _store_buffer.at(j);
+					if(store_buffer_entry.mode == EXECUTION_UNIT_MODE::UNKNOWN) continue; // address is not generated yet
 					// we dont care about the stores that came after us 
 					if (store_buffer_entry.store_id > load_buffer_entry.store_id) {
 						continue;
@@ -262,6 +279,28 @@ namespace OoOVisual
 					return { i,store_buffer_entry_index_that_is_forwarded_from };
 				}
 			}
+
+			// maybe we can bypass?
+			size_t bypassable_load_entry_index{};
+			bool can_bypass{ false };
+			for (size_t i{ 0 }; i < _load_buffer.size(); i++) {
+				const Buffer_Entry& load_entry = _load_buffer.at(i);
+				if(load_entry.mode == EXECUTION_UNIT_MODE::UNKNOWN) continue; // means that address for this is not generated yet
+				for (const auto& store_entry : _store_buffer) {
+					if (load_entry.calculated_address != store_entry.calculated_address || store_entry.mode == EXECUTION_UNIT_MODE::UNKNOWN)
+						can_bypass = true;
+					else
+						can_bypass = false;
+				}
+				if (can_bypass) {
+					bypassable_load_entry_index = i;
+					break;
+				}
+
+			}
+			if (can_bypass)
+				return { bypassable_load_entry_index,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
+
 			return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
 		}
 		Execution_Result Execution_Unit_Load_Store::execute_load() {
@@ -315,14 +354,15 @@ namespace OoOVisual
 			return result;
 		}
 
-		void Execution_Unit_Load_Store::execute_store(u32 store_id) {
+		void Execution_Unit_Load_Store::execute_store(u64 head) {
 #ifdef DEBUG_PRINTS
 			std::vector<size_t> commited_stores{};
 #endif
 			for (size_t i{}; i < _store_buffer.size(); i++) {
-				if (_store_buffer[i].store_id == store_id) {
-					if(!(Screen_MMIO::handle_write(_store_buffer[i].calculated_address, _store_buffer[i].register_data.signed_)))
-						DCache::write(_store_buffer[i].mode,_store_buffer[i].calculated_address, _store_buffer[i].register_data);
+				const auto& store_entry{ _store_buffer[i] };
+				if (store_entry.mode != EXECUTION_UNIT_MODE::UNKNOWN && store_entry.reorder_buffer_entry_index == head) {
+					if(!(Screen_MMIO::handle_write(store_entry.calculated_address, store_entry.register_data.signed_)))
+						DCache::write(store_entry.mode,store_entry.calculated_address, store_entry.register_data);
 #ifdef DEBUG_PRINTS
 					commited_stores.emplace_back(i);
 #endif
@@ -333,7 +373,7 @@ namespace OoOVisual
 				std::cout << std::format("Store instruction timestamp : {} wrote its data to the memory.\n", _store_buffer[j].timestamp);
 			}
 #endif
-			std::erase_if(_store_buffer, [&](const auto& a) {return a.store_id == store_id; });
+			std::erase_if(_store_buffer, [&](const auto& a) {return a.reorder_buffer_entry_index == head; });
 		}
 
 		time_t Execution_Unit_Load_Store::flush_mispredicted(time_t timestamp) {
@@ -382,20 +422,26 @@ namespace OoOVisual
 		}
 
 
-		void Execution_Unit_Load_Store::remove_speculated_load(u64 reorder_buffer_entry_index)
-		{
+		void Execution_Unit_Load_Store::allocate_store_buffer_entry(u64 reorder_buffer_entry_index) {
+			_store_buffer.emplace_back().reorder_buffer_entry_index = reorder_buffer_entry_index;
+		}
+		void Execution_Unit_Load_Store::allocate_load_buffer_entry(u64 reorder_buffer_entry_index) {
+			_load_buffer.emplace_back().reorder_buffer_entry_index = reorder_buffer_entry_index;
+		}
+
+		void Execution_Unit_Load_Store::remove_speculated_load(u64 reorder_buffer_entry_index) {
 			std::erase_if(
 				_speculative_load_buffer,
 				[&](const Buffer_Entry& entry) {return entry.reorder_buffer_entry_index == reorder_buffer_entry_index;}
 			);
 		}
-        Execution_Result Execution_Unit_Load_Store::resolve_speculated_loads(u32 store_id_that_is_going_to_be_architecturally_completed) {
+        Execution_Result Execution_Unit_Load_Store::resolve_speculated_loads(u64 head_that_points_to_rob) {
 			bool misspeculated{ false };
 			const auto& store_buffer_entry{
 				std::ranges::find_if(
 					_store_buffer,
 					[&](const auto& entry) {
-						return entry.store_id == store_id_that_is_going_to_be_architecturally_completed;
+						return entry.store_id == head_that_points_to_rob;
 					}
 				)
 			};

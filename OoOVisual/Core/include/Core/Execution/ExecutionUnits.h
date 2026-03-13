@@ -36,25 +36,26 @@ namespace OoOVisual
 		public:
 			struct Buffer_Entry {
 				// This field is needed for flushing upon misprediction
-				u32			  timestamp; 
+				u32			  timestamp{};
 				// load uses this to write  the value to the register file
-				reg_id_t      register_id; 
+				reg_id_t      register_id{ Constants::INVALID_PHYSICAL_REGISTER_ID };
 				// load  uses this to set the rob entry free
-				size_t	      reorder_buffer_entry_index; 
+				size_t	      reorder_buffer_entry_index{ Constants::REORDER_BUFFER_SIZE + 1 };
 				// this is  used by store  
-				data_t        register_data; 
+				data_t        register_data{};
 				// this is also both used by store and load
-				memory_addr_t calculated_address; 
+				memory_addr_t calculated_address{};
 				// load uses this to broadcast the tag to the common data bus for forwarding logic
-				u32			  producer_tag; 
+				u32			  producer_tag{ Constants::NO_PRODUCER_TAG };
 				//memory_addr_t instruction_address;
 				EXECUTION_UNIT_MODE mode{EXECUTION_UNIT_MODE::UNKNOWN};
 				/*  store_buffer_entry : store_id is used by reorder buffer to tell the store to write to the memory
 					load_buffer_entry : last store id
 				*/
-				u32 store_id;
-				/* instruction address is used to recover from the misspeculation */
-				memory_addr_t  instruction_address;
+				u32 store_id{};
+				/* instruction address is used to recover from load misspeculation */
+				memory_addr_t  instruction_address = 0;
+				Buffer_Entry() = default;
 				Buffer_Entry(
 					EXECUTION_UNIT_MODE mode_,
 					u32 id_,
@@ -76,17 +77,19 @@ namespace OoOVisual
 					store_id(store_id_)
 				{}
 			};
-			static Execution_Result					buffer_allocation_phase(const Reservation_Station_Entry* source_entry);
+			static Execution_Result					address_generation_phase(const Reservation_Station_Entry* source_entry);
 			static Execution_Result					execute_load();
-			static void								execute_store(u32 store_id);
+			static void								execute_store(u64 head);
 			static time_t							flush_mispredicted(time_t timestamp);
 			static bool								store_buffer_is_full() { return _store_buffer.size() >= Constants::STORE_BUFFER_SIZE; }
 			static bool								load_buffer_is_full() { return _load_buffer.size() >= Constants::LOAD_BUFFER_SIZE; }
 			static const std::vector<Buffer_Entry>& store_buffer() { return _store_buffer; } // used by visualizer
 			static const std::vector<Buffer_Entry>& load_buffer() { return _load_buffer; } // used by visualizer
 			static void							    reset();
+			static void								allocate_store_buffer_entry(u64 reorder_buffer_entry_index);
+			static void								allocate_load_buffer_entry(u64 reorder_buffer_entry_index);
 			static void 						    remove_speculated_load(u64 reorder_buffer_entry_index);
-			static Execution_Result 				resolve_speculated_loads(u32 store_id_that_is_going_to_be_architecturally_completed);
+			static Execution_Result 				resolve_speculated_loads(u64 head_that_points_to_store);
 		private:
 			static std::pair<size_t,size_t>		find_load_that_is_executable(); // .first stands for executable load if it can be executed by forwarding .second will hold the store buffer entry index that is being forwarded from
 		private:

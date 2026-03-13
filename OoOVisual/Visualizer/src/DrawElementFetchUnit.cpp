@@ -38,8 +38,6 @@ namespace OoOVisual
 						const memory_addr_t current_pc{ Core::Fetch_Unit::program_counter() };
 
 						if (follow_pc) {
-							const auto& stream{ Core::Fetch_Unit::instruction_stream() };
-							const memory_addr_t current_pc{ Core::Fetch_Unit::program_counter() };
 
 							int pc_row_index{ -1 };
 							for (size_t i{ 0 }; i < stream.size(); ++i) {

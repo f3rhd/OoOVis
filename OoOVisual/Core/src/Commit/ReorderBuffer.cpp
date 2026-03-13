@@ -74,8 +74,8 @@ namespace OoOVisual
 					break;
 				}
 				case FrontEnd::FLOW_TYPE::STORE: {
-					Execution_Unit_Load_Store::resolve_speculated_loads(dynamic_cast<Store_Reorder_Buffer_Entry*>(entry)->store_id);
-					Execution_Unit_Load_Store::execute_store(dynamic_cast<Store_Reorder_Buffer_Entry*>(entry)->store_id);
+					Execution_Unit_Load_Store::resolve_speculated_loads(_head);
+					Execution_Unit_Load_Store::execute_store(_head);
 					_buffer[_head].reset();
 					_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
 					break;
@@ -144,9 +144,9 @@ namespace OoOVisual
 				branch_entry->mispredicted = was_misprediction;
 				branch_entry->flush_timestamp_boundary = flush_boundary;
 			}
-			else if (auto* branch_entry = dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(_buffer[target].get())) {
-				branch_entry->flush_timestamp_boundary = flush_boundary;
-				branch_entry->mispredicted = was_misprediction;
+			else if (auto* unconditional_branch_entry = dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(_buffer[target].get())) {
+				unconditional_branch_entry->flush_timestamp_boundary = flush_boundary;
+				unconditional_branch_entry->mispredicted = was_misprediction;
 			}
 			else if (auto* load_entry = dynamic_cast<Load_Reorder_Buffer_Entry*>(_buffer[target].get())) {
 				load_entry->flush_timestamp_boundary = flush_boundary;

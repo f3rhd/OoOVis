@@ -40,16 +40,7 @@ namespace OoOVisual
 				if (!best || e.timestamp < best->timestamp)
 					best = &e;
 			}
-            if (best && best->ready && !best->issued_to_load_buffer) {
-                if (_id == RESERVATION_STATION_ID::LOAD_STORE) {
-                    if (!best->destination_register_id_as_ofsset) { // it is a load instruction
-                        if (Execution_Unit_Load_Store::load_buffer_is_full())
-                            return nullptr;
-                        best->issued_to_load_buffer = true;
-                        return best;
-                    }
-                    return Execution_Unit_Load_Store::store_buffer_is_full() ? nullptr : best;
-                }
+            if (best && best->ready) {
 				return best;
             }
             return nullptr;
