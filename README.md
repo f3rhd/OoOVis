@@ -13,7 +13,7 @@ It models modern superscalar mechanisms such as:
 * Branch Prediction & Recovery
 * Load/Store Unit
 
-The project’s goal is to make dynamic scheduling, speculative execution, and pipeline behavior observable in real time, providing clear insights into microarchitectural operation.
+The project's goal is to make dynamic scheduling, speculative execution, and pipeline behavior observable in real time, providing clear insights into microarchitectural operation.
 
 ---
 
@@ -161,7 +161,27 @@ OoOVisual/
 
 ---
 
-## 8. Purpose
+## 8. MMIO Register Reference
+
+The simulated CPU exposes a software GPU via memory-mapped I/O. Writing to these addresses issues graphics commands.
+
+| Address | Name       | Description                                                   |
+|---------|------------|---------------------------------------------------------------|
+| `0x00`  | `CMD_TYPE` | Command type: `1`=FILL_RECT, `2`=LINE, `3`=RECT, `4`=TRIANGLE, `5`=FILL_TRIANGLE     |
+| `0x04`  | `X1`       | Start X coordinate (or triangle point 1 X)                    |
+| `0x08`  | `Y1`       | Start Y coordinate (or triangle point 1 Y)                    |
+| `0x0C`  | `X2`       | End X coordinate (or triangle point 2 X)                      |
+| `0x10`  | `Y2`       | End Y coordinate (or triangle point 2 Y)                      |
+| `0x14`  | `COLOR`    | Draw color, packed as `0xRRGGBBAA`                            |
+| `0x18`  | `START`    | Write `1` to execute the current command                      |
+| `0x1C`  | `X3`       | Triangle point 3 X (`CMD_TYPE` = `4` or `5` only)                    |
+| `0x20`  | `Y3`       | Triangle point 3 Y (`CMD_TYPE` = `4` or `5` only)                    |
+
+To issue a command, write all parameter registers first, then write `1` to `START`. The GPU executes synchronously on the `START` write.
+
+---
+
+## 9. Purpose
 
 OoOVisual is intended for:
 
@@ -172,6 +192,6 @@ OoOVisual is intended for:
 
 ---
 
-## 9. License
+## 10. License
 
 This project is licensed under the MIT License.
