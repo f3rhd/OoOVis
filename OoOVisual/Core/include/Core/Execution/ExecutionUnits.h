@@ -77,17 +77,17 @@ namespace OoOVisual
 					store_id(store_id_)
 				{}
 			};
-			static Execution_Result					address_generation_phase(const Reservation_Station_Entry* source_entry);
+			static Execution_Result					address_generation_phase(Reservation_Station_Entry* source_entry);
 			static Execution_Result					execute_load();
 			static void								execute_store(u64 head);
-			static time_t							flush_mispredicted(time_t timestamp);
 			static bool								store_buffer_is_full() { return _store_buffer.size() >= Constants::STORE_BUFFER_SIZE; }
 			static bool								load_buffer_is_full() { return _load_buffer.size() >= Constants::LOAD_BUFFER_SIZE; }
 			static const std::vector<Buffer_Entry>& store_buffer() { return _store_buffer; } // used by visualizer
 			static const std::vector<Buffer_Entry>& load_buffer() { return _load_buffer; } // used by visualizer
 			static void							    reset();
-			static void								allocate_store_buffer_entry(u64 reorder_buffer_entry_index);
-			static void								allocate_load_buffer_entry(u64 reorder_buffer_entry_index);
+			static Buffer_Entry*					allocate_store_buffer_entry();
+			static Buffer_Entry*					allocate_load_buffer_entry();
+			static time_t							flush_mispredicted(time_t timestamp);
 			static void 						    remove_speculated_load(u64 reorder_buffer_entry_index);
 			static Execution_Result 				resolve_speculated_loads(u64 head_that_points_to_store);
 		private:

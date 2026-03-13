@@ -41,6 +41,10 @@ namespace OoOVisual
 			bool   busy = false;
 			/* boolean to indicate that the instruction uses destination register field as offset */
 			bool   destination_register_id_as_ofsset = false;
+			/* when a load address is generated  flag will turn true
+				so we dont try to address generate twice
+			*/
+			bool generated_addrress_for_load = false;
 			/* execution unit mode */
 			EXECUTION_UNIT_MODE mode = EXECUTION_UNIT_MODE::UNKNOWN;
 		};

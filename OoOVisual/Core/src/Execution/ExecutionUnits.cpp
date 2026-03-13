@@ -161,7 +161,7 @@ namespace OoOVisual
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_store_buffer{};
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_load_buffer{};
 		std::vector<Execution_Unit_Load_Store::Buffer_Entry> Execution_Unit_Load_Store::_speculative_load_buffer{};
-		Execution_Result Execution_Unit_Load_Store::address_generation_phase(const Reservation_Station_Entry* source_entry) {
+		Execution_Result Execution_Unit_Load_Store::address_generation_phase(Reservation_Station_Entry* source_entry) {
 
 			if (!source_entry)
 				return { Constants::EXECUTION_RESULT_INVALID };
@@ -199,6 +199,8 @@ namespace OoOVisual
 				Reorder_Buffer::set_ready(static_cast<u32>(source_entry->reorder_buffer_entry_index));
 				return {Constants::EXECUTION_RESULT_STATION_DEALLOCATE_ONLY,0,source_entry->self_tag };
 			}
+			if(source_entry->generated_addrress_for_load)
+				return { Constants::EXECUTION_RESULT_INVALID };
 			address = source_entry->src1.signed_ + source_entry->src2.signed_;
 			auto load_it {
 				std::find_if(
@@ -221,6 +223,7 @@ namespace OoOVisual
 			load_it->producer_tag = source_entry->self_tag;
 			load_it->instruction_address = source_entry->instruction_address;
 			load_it->store_id = source_entry->store_id;
+			source_entry->generated_addrress_for_load = true;
 #ifdef DEBUG_PRINTS
 			std::cout << std::format("Created entry in the load buffer buffer: timestamp:{}, destination_reg:{}, address:{}\n", source_entry->timestamp, source_entry->destination_register_id, address);
 #endif
@@ -251,7 +254,16 @@ namespace OoOVisual
 				}
 				)
 			) {
-				return { 0,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE }; // select the first entry in the load buffer ( implied by 0 ) 
+				auto it{
+					std::find_if(
+						_load_buffer.begin(),
+						_load_buffer.end(),
+						[](const Buffer_Entry& entry) {
+							return entry.mode != EXECUTION_UNIT_MODE::UNKNOWN;
+						}
+					)
+				};
+				return { it-_load_buffer.begin(),Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE};		
 			}
 			// maybe we can forward anything?
 			size_t store_buffer_entry_index_that_is_forwarded_from{Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE};
@@ -422,11 +434,15 @@ namespace OoOVisual
 		}
 
 
-		void Execution_Unit_Load_Store::allocate_store_buffer_entry(u64 reorder_buffer_entry_index) {
-			_store_buffer.emplace_back().reorder_buffer_entry_index = reorder_buffer_entry_index;
+
+		Execution_Unit_Load_Store::Buffer_Entry* Execution_Unit_Load_Store::allocate_store_buffer_entry()
+		{
+			return &_store_buffer.emplace_back();
 		}
-		void Execution_Unit_Load_Store::allocate_load_buffer_entry(u64 reorder_buffer_entry_index) {
-			_load_buffer.emplace_back().reorder_buffer_entry_index = reorder_buffer_entry_index;
+
+		Execution_Unit_Load_Store::Buffer_Entry* Execution_Unit_Load_Store::allocate_load_buffer_entry()
+		{
+			return &_load_buffer.emplace_back();
 		}
 
 		void Execution_Unit_Load_Store::remove_speculated_load(u64 reorder_buffer_entry_index) {
@@ -441,12 +457,11 @@ namespace OoOVisual
 				std::ranges::find_if(
 					_store_buffer,
 					[&](const auto& entry) {
-						return entry.store_id == head_that_points_to_rob;
+						return entry.reorder_buffer_entry_index == head_that_points_to_rob && entry.mode != EXECUTION_UNIT_MODE::UNKNOWN;
 					}
 				)
 			};
 			std::vector<const Buffer_Entry*> misspeculated_loads;
-			misspeculated_loads.reserve(_speculative_load_buffer.size());
 			for (const auto& speculated_load : _speculative_load_buffer) {
 				// resolving of the speculated instruction is done by the store instructions that precede the speculated store instruction
 				if(store_buffer_entry->store_id > speculated_load.store_id) 
@@ -485,7 +500,6 @@ namespace OoOVisual
 				Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
 				Fetch_Unit::stall();
 			}
-			misspeculated_loads.shrink_to_fit();
 			return { Constants::EXECUTION_RESULT_INVALID, {},Constants::NO_PRODUCER_TAG, misspeculated };
         }
 		Execution_Result Execution_Unit_Branch::execute(const Reservation_Station_Entry* source_entry) {
@@ -572,7 +586,10 @@ namespace OoOVisual
 			 // misprediction recovery
 
 #ifdef DEBUG_PRINTS
-			std::cout << Constants::RED << "Instructions[ " << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp <<  " was mispredicted\n" << Constants::RESET;
+			std::cout << Constants::RED << "Instructions[" << source_entry->instruction_address << "] timestamp : " << source_entry->timestamp << " was mispredicted\n" 
+				<< std::format("Prediction : {}, Actual : {} ",prediction,actual_taken) <<
+				"Setting PC to : " << target_address << "\n" <<
+				Constants::RESET;
 #endif
 			Fetch_Group::group = std::vector<Fetch_Element>(Constants::FETCH_WIDTH);
 			if (actual_taken == true && prediction == false) {

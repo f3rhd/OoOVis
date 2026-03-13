@@ -271,7 +271,10 @@ namespace OoOVisual
                 allocated_reservation_station_entry->instruction_address = instruction_id;
                 allocated_reservation_station_entry->timestamp = fetch_element.timestamp;
                 allocated_reservation_station_entry->store_id = _last_store_id;
-                Execution_Unit_Load_Store::allocate_load_buffer_entry(allocated_reservation_station_entry->reorder_buffer_entry_index);
+                Execution_Unit_Load_Store::Buffer_Entry* allocated_entry{ Execution_Unit_Load_Store::allocate_load_buffer_entry() };
+                allocated_entry->reorder_buffer_entry_index = allocated_reservation_station_entry->reorder_buffer_entry_index;
+                allocated_entry->timestamp = allocated_reservation_station_entry->timestamp;
+                allocated_entry->instruction_address = allocated_reservation_station_entry->instruction_address;
 				#ifdef DEBUG_PRINTS
                 std::cout << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}].\n", instruction_id,allocated_reservation_station_entry->timestamp,allocated_reservation_station_entry->self_tag);
 				#endif
@@ -336,7 +339,9 @@ namespace OoOVisual
 						)
 					)
                 );
-                Execution_Unit_Load_Store::allocate_store_buffer_entry(allocated_reservation_station_entry->reorder_buffer_entry_index);
+                Execution_Unit_Load_Store::Buffer_Entry* store_entry{ Execution_Unit_Load_Store::allocate_store_buffer_entry() };
+                store_entry->reorder_buffer_entry_index = allocated_reservation_station_entry->reorder_buffer_entry_index;
+                store_entry->timestamp = allocated_reservation_station_entry->timestamp;
 				#ifdef DEBUG_PRINTS
                 std::cout << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}].\n", instruction_id,allocated_reservation_station_entry->timestamp,allocated_reservation_station_entry->self_tag);
 				#endif
@@ -527,6 +532,9 @@ namespace OoOVisual
             }
             for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {
                 feedback[i] = dispatch_fetch_element(Fetch_Group::group[i]);
+                if (feedback[i] != DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH) {
+                    break;
+                }
             }
 			_last_dispatch_feedback = feedback;
             return feedback;

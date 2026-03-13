@@ -23,7 +23,7 @@ namespace OoOVisual
 				issued_entries[i] = Reservation_Station_Pool::get_reservation_station(static_cast<RESERVATION_STATION_ID>(i)).issue();
 			}
 			execution_results.emplace_back(Execution_Unit_Load_Store::execute_load());
-			execution_results.emplace_back(Execution_Unit_Load_Store::address_generation_phase(issued_entries[5]));
+			execution_results.emplace_back(Execution_Unit_Load_Store::address_generation_phase(const_cast<Reservation_Station_Entry*>(issued_entries[5])));
 
 			execution_results.emplace_back(Execution_Unit_Adder::execute(issued_entries[0]));
 			execution_results.emplace_back(Execution_Unit_Bitwise::execute(issued_entries[1]));
