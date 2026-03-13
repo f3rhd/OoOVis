@@ -180,10 +180,6 @@ namespace OoOVisual
 						}
 					)
 				};
-				if (store_it == _store_buffer.end()) {
-					std::cout << "STORE GIRL THIS SHOULDNT HAPPEN\n";
-					exit(1); // @VisitLater :  better termination
-				}
 				store_it->mode = source_entry->mode;
 				store_it->timestamp = source_entry->timestamp;
 				store_it->register_id = Constants::INVALID_PHYSICAL_REGISTER_ID;
@@ -211,10 +207,6 @@ namespace OoOVisual
 					}
 				)
 			};
-			if (load_it == _load_buffer.end()) {
-				std::cout << "LOAD GIRL THIS SHOULDNT HAPPEN\n";
-				exit(1); // @VisitLater :  better termination
-			}
 			load_it->mode = source_entry->mode;
 			load_it->timestamp = source_entry->timestamp;
 			load_it->register_id = source_entry->destination_register_id;

@@ -10,9 +10,10 @@ namespace OoOVisual
         enum class DISPATCH_FEEDBACK : u8 {
             NO_INSTRUCTION_TO_DISPATCH,
             RESERVATION_STATION_WAS_FULL,
+            STORE_BUFFER_WAS_FULL,
+            LOAD_BUFFER_WAS_FULL,
             REGISTER_FILE_WAS_FULL,
             REORDER_BUFFER_WAS_FULL,
-            BLOCKED_BY_EARLIER_INSTRUCTION,
             SUCCESSFUL_DISPATCH
         };
         class Dispatcher {

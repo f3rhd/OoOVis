@@ -16,7 +16,6 @@ namespace OoOVisual
 			constexpr ImColor color_success { 50, 255, 130, 255 };     
 			constexpr ImColor color_error   { 255, 80, 80, 255 };      
 			constexpr ImColor color_busy    { 255, 200, 50, 255 };     
-			constexpr ImColor color_waiting { 120, 160, 255, 255 };    
 			constexpr ImColor color_flush   { 200, 100, 255, 255 };    
 
 			auto id { wire.id() };
@@ -59,9 +58,6 @@ namespace OoOVisual
 					case Core::DISPATCH_FEEDBACK::REGISTER_FILE_WAS_FULL:
 					case Core::DISPATCH_FEEDBACK::REORDER_BUFFER_WAS_FULL:
 						wire.trigger_pulse(color_error); 
-						break;
-					case Core::DISPATCH_FEEDBACK::BLOCKED_BY_EARLIER_INSTRUCTION:
-						wire.trigger_pulse(color_waiting); 
 						break;
 					case Core::DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH:
 						break;

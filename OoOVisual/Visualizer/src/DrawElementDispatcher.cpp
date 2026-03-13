@@ -47,9 +47,14 @@ namespace OoOVisual
 						ImGui::Text("REORDER_BUFFER_WAS_FULL");
 						ImGui::PopStyleColor();
 						break;
-					case Core::DISPATCH_FEEDBACK::BLOCKED_BY_EARLIER_INSTRUCTION:
+					case Core::DISPATCH_FEEDBACK::LOAD_BUFFER_WAS_FULL:
 						ImGui::PushStyleColor(ImGuiCol_Text, Constants::RED);
-						ImGui::Text("BLOCKED_BY_EARLIER_INSTRUCTION");
+						ImGui::Text("LOAD_BUFFER_WAS_FULL");
+						ImGui::PopStyleColor();
+						break;
+					case Core::DISPATCH_FEEDBACK::STORE_BUFFER_WAS_FULL:
+						ImGui::PushStyleColor(ImGuiCol_Text, Constants::RED);
+						ImGui::Text("STORE_BUFFER_WAS_FULL");
 						ImGui::PopStyleColor();
 						break;
 					case Core::DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH:

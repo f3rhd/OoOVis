@@ -215,7 +215,7 @@ namespace OoOVisual
                 if (station.full())
                     return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
                 if (Execution_Unit_Load_Store::load_buffer_is_full())
-                    return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL; // @VisitLater : Have a unique enum for this feedback
+                    return DISPATCH_FEEDBACK::LOAD_BUFFER_WAS_FULL; 
                 if (Register_Manager::full())
                     return DISPATCH_FEEDBACK::REGISTER_FILE_WAS_FULL;
                 Reservation_Station_Entry* allocated_reservation_station_entry{ station.allocate_entry() };
@@ -296,7 +296,7 @@ namespace OoOVisual
                 if (station.full())
                     return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL;
                 if (Execution_Unit_Load_Store::store_buffer_is_full())
-                    return DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL; // @VisitLater : have a unique enum for this feedback
+                    return DISPATCH_FEEDBACK::STORE_BUFFER_WAS_FULL; // 
                 Reservation_Station_Entry* allocated_reservation_station_entry(station.allocate_entry());
                 switch (store_instruction->kind()) {
                 case FrontEnd::Store_Instruction::STORE_INSTRUCTION_TYPE::SB:
