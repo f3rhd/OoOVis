@@ -52,10 +52,10 @@ namespace OoOVisual
 			if (physical_register_id == 0)
 				return;
 			if (physical_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
-				std::cout << "Tried to deallocate invalid register.\n"; 
+				std::cout << "Tried to deallocate invalid register.\n";
 				Visualizer::App::close(); return;
 			}
-				
+
 			if (!_physical_register_file[physical_register_id].allocated) {
 				std::cout << "Tried to deallocate an already deallocated register.\n";
 				Visualizer::App::close(); return;
@@ -78,7 +78,7 @@ namespace OoOVisual
 			_physical_register_file[physical_register_id].data = data;
 			_physical_register_file[physical_register_id].producer_tag = Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
-			std::cout << Constants::CYAN <<std::format(
+			std::cout << Constants::CYAN << std::format(
 				"PhysicalRegisterFile[{}] <- {}\n",
 				physical_register_id,
 				data.signed_
@@ -88,9 +88,9 @@ namespace OoOVisual
 
 		reg_id_t Register_Manager::allocate_physical_register_for(reg_id_t architectural_register_id, u32 producer_tag) {
 			if (architectural_register_id == 0) {
-	#ifdef DEBUG_PRINTS
-				std::cout << Constants::BLUE <<  std::format("Register alias table was updated with zero->P0 due to register allocation.\n") << Constants::RESET;
-	#endif
+#ifdef DEBUG_PRINTS
+				std::cout << Constants::BLUE << std::format("Register alias table was updated with zero->P0 due to register allocation.\n") << Constants::RESET;
+#endif
 				return 0;
 			}
 			for (auto it{ _physical_register_file.rbegin() }; it != _physical_register_file.rend(); it++) {
@@ -101,7 +101,7 @@ namespace OoOVisual
 					entry.allocated = true;
 					entry.producer_tag = producer_tag;
 #ifdef DEBUG_PRINTS
-					std::cout << Constants::BLUE << std::format("Register alias table was updated with x{},{}->P{} due to register allocation.\n", architectural_register_id,FrontEnd::Lookup::reg_name(architectural_register_id), key) << Constants::RESET;
+					std::cout << Constants::BLUE << std::format("Register alias table was updated with x{},{}->P{} due to register allocation.\n", architectural_register_id, FrontEnd::Lookup::reg_name(architectural_register_id), key) << Constants::RESET;
 #endif
 					return key;
 				}
@@ -109,8 +109,7 @@ namespace OoOVisual
 			return Constants::INVALID_PHYSICAL_REGISTER_ID;
 		}
 
-		reg_id_t Register_Manager::aliasof(reg_id_t architectural_register_id)
-		{
+		reg_id_t Register_Manager::aliasof(reg_id_t architectural_register_id) {
 			if (architectural_register_id == Constants::INVALID_PHYSICAL_REGISTER_ID) {
 				std::cout << "Tried to read invalid register.";
 				Visualizer::App::close(); return Constants::INVALID_PHYSICAL_REGISTER_ID;
@@ -130,19 +129,16 @@ namespace OoOVisual
 			return _physical_register_file;
 		}
 
-		const std::map<OoOVisual::reg_id_t, OoOVisual::reg_id_t>& Register_Manager::frontend_alias_table()
-		{
+		const std::map<OoOVisual::reg_id_t, OoOVisual::reg_id_t>& Register_Manager::frontend_alias_table() {
 			return _frontend_register_alias_table;
 		}
 
-		const std::map<OoOVisual::reg_id_t, OoOVisual::reg_id_t>& Register_Manager::retirement_alias_table()
-		{
+		const std::map<OoOVisual::reg_id_t, OoOVisual::reg_id_t>& Register_Manager::retirement_alias_table() {
 			return _retirement_alias_table;
 
 		}
 
-		void Register_Manager::reset()
-		{
+		void Register_Manager::reset() {
 			_physical_register_file.clear();
 			_frontend_register_alias_table.clear();
 			init();

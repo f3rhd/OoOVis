@@ -9,9 +9,8 @@ namespace OoOVisual
 	{
 
 
-		Draw_Element_Reservation_Station::Draw_Element_Reservation_Station(DRAW_ELEMENT_ID id, const ImVec2 &position, const ImVec2 &dimension) : Draw_Element_Core_Unit(id,position,dimension){
-			switch (_id)
-			{
+		Draw_Element_Reservation_Station::Draw_Element_Reservation_Station(DRAW_ELEMENT_ID id, const ImVec2& position, const ImVec2& dimension) : Draw_Element_Core_Unit(id, position, dimension) {
+			switch (_id) {
 			case OoOVisual::Visualizer::DRAW_ELEMENT_ID::STATION_0:
 				_core_station = &Core::Reservation_Station_Pool::get_reservation_station(Core::RESERVATION_STATION_ID::ADD_SUB);
 				break;
@@ -45,8 +44,8 @@ namespace OoOVisual
 
 			if (ImGui::BeginTable("##ReservationStation", 10, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
 				ImGui::TableSetupColumn("slot");
-				ImGui::TableSetupColumn("time"); 
-				ImGui::TableSetupColumn("busy"); 
+				ImGui::TableSetupColumn("time");
+				ImGui::TableSetupColumn("busy");
 				ImGui::TableSetupColumn("ready");
 				ImGui::TableSetupColumn("dest");
 				ImGui::TableSetupColumn("src1/t1");
@@ -55,12 +54,12 @@ namespace OoOVisual
 				ImGui::TableSetupColumn("rob idx");
 				ImGui::TableHeadersRow();
 
-				for (u32 i { 0 }; i < Core::Constants::RESERVATION_STATION_SIZE; ++i) {
-					const auto& entry { _core_station->getc()[i] };
-					
+				for (u32 i{ 0 }; i < Core::Constants::RESERVATION_STATION_SIZE; ++i) {
+					const auto& entry{ _core_station->getc()[i] };
+
 					// skip entries that aren't being used
 					if (entry.mode == Core::EXECUTION_UNIT_MODE::UNKNOWN) {
-						continue; 
+						continue;
 					}
 
 					ImGui::TableNextRow();
@@ -69,40 +68,45 @@ namespace OoOVisual
 					ImGui::Text("%u", i);
 
 					ImGui::TableSetColumnIndex(1);
-					ImGui::TextColored(ImVec4 { 0.7f, 0.7f, 1.0f, 1.0f }, "%u", entry.timestamp);
+					ImGui::TextColored(ImVec4{ 0.7f, 0.7f, 1.0f, 1.0f }, "%u", entry.timestamp);
 
 					ImGui::TableSetColumnIndex(2);
 					if (entry.busy) {
-						ImGui::TextColored(ImVec4 { 1.0f, 0.4f, 0.4f, 1.0f }, "busy");
-					} else {
+						ImGui::TextColored(ImVec4{ 1.0f, 0.4f, 0.4f, 1.0f }, "busy");
+					}
+					else {
 						ImGui::TextDisabled("idle");
 					}
 
 					ImGui::TableSetColumnIndex(3);
 					if (entry.ready) {
-						ImGui::TextColored(ImVec4 { 0.2f, 1.0f, 0.2f, 1.0f }, "ready");
-					} else {
-						ImGui::TextColored(ImVec4 { 1.0f, 0.8f, 0.2f, 1.0f }, "wait");
+						ImGui::TextColored(ImVec4{ 0.2f, 1.0f, 0.2f, 1.0f }, "ready");
+					}
+					else {
+						ImGui::TextColored(ImVec4{ 1.0f, 0.8f, 0.2f, 1.0f }, "wait");
 					}
 
 					ImGui::TableSetColumnIndex(4);
 					if (entry.destination_register_id != Core::Constants::INVALID_PHYSICAL_REGISTER_ID) {
 						ImGui::Text("p%u", entry.destination_register_id);
-					} else {
+					}
+					else {
 						ImGui::TextDisabled("-");
 					}
 
 					ImGui::TableSetColumnIndex(5);
 					if (entry.producer_tag1 != Core::Constants::NO_PRODUCER_TAG) {
-						ImGui::TextColored(ImVec4 { 1.0f, 0.6f, 0.6f, 1.0f }, "t:%u", entry.producer_tag1);
-					} else {
+						ImGui::TextColored(ImVec4{ 1.0f, 0.6f, 0.6f, 1.0f }, "t:%u", entry.producer_tag1);
+					}
+					else {
 						ImGui::Text("v:%d", entry.src1.signed_);
 					}
 
 					ImGui::TableSetColumnIndex(6);
 					if (entry.producer_tag2 != Core::Constants::NO_PRODUCER_TAG) {
-						ImGui::TextColored(ImVec4 { 1.0f, 0.6f, 0.6f, 1.0f }, "t:%u", entry.producer_tag2);
-					} else {
+						ImGui::TextColored(ImVec4{ 1.0f, 0.6f, 0.6f, 1.0f }, "t:%u", entry.producer_tag2);
+					}
+					else {
 						ImGui::Text("v:%d", entry.src2.signed_);
 					}
 
@@ -111,13 +115,14 @@ namespace OoOVisual
 						ImGui::Text("tgt: 0x%08X", entry.branch_target);
 						if (entry.fetch_unit_prediction != Core::Constants::NOT_BRANCH_INSTRUCTION) {
 							ImGui::SameLine();
-							ImGui::TextColored(ImVec4 { 0.4f, 0.8f, 1.0f, 1.0f }, "[pred]");
+							ImGui::TextColored(ImVec4{ 0.4f, 0.8f, 1.0f, 1.0f }, "[pred]");
 						}
 					}
 					else if (_core_station->id() == Core::RESERVATION_STATION_ID::LOAD_STORE) {
 						if (entry.destination_register_id_as_ofsset) {
 							ImGui::Text("store");
-						} else {
+						}
+						else {
 							ImGui::Text("load");
 						}
 					}
@@ -128,7 +133,7 @@ namespace OoOVisual
 					ImGui::TableSetColumnIndex(8);
 					ImGui::Text("#%lu", entry.reorder_buffer_entry_index);
 					ImGui::TableSetColumnIndex(9);
-					ImGui::TextColored(ImVec4 { 1.0f, 0.5f, 0.0f, 1.0f }, "tag:%u", entry.self_tag);
+					ImGui::TextColored(ImVec4{ 1.0f, 0.5f, 0.0f, 1.0f }, "tag:%u", entry.self_tag);
 				}
 				ImGui::EndTable();
 			}

@@ -6,10 +6,12 @@
 #include <vector>
 namespace OoOVisual
 {
-	namespace Core {
+	namespace Core
+	{
 		class Reservation_Station;
 	}
-	namespace FrontEnd {
+	namespace FrontEnd
+	{
 		struct Instruction;
 	}
 	union data_t {

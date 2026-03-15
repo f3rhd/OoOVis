@@ -1,7 +1,9 @@
 #pragma once
 #include <Core/Types/Types.h>
-namespace OoOVisual {
-	namespace FrontEnd {
+namespace OoOVisual
+{
+	namespace FrontEnd
+	{
 		auto constexpr NO_LABEL = 0;
 		auto constexpr FORWARD_ADDR = 0xFFFFFFFFu;
 		enum class FLOW_TYPE : u8 {
@@ -26,16 +28,14 @@ namespace OoOVisual {
 			) :
 				_dest_src_reg(dest_reg_),
 				_base_reg(base_reg_),
-				_offset(offset_) {
-			}
+				_offset(offset_) {}
 		protected:
 			reg_id_t _dest_src_reg;
 			reg_id_t _base_reg;
 			offset_t _offset;
 		};
 		struct Load_Instruction : Memory_Instruction {
-			enum class LOAD_INSTRUCTION_TYPE
-			{
+			enum class LOAD_INSTRUCTION_TYPE {
 				LB,
 				LH,
 				LW,
@@ -49,8 +49,7 @@ namespace OoOVisual {
 				offset_t offset_,
 				const reg_id_t base_reg_
 			) :
-				Memory_Instruction(dest_reg_, base_reg_, offset_), _type(type_) {
-			}
+				Memory_Instruction(dest_reg_, base_reg_, offset_), _type(type_) {}
 			FLOW_TYPE flow() const override {
 				return FLOW_TYPE::LOAD;
 			};
@@ -62,8 +61,7 @@ namespace OoOVisual {
 			LOAD_INSTRUCTION_TYPE _type;
 		};
 		struct Store_Instruction : Memory_Instruction {
-			enum class STORE_INSTRUCTION_TYPE
-			{
+			enum class STORE_INSTRUCTION_TYPE {
 				SB,
 				SH,
 				SW,
@@ -75,8 +73,7 @@ namespace OoOVisual {
 				offset_t offset_,
 				const reg_id_t base_reg_
 			) :
-				Memory_Instruction(dest_reg_, base_reg_, offset_), _type(type_) {
-			}
+				Memory_Instruction(dest_reg_, base_reg_, offset_), _type(type_) {}
 			FLOW_TYPE flow() const override {
 				return FLOW_TYPE::STORE;
 			};
@@ -88,8 +85,7 @@ namespace OoOVisual {
 			STORE_INSTRUCTION_TYPE _type;
 		};
 		struct Register_Instruction : Instruction {
-			enum class REGISTER_INSTRUCTION_TYPE
-			{
+			enum class REGISTER_INSTRUCTION_TYPE {
 				ADD,
 				SUB,
 				SLL,
@@ -148,8 +144,7 @@ namespace OoOVisual {
 			bool _is_imm = false;
 		};
 		struct Branch_Instruction : Instruction {
-			enum class BRANCH_INSTRUCTION_TYPE
-			{
+			enum class BRANCH_INSTRUCTION_TYPE {
 				BEQ,
 				BNE,
 				BLT,
@@ -167,9 +162,7 @@ namespace OoOVisual {
 				_src1_reg(src1_),
 				_src2_reg(src2_),
 				_target_addr(target_addr_),
-				_type(type_)
-			{
-			}
+				_type(type_) {}
 			memory_addr_t target_addr() const override { return _target_addr; }
 			void set_target_addr(memory_addr_t label_id) { _target_addr = label_id; };
 			FLOW_TYPE flow() const override { return FLOW_TYPE::BRANCH_CONDITIONAL; }
@@ -182,8 +175,7 @@ namespace OoOVisual {
 			memory_addr_t _target_addr;
 		};
 		struct Jump_Instruction : Instruction {
-			enum class JUMP_INSTRUCTION_TYPE
-			{
+			enum class JUMP_INSTRUCTION_TYPE {
 				JALR,
 				JAL,
 				UNKNOWN
@@ -198,13 +190,12 @@ namespace OoOVisual {
 				_dest_reg(dest_reg_),
 				_src1(src1_),
 				_target_addr(target_addr),
-				_imm(imm_) {
-			}
-			memory_addr_t target_addr() const override { 
-				return _target_addr; 
+				_imm(imm_) {}
+			memory_addr_t target_addr() const override {
+				return _target_addr;
 			}
 			void set_target_addr(memory_addr_t target_addr) {
-				_target_addr = target_addr; 
+				_target_addr = target_addr;
 			};
 			FLOW_TYPE flow() const override {
 				return FLOW_TYPE::BRANCH_UNCONDITIONAL;

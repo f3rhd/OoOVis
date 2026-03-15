@@ -3,7 +3,7 @@ namespace OoOVisual
 {
 	namespace Core
 	{
-		enum class EXECUTION_UNIT_MODE : unsigned int  {
+		enum class EXECUTION_UNIT_MODE : unsigned int {
 			BRANCH_UNCONDITIONAL_JAL,
 			BRANCH_UNCONDITIONAL_JALR,
 			BRANCH_CONDITIONAL_GREATER_OR_EQUAL_THAN_UNSIGNED,

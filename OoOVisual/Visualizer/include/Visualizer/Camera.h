@@ -5,11 +5,10 @@ namespace OoOVisual
 	namespace Visualizer
 	{
 
-		struct Camera
-		{
+		struct Camera {
 
 			Camera() = default;
-			ImVec2 world_to_screen(ImVec2 world_pos) const;		
+			ImVec2 world_to_screen(ImVec2 world_pos) const;
 			void update();
 			ImVec2 translation{ 0.0f, 0.0f };
 			float zoom{ 1.0f };

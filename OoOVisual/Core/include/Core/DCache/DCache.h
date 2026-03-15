@@ -3,10 +3,11 @@
 #include <Core/Execution/ExecutionUnits.h>
 namespace OoOVisual
 {
-	namespace Core {
+	namespace Core
+	{
 		class DCache {
 		public:
-			static void	  write(EXECUTION_UNIT_MODE mode, memory_addr_t addr,data_t data);
+			static void	  write(EXECUTION_UNIT_MODE mode, memory_addr_t addr, data_t data);
 			static data_t read(EXECUTION_UNIT_MODE mode, memory_addr_t addr);
 			static void		  reset();
 			static const std::unordered_map<memory_addr_t, u8> cache() { return _memory; }

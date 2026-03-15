@@ -1,8 +1,8 @@
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <iostream>
 #include <Visualizer/App.h>
 #include <Visualizer/Constants.h>
-#include <iostream>
-#include <imgui_impl_opengl3.h>
-#include <imgui_impl_glfw.h>
 namespace OoOVisual
 {
 	namespace Visualizer
@@ -23,12 +23,12 @@ namespace OoOVisual
 			}
 
 			glfwMakeContextCurrent(_window);
-			glfwSwapInterval(1); 
+			glfwSwapInterval(1);
 
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
 			ImGuiIO& io = ImGui::GetIO();
-			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; 
+			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
 			ImGui::StyleColorsDark();
 
@@ -40,7 +40,7 @@ namespace OoOVisual
 
 		void App::start_frame() {
 			glfwPollEvents();
-			
+
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
@@ -52,12 +52,12 @@ namespace OoOVisual
 			int display_w{}, display_h{};
 			glfwGetFramebufferSize(_window, &display_w, &display_h);
 			glViewport(0, 0, display_w, display_h);
-			
-			glClearColor(0.1f, 0.1f, 0.12f, 1.0f); 
+
+			glClearColor(0.1f, 0.1f, 0.12f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-			
+
 			glfwSwapBuffers(_window);
 		}
 
@@ -77,13 +77,12 @@ namespace OoOVisual
 			glfwTerminate();
 		}
 
-		ImVec2 App::window_size()
-		{
+		ImVec2 App::window_size() {
 
-			int width{}; 
+			int width{};
 			int height{};
 			glfwGetWindowSize(_window, &width, &height);
-			return ImVec2(static_cast<float>(width),static_cast<float>(height));
+			return ImVec2(static_cast<float>(width), static_cast<float>(height));
 		}
 
 	}

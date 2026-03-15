@@ -26,7 +26,7 @@ namespace OoOVisual
 			auto parse_result(parser.parse_instructions(cli_args.input_file));
 			if (!parser.was_successful())
 				return false;
-			Fetch_Unit::init(std::move(parse_result.first),std::move(parse_result.second));
+			Fetch_Unit::init(std::move(parse_result.first), std::move(parse_result.second));
 			Register_Manager::init();
 			return true;
 		}
@@ -40,14 +40,12 @@ namespace OoOVisual
 		float* tick_speed() {
 			return &_tick_speed;
 		}
-		void run()
-		{
-			static auto _last_time{ std::chrono::high_resolution_clock::now()};
-			auto now{ std::chrono::high_resolution_clock::now()};
+		void run() {
+			static auto _last_time{ std::chrono::high_resolution_clock::now() };
+			auto now{ std::chrono::high_resolution_clock::now() };
 			std::chrono::duration<double> delta{ now - _last_time };
 			_last_time = now;
-			switch (_mode)
-			{
+			switch (_mode) {
 			case OoOVisual::Core::CORE_MODE::RUN:
 				_accumulator += _tick_speed * Constants::MAX_IPS * delta.count();
 				while (_accumulator >= 1.0f) {
@@ -79,8 +77,7 @@ namespace OoOVisual
 			Screen_MMIO::clear_screen();
 		}
 
-		void set_core_mode(CORE_MODE mode)
-		{
+		void set_core_mode(CORE_MODE mode) {
 			_mode = mode;
 		}
 

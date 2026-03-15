@@ -503,8 +503,7 @@ namespace OoOVisual
 			return _station_dispatch_map.at(id);
 		}
 
-		void Dispatcher::reset()
-		{
+		void Dispatcher::reset() {
 			_last_dispatch_feedback = std::vector<DISPATCH_FEEDBACK>(Constants::FETCH_WIDTH, DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH);
 			_last_store_id = 0;
 			for (auto& [key, val] : _station_dispatch_map) {

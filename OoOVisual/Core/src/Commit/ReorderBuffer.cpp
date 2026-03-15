@@ -8,8 +8,9 @@
 #include <iostream>
 namespace OoOVisual
 {
-	namespace Core {
-		#define ROB_MISPREDICTION_RECOVERY(ENTRY_TYPE) {                                \
+	namespace Core
+	{
+#define ROB_MISPREDICTION_RECOVERY(ENTRY_TYPE) {                                \
 			auto branch_timestamp = dynamic_cast<ENTRY_TYPE*>(entry)->self_timestamp; \
 			auto flush_boundary{ dynamic_cast<ENTRY_TYPE*>(entry)->flush_timestamp_boundary }; \
 			if (flush_boundary == Constants::TIME_ZERO) {                                \
@@ -42,7 +43,8 @@ namespace OoOVisual
 				if (!entry->ready) return;
 				_head_moved = true;
 				switch (entry->flow()) {
-				case FrontEnd::FLOW_TYPE::REGISTER: {
+				case FrontEnd::FLOW_TYPE::REGISTER:
+				{
 					auto entry_{ dynamic_cast<Register_Reorder_Buffer_Entry*>(entry) };
 					Register_Manager::deallocate((entry_)->old_alias);
 					Register_Manager::update_retirement_alias_table_with(
@@ -53,7 +55,8 @@ namespace OoOVisual
 					_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
 					break;
 				}
-				case FrontEnd::FLOW_TYPE::LOAD: {
+				case FrontEnd::FLOW_TYPE::LOAD:
+				{
 					auto entry_{ dynamic_cast<Load_Reorder_Buffer_Entry*>(entry) };
 					Execution_Unit_Load_Store::remove_speculated_load(_head);
 					if (entry_->misspeculated) {
@@ -65,15 +68,16 @@ namespace OoOVisual
 							(entry_)->architectural_register_id,
 							(entry_)->new_alias
 						);
-						#ifdef DEBUG_PRINTS
+#ifdef DEBUG_PRINTS
 						std::cout << Constants::GREEN << std::format("Load instruction timestamp: {} was speculated correctly\n", entry_->self_timestamp) << Constants::RESET;
-						#endif
+#endif
 						_buffer[_head].reset();
 						_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
 					}
 					break;
 				}
-				case FrontEnd::FLOW_TYPE::STORE: {
+				case FrontEnd::FLOW_TYPE::STORE:
+				{
 					Execution_Unit_Load_Store::resolve_speculated_loads(_head);
 					Execution_Unit_Load_Store::execute_store(_head);
 					_buffer[_head].reset();
@@ -91,7 +95,8 @@ namespace OoOVisual
 						_head = (_head + 1) % Constants::REORDER_BUFFER_SIZE;
 					}
 					break;
-				case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL: {
+				case FrontEnd::FLOW_TYPE::BRANCH_UNCONDITIONAL:
+				{
 					auto* entry_{ dynamic_cast<Branch_Unconditional_Reorder_Buffer_Entry*>(entry) };
 					Register_Manager::deallocate((entry_)->old_alias);
 					Register_Manager::update_retirement_alias_table_with(
@@ -128,16 +133,15 @@ namespace OoOVisual
 		void Reorder_Buffer::set_ready(u64 target_entry_index) {
 			if (target_entry_index >= Constants::REORDER_BUFFER_SIZE) {
 				std::cout << "Tried to access non-existing reorder buffer entry.\n";
-				Visualizer::App::close(); return;	
+				Visualizer::App::close(); return;
 			}
 			_buffer[target_entry_index]->ready = true;
 		}
 
-		void Reorder_Buffer::set_speculation_evaluation(u64 target, bool was_misprediction,time_t flush_boundary)
-		{
+		void Reorder_Buffer::set_speculation_evaluation(u64 target, bool was_misprediction, time_t flush_boundary) {
 			if (target >= Constants::REORDER_BUFFER_SIZE) {
 				std::cout << "Tried to access non-existing reorder buffer entry.\n";
-				Visualizer::App::close(); return;	
+				Visualizer::App::close(); return;
 			}
 			_buffer[target]->ready = true;
 			if (auto* branch_entry = dynamic_cast<Branch_Conditional_Reorder_Buffer_Entry*>(_buffer[target].get())) {
@@ -154,7 +158,7 @@ namespace OoOVisual
 			}
 			else {
 				std::cout << "Tried to access branch reorder buffer with wrong index.\n";
-				Visualizer::App::close(); return;	
+				Visualizer::App::close(); return;
 			}
 
 		}
@@ -162,24 +166,21 @@ namespace OoOVisual
 			return _head_moved;
 		}
 
-		void Reorder_Buffer::reset()
-		{
+		void Reorder_Buffer::reset() {
 			_head = 0;
 			_tail = 0;
 			_head_moved = false;
 			_flushed = false;
 
 			for (auto& element : _buffer) {
-				if (element)
-				{
+				if (element) {
 					element.reset();
 				}
 			}
 		}
 
 
-		bool Reorder_Buffer::empty()
-		{
+		bool Reorder_Buffer::empty() {
 			return _head == _tail;
 		}
 		bool Reorder_Buffer::flushed() {
@@ -190,12 +191,11 @@ namespace OoOVisual
 		}
 
 		bool Reorder_Buffer::full() {
-			return (_tail + 1)  % Constants::REORDER_BUFFER_SIZE == _head;
+			return (_tail + 1) % Constants::REORDER_BUFFER_SIZE == _head;
 		}
 
 
-		size_t Reorder_Buffer::head()
-		{
+		size_t Reorder_Buffer::head() {
 			return _head;
 		}
 		size_t Reorder_Buffer::tail() {

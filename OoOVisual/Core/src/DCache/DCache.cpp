@@ -44,7 +44,8 @@ namespace OoOVisual
 			data_t result{};
 
 			switch (mode) {
-			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_WORD: {
+			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_WORD:
+			{
 				i32 word = static_cast<i32>(
 					(static_cast<u32>(_memory[addr])) |
 					(static_cast<u32>(_memory[addr + 1]) << 8) |
@@ -86,8 +87,7 @@ namespace OoOVisual
 			return result;
 
 		}
-		void DCache::reset()
-		{
+		void DCache::reset() {
 			_memory.clear();
 		}
 	} // namespace Core

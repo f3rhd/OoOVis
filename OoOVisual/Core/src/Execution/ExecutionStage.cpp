@@ -10,14 +10,14 @@ namespace OoOVisual
 {
 	namespace Core
 	{
-		std::vector<const Reservation_Station_Entry*> Execution_Stage::_last_issued_entries(Constants::RESERVATION_STATION_AMOUNT,nullptr);
+		std::vector<const Reservation_Station_Entry*> Execution_Stage::_last_issued_entries(Constants::RESERVATION_STATION_AMOUNT, nullptr);
 		void Execution_Stage::issue_and_execute() {
 
-			std::vector<const Reservation_Station_Entry*> issued_entries(Constants::RESERVATION_STATION_AMOUNT-1);
+			std::vector<const Reservation_Station_Entry*> issued_entries(Constants::RESERVATION_STATION_AMOUNT - 1);
 			std::vector<Execution_Result> execution_results;
 			auto branch_execution_input = Reservation_Station_Pool::get_reservation_station(static_cast<RESERVATION_STATION_ID>(6)).issue();
 			// upon misprediction execution unit may flush the instructions that are ready to execute.
-			execution_results.reserve(Constants::RESERVATION_STATION_AMOUNT + 1); 
+			execution_results.reserve(Constants::RESERVATION_STATION_AMOUNT + 1);
 			auto branch_execution_result{ execution_results.emplace_back(Execution_Unit_Branch::execute(branch_execution_input)) };
 			for (size_t i{}; i < Constants::RESERVATION_STATION_AMOUNT - 1; i++) {
 				issued_entries[i] = Reservation_Station_Pool::get_reservation_station(static_cast<RESERVATION_STATION_ID>(i)).issue();
@@ -33,7 +33,7 @@ namespace OoOVisual
 
 			/* upon misprediciton stall the frontend pipeline and drain the OoO core
 			   this is needed because we need to recover the register alias table as soon as possible
-			   there could be a possibility where once a misprediction is detected the branch instruction is not 
+			   there could be a possibility where once a misprediction is detected the branch instruction is not
 			   at the head of the reorder buffer which means it will take multiple cycles to restore the alias table
 			   which may cause incoming instructions to use a wrong alias table
 			*/
@@ -59,13 +59,11 @@ namespace OoOVisual
 			_last_issued_entries.emplace_back(branch_execution_input);
 		}
 
-		void Execution_Stage::reset()
-		{
-			_last_issued_entries = std::vector<const Reservation_Station_Entry*>(Constants::RESERVATION_STATION_AMOUNT,nullptr);
+		void Execution_Stage::reset() {
+			_last_issued_entries = std::vector<const Reservation_Station_Entry*>(Constants::RESERVATION_STATION_AMOUNT, nullptr);
 		}
 
-		const std::vector<const OoOVisual::Core::Reservation_Station_Entry*> Execution_Stage::issued()
-		{
+		const std::vector<const OoOVisual::Core::Reservation_Station_Entry*> Execution_Stage::issued() {
 			return _last_issued_entries;
 		}
 

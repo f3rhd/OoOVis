@@ -1,18 +1,18 @@
 #include <Core/Commit/ReorderBufferEntry.h>
 #include <memory>
 #include <vector>
-namespace OoOVisual 
+namespace OoOVisual
 {
-	namespace Core 
+	namespace Core
 	{
 		class Reorder_Buffer {
 
 		public:
 			static size_t												allocate(std::unique_ptr<Reorder_Buffer_Entry>&& entry);
 			static void													set_ready(u64 target_entry_index);
-			static void													set_speculation_evaluation(u64 target,bool was_misprediction,time_t flush_boundary);
+			static void													set_speculation_evaluation(u64 target, bool was_misprediction, time_t flush_boundary);
 			static void													commit();
-			static std::vector<std::unique_ptr<Reorder_Buffer_Entry>>&	buffer();
+			static std::vector<std::unique_ptr<Reorder_Buffer_Entry>>& buffer();
 			static bool													full();
 			static size_t												head();
 			static size_t												tail();

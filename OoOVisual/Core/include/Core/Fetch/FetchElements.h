@@ -7,15 +7,15 @@ namespace OoOVisual
 {
 	namespace Core
 	{
-        struct Fetch_Element {
-            std::unique_ptr<FrontEnd::Instruction>* instruction{};
-            memory_addr_t address = 0;
-            u32 timestamp = 0;
-            u8 branch_prediction = Constants::NOT_BRANCH_INSTRUCTION;
-        };
-        struct Fetch_Group {
-            static std::vector<Fetch_Element> group;
-        };
+		struct Fetch_Element {
+			std::unique_ptr<FrontEnd::Instruction>* instruction{};
+			memory_addr_t address = 0;
+			u32 timestamp = 0;
+			u8 branch_prediction = Constants::NOT_BRANCH_INSTRUCTION;
+		};
+		struct Fetch_Group {
+			static std::vector<Fetch_Element> group;
+		};
 
 	}
 }

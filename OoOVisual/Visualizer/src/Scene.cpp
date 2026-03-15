@@ -242,7 +242,7 @@ namespace OoOVisual
 				reg_file_right_center
 			));
 			ImVec2 screen_pos{ reg_file_pos.x + reg_file_size.x + 100, reg_file_pos.y };
-			ImVec2 screen_size{ Core::Constants::CORE_SCREEN_WIDTH, Core::Constants::CORE_SCREEN_HEIGHT }; 
+			ImVec2 screen_size{ Core::Constants::CORE_SCREEN_WIDTH, Core::Constants::CORE_SCREEN_HEIGHT };
 
 			_units.emplace_back(std::make_unique<Visualizer::Draw_Element_Screen>(
 				Visualizer::DRAW_ELEMENT_ID::SCREEN,
@@ -250,29 +250,24 @@ namespace OoOVisual
 				screen_size
 			));
 		}
-		void Scene::play()
-		{
+		void Scene::play() {
 			_scene_camera.update();
-			ImGui::Begin("Pipeline Canvas", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus );
-			ImGui::SetNextItemWidth(150.0f); 
+			ImGui::Begin("Pipeline Canvas", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
+			ImGui::SetNextItemWidth(150.0f);
 			ImGui::SliderFloat("Speed", Core::tick_speed(), 0.0f, 1.0f, "%.2f");
-			if (ImGui::Button("Run"))
-			{
+			if (ImGui::Button("Run")) {
 				Core::set_core_mode(Core::CORE_MODE::RUN);
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Step"))
-			{
+			if (ImGui::Button("Step")) {
 				Core::set_core_mode(Core::CORE_MODE::STEP);
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Stop"))
-			{
+			if (ImGui::Button("Stop")) {
 				Core::set_core_mode(Core::CORE_MODE::STOP);
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Reset"))
-			{
+			if (ImGui::Button("Reset")) {
 				Core::reset();
 			}
 			for (const auto& element : _units) {
@@ -281,8 +276,7 @@ namespace OoOVisual
 			ImGui::End();
 		}
 
-		void Scene::clear()
-		{
+		void Scene::clear() {
 			_units.clear();
 		}
 

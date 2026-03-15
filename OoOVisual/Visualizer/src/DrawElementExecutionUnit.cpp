@@ -11,8 +11,7 @@ namespace OoOVisual
 
 		void Draw_Element_Execution_Unit::show_tooltip() const {
 			const Core::Reservation_Station_Entry* issued_entry{};
-			switch (_id)
-			{
+			switch (_id) {
 			case OoOVisual::Visualizer::DRAW_ELEMENT_ID::ADDER_SUBTRACTOR_UNIT:
 				issued_entry = Core::Execution_Stage::issued()[0];
 				break;
@@ -94,25 +93,25 @@ namespace OoOVisual
 			ImGui::EndTooltip();
 		}
 		void Draw_Element_Execution_Unit::show_detailed() const {
-			const auto& load_buf { Core::Execution_Unit_Load_Store::load_buffer() };
-			const auto& store_buf { Core::Execution_Unit_Load_Store::store_buffer() };
-			const auto& mem_map { Core::DCache::cache() }; 
+			const auto& load_buf{ Core::Execution_Unit_Load_Store::load_buffer() };
+			const auto& store_buf{ Core::Execution_Unit_Load_Store::store_buffer() };
+			const auto& mem_map{ Core::DCache::cache() };
 
-			ImVec2 min_size { 200, 200.0f }; 
-			ImVec2 max_size { FLT_MAX, FLT_MAX }; 
-			ImGuiWindowFlags window_flags { ImGuiWindowFlags_NoSavedSettings };
+			ImVec2 min_size{ 200, 200.0f };
+			ImVec2 max_size{ FLT_MAX, FLT_MAX };
+			ImGuiWindowFlags window_flags{ ImGuiWindowFlags_NoSavedSettings };
 			ImGui::SetNextWindowSizeConstraints(min_size, max_size);
 			ImGui::SetNextWindowSize({ 900, 600 }, ImGuiCond_FirstUseEver);
 
 			if (ImGui::Begin("Load-Store details", nullptr, window_flags)) {
-				
+
 				ImGui::SeparatorText("internal unit buffers");
 				if (ImGui::BeginChild("buffer_section", { 0, 250 }, true)) {
-					
+
 					auto render_buf_lambda = [&](const char* label, const auto& buffer) {
 						ImGui::Text("%s", label);
-						ImGuiTableFlags table_flags { ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable };
-						
+						ImGuiTableFlags table_flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable };
+
 						if (ImGui::BeginTable(label, 7, table_flags, { 0, 100 })) {
 							ImGui::TableSetupColumn("mode");
 							ImGui::TableSetupColumn("ts");
@@ -136,39 +135,39 @@ namespace OoOVisual
 							}
 							ImGui::EndTable();
 						}
-					};
+						};
 
 					render_buf_lambda("load buffer", load_buf);
 					ImGui::Spacing();
 					render_buf_lambda("store buffer", store_buf);
-					
+
 					ImGui::EndChild();
 				}
 
 				ImGui::Spacing();
-				
+
 				ImGui::SeparatorText("instruction cache & memory");
 				if (ImGui::BeginChild("memory_section", { 0, 0 }, true)) {
-					
-					std::vector<memory_addr_t> sorted_keys {};
+
+					std::vector<memory_addr_t> sorted_keys{};
 					for (const auto& [addr, val] : mem_map) {
 						sorted_keys.push_back(addr);
 					}
 					std::sort(sorted_keys.begin(), sorted_keys.end());
 
-					ImGuiTableFlags mem_table_flags { ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY };
-					
+					ImGuiTableFlags mem_table_flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY };
+
 					if (ImGui::BeginTable("mem_table", 2, mem_table_flags)) {
 						ImGui::TableSetupColumn("address", ImGuiTableColumnFlags_WidthFixed, 150.0f);
 						ImGui::TableSetupColumn("data (hex / dec)", ImGuiTableColumnFlags_WidthStretch);
 						ImGui::TableHeadersRow();
 
-						ImGuiListClipper clipper {};
+						ImGuiListClipper clipper{};
 						clipper.Begin(static_cast<int>(sorted_keys.size()));
 						while (clipper.Step()) {
-							for (int i { clipper.DisplayStart }; i < clipper.DisplayEnd; i++) {
-								auto addr { sorted_keys[i] };
-								auto val { mem_map.at(addr) };
+							for (int i{ clipper.DisplayStart }; i < clipper.DisplayEnd; i++) {
+								auto addr{ sorted_keys[i] };
+								auto val{ mem_map.at(addr) };
 
 								ImGui::TableNextRow();
 								ImGui::TableSetColumnIndex(0);
@@ -188,7 +187,7 @@ namespace OoOVisual
 			if (is_hovered(cam))
 				show_tooltip();
 			show_architectural(cam);
-			if (_id == DRAW_ELEMENT_ID::LOAD_STORE_UNIT){
+			if (_id == DRAW_ELEMENT_ID::LOAD_STORE_UNIT) {
 				set_detailed(cam);
 				if (_detailed)
 					show_detailed();

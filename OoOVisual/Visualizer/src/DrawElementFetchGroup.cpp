@@ -6,8 +6,7 @@ namespace OoOVisual
 	namespace Visualizer
 	{
 
-		void Draw_Element_Fetch_Group::show_tooltip() const
-		{
+		void Draw_Element_Fetch_Group::show_tooltip() const {
 			if (Core::Fetch_Group::group.empty()) {
 				ImGui::SetTooltip("Fetch queue is empty.");
 				return;
@@ -17,7 +16,7 @@ namespace OoOVisual
 			ImGui::Separator();
 
 			if (ImGui::BeginTable("FetchQueueTable", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
-				
+
 				ImGui::TableSetupColumn("Slot");
 				ImGui::TableSetupColumn("Address");
 				ImGui::TableSetupColumn("TS");
@@ -41,7 +40,8 @@ namespace OoOVisual
 					ImGui::TableSetColumnIndex(3);
 					if (element.branch_prediction == Core::Constants::NOT_BRANCH_INSTRUCTION) {
 						ImGui::TextDisabled("-");
-					} else {
+					}
+					else {
 						ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "YES");
 					}
 				}

@@ -6,7 +6,7 @@ namespace OoOVisual
 	{
 
 		struct Draw_Element_Register_Manager : Draw_Element_Core_Unit {
-			explicit Draw_Element_Register_Manager(DRAW_ELEMENT_ID id,const ImVec2 &position, const ImVec2 &dimension) : Draw_Element_Core_Unit(id,position,dimension) {}
+			explicit Draw_Element_Register_Manager(DRAW_ELEMENT_ID id, const ImVec2& position, const ImVec2& dimension) : Draw_Element_Core_Unit(id, position, dimension) {}
 			void show_tooltip() const override;
 			void show_detailed() const override;
 			void draw(const Camera& cam) override;

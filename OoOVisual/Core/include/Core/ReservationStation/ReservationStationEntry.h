@@ -2,10 +2,10 @@
 #include <Core/Types/Types.h>
 #include <Core/Constants/Constants.h>
 #include <Core/Execution/ExecutionUnitModes.h>
-namespace OoOVisual 
+namespace OoOVisual
 {
-    namespace Core
-    {
+	namespace Core
+	{
 		enum class RESERVATION_STATION_ID : u8 {
 			ADD_SUB,
 			BITWISE,
@@ -30,10 +30,10 @@ namespace OoOVisual
 			memory_addr_t branch_target = 0;
 			/*timestamp given to any instruction when it was fetched */
 			u32 timestamp = Constants::TIME_ZERO;
-			/* for load instruction it implies the last store_id 
+			/* for load instruction it implies the last store_id
 			   for store instructin it implies the self_store_id
 			*/
-			u32 store_id = Constants::NOT_STORE; 
+			u32 store_id = Constants::NOT_STORE;
 			/* prediction made by fetch unit when it saw a branch instruction */
 			u8 fetch_unit_prediction = Constants::NOT_BRANCH_INSTRUCTION;
 			/* elementary station fields */
@@ -49,5 +49,5 @@ namespace OoOVisual
 			EXECUTION_UNIT_MODE mode = EXECUTION_UNIT_MODE::UNKNOWN;
 		};
 
-    } // namespace Core
+	} // namespace Core
 } // namespace OoOVis

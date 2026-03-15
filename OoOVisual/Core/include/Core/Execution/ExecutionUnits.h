@@ -48,7 +48,7 @@ namespace OoOVisual
 				// load uses this to broadcast the tag to the common data bus for forwarding logic
 				u32			  producer_tag{ Constants::NO_PRODUCER_TAG };
 				//memory_addr_t instruction_address;
-				EXECUTION_UNIT_MODE mode{EXECUTION_UNIT_MODE::UNKNOWN};
+				EXECUTION_UNIT_MODE mode{ EXECUTION_UNIT_MODE::UNKNOWN };
 				/*  store_buffer_entry : store_id is used by reorder buffer to tell the store to write to the memory
 					load_buffer_entry : last store id
 				*/
@@ -60,22 +60,21 @@ namespace OoOVisual
 					EXECUTION_UNIT_MODE mode_,
 					u32 id_,
 					u32 id__,
-					size_t index, 
-					data_t data, 
+					size_t index,
+					data_t data,
 					memory_addr_t addr,
 					u32 producer_tag_,
 					memory_addr_t instr_addr,
 					u32  store_id_ = Constants::NOT_STORE
 				) : mode(mode_),
-					timestamp(id_), 
+					timestamp(id_),
 					register_id(id__),
-					reorder_buffer_entry_index(index), 
-					register_data(data), 
+					reorder_buffer_entry_index(index),
+					register_data(data),
 					calculated_address(addr),
 					producer_tag(producer_tag_),
 					instruction_address(instr_addr),
-					store_id(store_id_)
-				{}
+					store_id(store_id_) {}
 			};
 			static Execution_Result					address_generation_phase(Reservation_Station_Entry* source_entry);
 			static Execution_Result					execute_load();
@@ -85,13 +84,13 @@ namespace OoOVisual
 			static const std::vector<Buffer_Entry>& store_buffer() { return _store_buffer; } // used by visualizer
 			static const std::vector<Buffer_Entry>& load_buffer() { return _load_buffer; } // used by visualizer
 			static void							    reset();
-			static Buffer_Entry*					allocate_store_buffer_entry();
-			static Buffer_Entry*					allocate_load_buffer_entry();
+			static Buffer_Entry* allocate_store_buffer_entry();
+			static Buffer_Entry* allocate_load_buffer_entry();
 			static time_t							flush_mispredicted(time_t timestamp);
 			static void 						    remove_speculated_load(u64 reorder_buffer_entry_index);
 			static Execution_Result 				resolve_speculated_loads(u64 head_that_points_to_store);
 		private:
-			static std::pair<size_t,size_t>		find_load_that_is_executable(); // .first stands for executable load if it can be executed by forwarding .second will hold the store buffer entry index that is being forwarded from
+			static std::pair<size_t, size_t>		find_load_that_is_executable(); // .first stands for executable load if it can be executed by forwarding .second will hold the store buffer entry index that is being forwarded from
 		private:
 			static std::vector<Buffer_Entry> 	_store_buffer;
 			static std::vector<Buffer_Entry> 	_load_buffer;

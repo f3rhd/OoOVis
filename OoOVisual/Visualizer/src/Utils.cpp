@@ -33,8 +33,7 @@ namespace OoOVisual
 			}
 
 			const char* flowtype_to_str(FrontEnd::FLOW_TYPE type) {
-				switch (type)
-				{
+				switch (type) {
 				case OoOVisual::FrontEnd::FLOW_TYPE::REGISTER:
 					return "REGISTER";
 				case OoOVisual::FrontEnd::FLOW_TYPE::LOAD:
@@ -53,8 +52,7 @@ namespace OoOVisual
 				}
 			}
 			const char* execution_mode_to_str(Core::EXECUTION_UNIT_MODE mode) {
-				switch (mode)
-				{
+				switch (mode) {
 				case OoOVisual::Core::EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL_JAL:
 					return "JAL";
 				case OoOVisual::Core::EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL_JALR:
@@ -70,7 +68,7 @@ namespace OoOVisual
 				case OoOVisual::Core::EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_LESS_THAN:
 					return "BLT";
 				case OoOVisual::Core::EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_THAN:
-					return "BGT"; 
+					return "BGT";
 				case OoOVisual::Core::EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_LESS_THAN_UNSIGNED:
 					return "BLTU";
 				case OoOVisual::Core::EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_THAN_UNSIGNED:

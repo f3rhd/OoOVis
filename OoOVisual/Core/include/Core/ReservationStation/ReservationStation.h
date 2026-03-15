@@ -3,7 +3,8 @@
 #include <vector>
 namespace OoOVisual
 {
-	namespace Core {
+	namespace Core
+	{
 
 		class Reservation_Station {
 
@@ -16,7 +17,7 @@ namespace OoOVisual
 			RESERVATION_STATION_ID id() const { return _id; }
 			bool full() const;
 		private:
-			std::vector<Reservation_Station_Entry> _buffer; 
+			std::vector<Reservation_Station_Entry> _buffer;
 			RESERVATION_STATION_ID _id;
 		};
 

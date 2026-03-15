@@ -11,10 +11,10 @@ namespace OoOVisual
 		void Draw_Element_Fetch_Unit::show_detailed() const {
 			ImGuiViewport* viewport{ ImGui::GetMainViewport() };
 			float padding{ 20.0f };
-			
-			ImVec2 initial_pos{ viewport->WorkPos.x + viewport->WorkSize.x - padding, 
+
+			ImVec2 initial_pos{ viewport->WorkPos.x + viewport->WorkSize.x - padding,
 								viewport->WorkPos.y + padding };
-			ImVec2 window_pivot{ 1.0f, 0.0f }; 
+			ImVec2 window_pivot{ 1.0f, 0.0f };
 
 			ImGui::SetNextWindowPos(initial_pos, ImGuiCond_FirstUseEver, window_pivot);
 			ImGui::SetNextWindowBgAlpha(0.9f);
@@ -23,7 +23,7 @@ namespace OoOVisual
 
 			static bool follow_pc{ true };
 			if (ImGui::Begin("Fetch Unit Details", nullptr, window_flags)) {
-				
+
 				ImGui::TextColored(ImVec4{ 0.4f, 0.7f, 1.0f, 1.0f }, "FETCH UNIT INTERNALS");
 				ImGui::Separator();
 				ImGui::Text("Pc: %u", Core::Fetch_Unit::program_counter());
@@ -31,7 +31,7 @@ namespace OoOVisual
 				ImGui::Checkbox("Follow Pc", &follow_pc);
 
 				if (ImGui::CollapsingHeader("Instruction Stream", ImGuiTreeNodeFlags_DefaultOpen)) {
-					
+
 					ImGuiWindowFlags child_flags = ImGuiWindowFlags_HorizontalScrollbar;
 					if (ImGui::BeginChild("InstructionScroll", ImVec2{ 350.0f, 250.0f }, true, child_flags)) {
 						const auto& stream{ Core::Fetch_Unit::instruction_stream() };
@@ -49,9 +49,9 @@ namespace OoOVisual
 
 							if (follow_pc && pc_row_index != -1) {
 								float item_height{ ImGui::GetTextLineHeightWithSpacing() };
-								
+
 								float target_scroll_y{ (pc_row_index * item_height) - (ImGui::GetWindowHeight() * 0.5f) + (item_height * 0.5f) };
-								
+
 								ImGui::SetScrollY(target_scroll_y);
 							}
 						}
@@ -67,20 +67,20 @@ namespace OoOVisual
 								for (int i{ clipper.DisplayStart }; i < clipper.DisplayEnd; ++i) {
 									ImGui::TableNextRow(); // Start a new row for the table
 
-									bool is_current_line{ static_cast<memory_addr_t>(stream[i].second) == current_pc};
+									bool is_current_line{ static_cast<memory_addr_t>(stream[i].second) == current_pc };
 
 									if (is_current_line) {
 										ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{ 1.0f, 0.8f, 0.0f, 1.0f });
 									}
 
-									if (stream[i].first.back() == ':') { 
-										ImGui::TableSetColumnIndex(1); 
+									if (stream[i].first.back() == ':') {
+										ImGui::TableSetColumnIndex(1);
 										ImGui::Text("%s", stream[i].first.c_str());
 									}
-									else { 
+									else {
 										ImGui::TableSetColumnIndex(0);
 										ImGui::TextDisabled("[%04ld]", stream[i].second);
-										
+
 										ImGui::TableSetColumnIndex(1);
 										ImGui::Text("%s", stream[i].first.c_str());
 									}
@@ -96,13 +96,13 @@ namespace OoOVisual
 					ImGui::EndChild();
 				}
 			}
-			ImGui::End(); 
-}
+			ImGui::End();
+		}
 		void Draw_Element_Fetch_Unit::show_tooltip() const {
 			auto current_pc{ Core::Fetch_Unit::program_counter() };
 			ImGui::SetTooltip(
 				"Fetch Unit\nPc: %u"
-				,current_pc
+				, current_pc
 			);
 		}
 		void Draw_Element_Fetch_Unit::draw(const Camera& cam) {

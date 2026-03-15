@@ -6,7 +6,7 @@
 
 namespace OoOVisual
 {
-	namespace Core 
+	namespace Core
 	{
 		struct Screen_MMIO {
 			enum class CMD_TYPE : i32 {
@@ -17,14 +17,14 @@ namespace OoOVisual
 				TRIANGLE = 4,
 				FILL_TRIANGLE = 5
 			};
-			static bool handle_write(u32 address,i32 value);
+			static bool handle_write(u32 address, i32 value);
 			static void clear_screen();
 			static const std::array<u32, Constants::CORE_SCREEN_SIZE>& buffer();
 		private:
 			static void hollow_triangle();
 			static void fill_triangle();
-			static void draw_line (
-				i32 start_x, i32 start_y, 
+			static void draw_line(
+				i32 start_x, i32 start_y,
 				i32 end_x, i32 end_y
 			);
 		private:

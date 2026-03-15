@@ -1,11 +1,10 @@
 #include <Visualizer/Camera.h>
 namespace OoOVisual
 {
-	namespace Visualizer 
+	namespace Visualizer
 	{
 
-		ImVec2 Camera::world_to_screen(ImVec2 world_pos) const
-		{
+		ImVec2 Camera::world_to_screen(ImVec2 world_pos) const {
 			return ImVec2{
 				world_pos.x * zoom + translation.x,
 				world_pos.y * zoom + translation.y
@@ -13,10 +12,9 @@ namespace OoOVisual
 
 		}
 
-		void Camera::update()
-		{
+		void Camera::update() {
 
-			float move_speed{ 5.0f }; 
+			float move_speed{ 5.0f };
 			if (ImGui::IsKeyDown(ImGuiKey_W)) translation.y += move_speed;
 			if (ImGui::IsKeyDown(ImGuiKey_S)) translation.y -= move_speed;
 			if (ImGui::IsKeyDown(ImGuiKey_A)) translation.x += move_speed;
@@ -25,11 +23,11 @@ namespace OoOVisual
 			float zoom_factor{ 1.02f };
 			bool zooming{ false };
 
-			if (ImGui::IsKeyDown(ImGuiKey_Equal) || ImGui::IsKeyDown(ImGuiKey_KeypadAdd)) { 
+			if (ImGui::IsKeyDown(ImGuiKey_Equal) || ImGui::IsKeyDown(ImGuiKey_KeypadAdd)) {
 				zoom *= zoom_factor;
 				zooming = true;
 			}
-			if (ImGui::IsKeyDown(ImGuiKey_Minus) || ImGui::IsKeyDown(ImGuiKey_KeypadSubtract)) { 
+			if (ImGui::IsKeyDown(ImGuiKey_Minus) || ImGui::IsKeyDown(ImGuiKey_KeypadSubtract)) {
 				zoom /= zoom_factor;
 				zooming = true;
 			}

@@ -25,15 +25,15 @@ namespace OoOVisual
 			ImGui::EndTooltip();
 		}
 
-		
+
 		void Draw_Element_Register_Manager::show_detailed() const {
 			ImGuiViewport* viewport{ ImGui::GetMainViewport() };
 			float padding{ 30.0f };
-			ImVec2 spawn_pos{ padding, viewport->WorkSize.y - 550.0f - padding }; 
+			ImVec2 spawn_pos{ padding, viewport->WorkSize.y - 550.0f - padding };
 
 			ImGui::SetNextWindowPos(spawn_pos, ImGuiCond_FirstUseEver);
-			ImGui::SetNextWindowSize(ImVec2{ 450.0f, 550.0f }, ImGuiCond_FirstUseEver); 
-			
+			ImGui::SetNextWindowSize(ImVec2{ 450.0f, 550.0f }, ImGuiCond_FirstUseEver);
+
 			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ 0.07f, 0.07f, 0.07f, 0.92f });
 
 			if (ImGui::Begin("Register Management Unit", nullptr)) {
@@ -41,7 +41,7 @@ namespace OoOVisual
 
 					if (ImGui::BeginTabItem("Physical Registers (PRF)")) {
 						ImGuiTableFlags prf_flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY };
-						
+
 						if (ImGui::BeginTable("PRF_Table", 3, prf_flags, ImVec2{ 0.0f, -1.0f })) {
 							ImGui::TableSetupScrollFreeze(0, 1);
 							ImGui::TableSetupColumn("P-Reg", ImGuiTableColumnFlags_WidthFixed, 60.0f);
@@ -50,11 +50,11 @@ namespace OoOVisual
 							ImGui::TableHeadersRow();
 
 							const auto& prf{ Core::Register_Manager::phyical_register_file() };
-							
+
 							for (auto it{ prf.rbegin() }; it != prf.rend(); ++it) {
 								const auto& pair{ *it };
 								const auto& entry{ pair.second };
-								
+
 								ImGui::TableNextRow();
 								ImGui::TableSetColumnIndex(0);
 								ImGui::Text("p%u", pair.first);
@@ -62,7 +62,8 @@ namespace OoOVisual
 								ImGui::TableSetColumnIndex(1);
 								if (entry.allocated) {
 									ImGui::TextColored(ImVec4{ 1.0f, 0.3f, 0.3f, 1.0f }, "BUSY");
-								} else {
+								}
+								else {
 									ImGui::TextColored(ImVec4{ 0.3f, 1.0f, 0.3f, 1.0f }, "READY");
 								}
 
@@ -76,7 +77,7 @@ namespace OoOVisual
 
 					if (ImGui::BeginTabItem("Alias Tables (RAT/RRAT)")) {
 						ImGuiTableFlags rat_flags{ ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY };
-						
+
 						// Arch Idx, ABI Name, RAT, RRAT
 						if (ImGui::BeginTable("RAT_Compare", 4, rat_flags, ImVec2{ 0.0f, -1.0f })) {
 							ImGui::TableSetupScrollFreeze(0, 1);
@@ -91,10 +92,10 @@ namespace OoOVisual
 
 							for (int i{ 31 }; i >= 0; --i) {
 								u32 arch_idx{ static_cast<u32>(i) };
-								auto abi_name_{ FrontEnd::Lookup::reg_name(arch_idx)};
+								auto abi_name_{ FrontEnd::Lookup::reg_name(arch_idx) };
 								auto abi_name{ abi_name_.c_str() };
 								ImGui::TableNextRow();
-								
+
 								ImGui::TableSetColumnIndex(0);
 								ImGui::Text("x%u", arch_idx);
 
@@ -104,7 +105,8 @@ namespace OoOVisual
 								ImGui::TableSetColumnIndex(2);
 								if (rat.count(arch_idx)) {
 									ImGui::Text("p%u", rat.at(arch_idx));
-								} else {
+								}
+								else {
 									ImGui::TextDisabled("-");
 								}
 
@@ -115,7 +117,8 @@ namespace OoOVisual
 
 									if (p_spec != p_commit) {
 										ImGui::TextColored(ImVec4{ 1.0f, 0.8f, 0.2f, 1.0f }, "p%u", p_commit);
-									} else {
+									}
+									else {
 										ImGui::Text("p%u", p_commit);
 									}
 								}

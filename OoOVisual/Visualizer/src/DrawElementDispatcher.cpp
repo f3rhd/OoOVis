@@ -12,7 +12,7 @@ namespace OoOVisual
 			ImGui::Separator();
 
 			if (ImGui::BeginTable("##FetchQueueTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
-				
+
 				ImGui::TableSetupColumn("Slot");
 				ImGui::TableSetupColumn("FEEDBACK STATUS");
 				ImGui::TableHeadersRow();

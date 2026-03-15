@@ -1,6 +1,6 @@
 #pragma  once
 #include <Frontend/Parser/Parser.h>
-namespace OoOVisual 
+namespace OoOVisual
 {
 	namespace Core
 	{
