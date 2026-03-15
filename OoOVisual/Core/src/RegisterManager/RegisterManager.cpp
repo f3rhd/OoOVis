@@ -1,13 +1,13 @@
-#include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Constants/Constants.h>
+#include <Core/RegisterManager/RegisterManager.h>
+#include <format>
+#include <format>
 #include <Frontend/Parser/Lookup.h>
-#include <Visualizer/App.h>
-#include <stdexcept>
-#include <format>
 #include <iomanip>
-#include <string>
 #include <iostream>
-#include <format>
+#include <stdexcept>
+#include <string>
+#include <Visualizer/App.h>
 namespace OoOVisual
 {
 	namespace Core
@@ -81,7 +81,7 @@ namespace OoOVisual
 			std::cout << Constants::CYAN << std::format(
 				"PhysicalRegisterFile[{}] <- {}\n",
 				physical_register_id,
-				data.signed_
+				data.SIGNED
 			) << Constants::RESET;
 #endif
 		}

@@ -1,9 +1,16 @@
-#include <Visualizer/DrawElementExecutionUnit.h>
-#include <Visualizer/Utils.h>
+#include "../../vendor/ImGui/imgui.h"
+#include <algorithm>
+#include <cfloat>
+#include <Core/DCache/DCache.h>
 #include <Core/Execution/ExecutionStage.h>
 #include <Core/Execution/ExecutionUnits.h>
-#include <Core/DCache/DCache.h>
-#include <algorithm>
+#include <Core/ReservationStation/ReservationStationEntry.h>
+#include <Core/Types/Types.h>
+#include <vector>
+#include <Visualizer/Camera.h>
+#include <Visualizer/DrawElement.h>
+#include <Visualizer/DrawElementExecutionUnit.h>
+#include <Visualizer/Utils.h>
 namespace OoOVisual
 {
 	namespace Visualizer
@@ -129,7 +136,7 @@ namespace OoOVisual
 								ImGui::TableSetColumnIndex(1); ImGui::Text("%u", entry.timestamp);
 								ImGui::TableSetColumnIndex(2); ImGui::Text("r%u", (u32)entry.register_id);
 								ImGui::TableSetColumnIndex(3); ImGui::Text("%zu", entry.reorder_buffer_entry_index);
-								ImGui::TableSetColumnIndex(4); ImGui::Text("0x%X", (u32)entry.register_data.signed_);
+								ImGui::TableSetColumnIndex(4); ImGui::Text("0x%X", (u32)entry.register_data.SIGNED);
 								ImGui::TableSetColumnIndex(5); ImGui::Text("0x%X", (u32)entry.calculated_address);
 								ImGui::TableSetColumnIndex(6); ImGui::Text("#%u", entry.producer_tag);
 							}

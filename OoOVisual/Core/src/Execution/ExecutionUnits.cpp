@@ -1,15 +1,20 @@
-#include <Core/Execution/ExecutionUnits.h>
-#include <Core/RegisterManager/RegisterManager.h>
-#include <Core/DCache/DCache.h>
-#include <Core/Commit/ReorderBuffer.h>
-#include <Core/Fetch/Fetch.h>
-#include <Core/ReservationStation/ReservationStationPool.h>
-#include <Core/Constants/Constants.h>
-#include <Core/MMIO/ScreenMMIO.h>
-#include <iostream>
-#include <format>
-#include <ranges>
 #include <algorithm>
+#include <Core/Commit/ReorderBuffer.h>
+#include <Core/Constants/Constants.h>
+#include <Core/DCache/DCache.h>
+#include <Core/Execution/ExecutionResult.h>
+#include <Core/Execution/ExecutionUnitModes.h>
+#include <Core/Execution/ExecutionUnits.h>
+#include <Core/Fetch/Fetch.h>
+#include <Core/Fetch/FetchElements.h>
+#include <Core/MMIO/ScreenMMIO.h>
+#include <Core/RegisterManager/RegisterManager.h>
+#include <Core/ReservationStation/ReservationStationEntry.h>
+#include <Core/ReservationStation/ReservationStationPool.h>
+#include <Core/Types/Types.h>
+#include <cstdint>
+#include <utility>
+#include <vector>
 
 namespace OoOVisual
 {
@@ -25,16 +30,16 @@ namespace OoOVisual
 			data.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_ADD:
-				data.produced_data.signed_ = source_entry->src1.signed_ + source_entry->src2.signed_;
+				data.produced_data.SIGNED = source_entry->src1.SIGNED + source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_SUB:
-				data.produced_data.signed_ = source_entry->src1.signed_ - source_entry->src2.signed_;
+				data.produced_data.SIGNED = source_entry->src1.SIGNED - source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_AUIPC: // immediate value lives in the source 2
-				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 12) & 0xFFFFF000 + Fetch_Unit::program_counter();
+				data.produced_data.UNSIGNED = (source_entry->src2.UNSIGNED << 12) & 0xFFFFF000 + Fetch_Unit::program_counter();
 				break;
 			case EXECUTION_UNIT_MODE::ADD_SUB_UNIT_LOAD_UPPER:
-				data.produced_data.unsigned_ = (source_entry->src2.unsigned_ << 12) & 0xFFFFF000;
+				data.produced_data.UNSIGNED = (source_entry->src2.UNSIGNED << 12) & 0xFFFFF000;
 				break;
 				// shouldnt happen
 			default:
@@ -56,22 +61,22 @@ namespace OoOVisual
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::BITWISE_AND:
-				result.produced_data.signed_ = source_entry->src1.signed_ & source_entry->src2.signed_;
+				result.produced_data.SIGNED = source_entry->src1.SIGNED & source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BITWISE_XOR:
-				result.produced_data.signed_ = source_entry->src1.signed_ | source_entry->src2.signed_;
+				result.produced_data.SIGNED = source_entry->src1.SIGNED | source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::LOGICAL_XOR:
-				result.produced_data.signed_ = source_entry->src1.signed_ ^ source_entry->src2.signed_;
+				result.produced_data.SIGNED = source_entry->src1.SIGNED ^ source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BITWISE_SHIFT_LEFT_LOGICAL:
-				result.produced_data.unsigned_ = source_entry->src1.unsigned_ << source_entry->src2.unsigned_;
+				result.produced_data.UNSIGNED = source_entry->src1.UNSIGNED << source_entry->src2.UNSIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BITWISE_SHIFT_RIGHT_LOGICAL:
-				result.produced_data.unsigned_ = source_entry->src1.unsigned_ >> source_entry->src2.unsigned_;
+				result.produced_data.UNSIGNED = source_entry->src1.UNSIGNED >> source_entry->src2.UNSIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BITWISE_SHIFT_RIGHT_ARITHMETIC:
-				result.produced_data.signed_ = source_entry->src1.signed_ >> source_entry->src2.unsigned_;
+				result.produced_data.SIGNED = source_entry->src1.SIGNED >> source_entry->src2.UNSIGNED;
 				break;
 				// shouldnt happen
 			default:
@@ -89,7 +94,7 @@ namespace OoOVisual
 			Execution_Result result{};
 			result.kind = Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD;
 			result.producer_tag = source_entry->self_tag;
-			result.produced_data.signed_ = source_entry->src1.signed_ < source_entry->src2.signed_ ? 1 : 0;
+			result.produced_data.SIGNED = source_entry->src1.SIGNED < source_entry->src2.SIGNED ? 1 : 0;
 			Register_Manager::write(source_entry->destination_register_id, result.produced_data);
 			Reorder_Buffer::set_ready(source_entry->reorder_buffer_entry_index);
 			return result;
@@ -104,21 +109,21 @@ namespace OoOVisual
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_SIGNED:
 			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH:
-				result.produced_data.signed_ = source_entry->src1.signed_ * source_entry->src2.signed_;
+				result.produced_data.SIGNED = source_entry->src1.SIGNED * source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_SIGNED_UNSIGNED:
 			{
 				// MULHSU: src1 is signed, src2 is unsigned
 				// We cast to 64-bit to ensure we don't lose the overflow
-				int64_t full_product(static_cast<int64_t>(source_entry->src1.signed_) * static_cast<uint64_t>(source_entry->src2.unsigned_));
-				result.produced_data.signed_ = static_cast<int32_t>(full_product >> 32);
+				int64_t full_product(static_cast<int64_t>(source_entry->src1.SIGNED) * static_cast<uint64_t>(source_entry->src2.UNSIGNED));
+				result.produced_data.SIGNED = static_cast<int32_t>(full_product >> 32);
 				break;
 			}
 			case EXECUTION_UNIT_MODE::MULTIPLIER_MULTIPLY_HIGH_UNSIGNED:
 			{
 				// MULHU: Both src1 and src2 are unsigned
-				uint64_t full_product{ static_cast<uint64_t>(source_entry->src1.unsigned_) * static_cast<uint64_t>(source_entry->src2.unsigned_) };
-				result.produced_data.unsigned_ = static_cast<uint32_t>(full_product >> 32);
+				uint64_t full_product{ static_cast<uint64_t>(source_entry->src1.UNSIGNED) * static_cast<uint64_t>(source_entry->src2.UNSIGNED) };
+				result.produced_data.UNSIGNED = static_cast<uint32_t>(full_product >> 32);
 				break;
 			}
 			// shouldnt happen
@@ -139,17 +144,17 @@ namespace OoOVisual
 			result.producer_tag = source_entry->self_tag;
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_SIGNED:
-				result.produced_data.signed_ = source_entry->src1.signed_ / source_entry->src2.signed_;
+				result.produced_data.SIGNED = source_entry->src1.SIGNED / source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::DIVIDER_DIVIDE_UNSIGNED:
-				result.produced_data.unsigned_ = source_entry->src1.unsigned_ / source_entry->src2.unsigned_;
+				result.produced_data.UNSIGNED = source_entry->src1.UNSIGNED / source_entry->src2.UNSIGNED;
 				break;
 
 			case EXECUTION_UNIT_MODE::DIVIDER_REMAINDER_SIGNED:
-				result.produced_data.signed_ = source_entry->src1.signed_ % source_entry->src2.signed_;
+				result.produced_data.SIGNED = source_entry->src1.SIGNED % source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::DIVIDER_REMAINDER_UNSIGNED:
-				result.produced_data.unsigned_ = source_entry->src1.unsigned_ % source_entry->src2.unsigned_;
+				result.produced_data.UNSIGNED = source_entry->src1.UNSIGNED % source_entry->src2.UNSIGNED;
 				break;
 				// shouldnt happen
 			default:
@@ -169,7 +174,7 @@ namespace OoOVisual
 			memory_addr_t address{}; ;
 			data_t        register_data{}; ;
 			if (source_entry->destination_register_id_as_ofsset) {
-				address = source_entry->src1.signed_ + static_cast<offset_t>(source_entry->destination_register_id);
+				address = source_entry->src1.SIGNED + static_cast<offset_t>(source_entry->destination_register_id);
 				register_data = source_entry->src2;
 				/* if a store instruction is issued to a reservation station an entry in store buffer is allocated for it during dispatch stage*/
 				auto store_it{
@@ -198,7 +203,7 @@ namespace OoOVisual
 			}
 			if (source_entry->generated_addrress_for_load)
 				return { Constants::EXECUTION_RESULT_INVALID };
-			address = source_entry->src1.signed_ + source_entry->src2.signed_;
+			address = source_entry->src1.SIGNED + source_entry->src2.SIGNED;
 			auto load_it{
 				std::find_if(
 					_load_buffer.begin(),
@@ -365,7 +370,7 @@ namespace OoOVisual
 			for (size_t i{}; i < _store_buffer.size(); i++) {
 				const auto& store_entry{ _store_buffer[i] };
 				if (store_entry.mode != EXECUTION_UNIT_MODE::UNKNOWN && store_entry.reorder_buffer_entry_index == head) {
-					if (!(Screen_MMIO::handle_write(store_entry.calculated_address, store_entry.register_data.signed_)))
+					if (!(Screen_MMIO::handle_write(store_entry.calculated_address, store_entry.register_data.SIGNED)))
 						DCache::write(store_entry.mode, store_entry.calculated_address, store_entry.register_data);
 #ifdef DEBUG_PRINTS
 					commited_stores.emplace_back(i);
@@ -500,7 +505,7 @@ namespace OoOVisual
 			switch (source_entry->mode) {
 			case EXECUTION_UNIT_MODE::BRANCH_UNCONDITIONAL_JALR:// Fetch unit keeps fetching when it sees jalr instruction so we gotta recover
 			{
-				target_address = source_entry->src1.unsigned_ + source_entry->src2.unsigned_;
+				target_address = source_entry->src1.UNSIGNED + source_entry->src2.UNSIGNED;
 				Fetch_Unit::set_program_counter(target_address);
 				Fetch_Unit::set_program_counter_flags();
 				Register_Manager::write(source_entry->destination_register_id, { source_entry->instruction_address + 1 });
@@ -531,28 +536,28 @@ namespace OoOVisual
 				};
 				break;
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_EQUAL:
-				actual_taken = source_entry->src1.signed_ == source_entry->src2.signed_;
+				actual_taken = source_entry->src1.SIGNED == source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_NOT_EQUAL:
-				actual_taken = source_entry->src1.signed_ != source_entry->src2.signed_;
+				actual_taken = source_entry->src1.SIGNED != source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_LESS_THAN:
-				actual_taken = source_entry->src1.signed_ < source_entry->src2.signed_;
+				actual_taken = source_entry->src1.SIGNED < source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_THAN:
-				actual_taken = source_entry->src1.signed_ > source_entry->src2.signed_;
+				actual_taken = source_entry->src1.SIGNED > source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_OR_EQUAL_THAN:
-				actual_taken = source_entry->src1.signed_ >= source_entry->src2.signed_;
+				actual_taken = source_entry->src1.SIGNED >= source_entry->src2.SIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_OR_EQUAL_THAN_UNSIGNED:
-				actual_taken = source_entry->src1.unsigned_ >= source_entry->src2.unsigned_;
+				actual_taken = source_entry->src1.UNSIGNED >= source_entry->src2.UNSIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_LESS_THAN_UNSIGNED:
-				actual_taken = source_entry->src1.unsigned_ < source_entry->src2.unsigned_;
+				actual_taken = source_entry->src1.UNSIGNED < source_entry->src2.UNSIGNED;
 				break;
 			case EXECUTION_UNIT_MODE::BRANCH_CONDITIONAL_GREATER_THAN_UNSIGNED:
-				actual_taken = source_entry->src1.unsigned_ > source_entry->src2.unsigned_;
+				actual_taken = source_entry->src1.UNSIGNED > source_entry->src2.UNSIGNED;
 				break;
 				// wont happen
 			default:

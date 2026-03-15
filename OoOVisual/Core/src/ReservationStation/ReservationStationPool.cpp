@@ -1,10 +1,10 @@
-#include <Core/ReservationStation/ReservationStationPool.h>
+#include <algorithm>
 #include <Core/Constants/Constants.h>
 #include <Core/RegisterManager/RegisterManager.h>
-#include <iostream>
+#include <Core/ReservationStation/ReservationStationPool.h>
 #include <format>
+#include <iostream>
 #include <ranges>
-#include <algorithm>
 namespace OoOVisual
 {
 	namespace Core
@@ -51,7 +51,7 @@ namespace OoOVisual
 						entry.src1 = produced_data;
 						entry.ready = entry.producer_tag1 == Constants::NO_PRODUCER_TAG && entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
-						std::cout << Constants::BLUE << std::format("Forwarded data:{} to Instructions[{}] timestamp : {} from ReservationStationPool[{}].\n", produced_data.signed_, entry.instruction_address, entry.timestamp, producer_tag) << Constants::RESET;
+						std::cout << Constants::BLUE << std::format("Forwarded data:{} to Instructions[{}] timestamp : {} from ReservationStationPool[{}].\n", produced_data.SIGNED, entry.instruction_address, entry.timestamp, producer_tag) << Constants::RESET;
 #endif
 
 					}
@@ -60,7 +60,7 @@ namespace OoOVisual
 						entry.src2 = produced_data;
 						entry.ready = entry.producer_tag1 == Constants::NO_PRODUCER_TAG && entry.producer_tag2 == Constants::NO_PRODUCER_TAG;
 #ifdef DEBUG_PRINTS
-						std::cout << Constants::BLUE << std::format("Forwarded data:{} to Instructions[{}] timestamp : {} from ReservationStationPool[{}].\n", produced_data.signed_, entry.instruction_address, entry.timestamp, producer_tag) << Constants::RESET;
+						std::cout << Constants::BLUE << std::format("Forwarded data:{} to Instructions[{}] timestamp : {} from ReservationStationPool[{}].\n", produced_data.SIGNED, entry.instruction_address, entry.timestamp, producer_tag) << Constants::RESET;
 #endif
 					}
 				}

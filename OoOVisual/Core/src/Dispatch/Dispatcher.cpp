@@ -1,13 +1,13 @@
-#include <Core/Dispatch/Dispatcher.h>
-#include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Constants/Constants.h>
-#include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/Constants/Constants.h>
+#include <Core/Dispatch/Dispatcher.h>
 #include <Core/Execution/ExecutionUnits.h>
+#include <Core/RegisterManager/RegisterManager.h>
+#include <Core/ReservationStation/ReservationStationPool.h>
+#include <format>
 #include <iostream>
 #include <unordered_map>
-#include <format>
 #include <Visualizer/App.h>
 namespace OoOVisual
 {
@@ -170,7 +170,7 @@ namespace OoOVisual
 				// store the old alias before renaming
 				auto old_alias{ Register_Manager::aliasof(register_instruction->dest_reg()) };
 				if (register_instruction->uses_immval()) {
-					allocated_reservation_station_entry->src2.signed_ = register_instruction->src2().imm_val;
+					allocated_reservation_station_entry->src2.SIGNED = register_instruction->src2().imm_val;
 					allocated_reservation_station_entry->producer_tag2 = Constants::NO_PRODUCER_TAG;
 				}
 				else {
@@ -261,7 +261,7 @@ namespace OoOVisual
 				allocated_reservation_station_entry->src1 = entry.data;
 				allocated_reservation_station_entry->producer_tag1 = entry.producer_tag;
 				allocated_reservation_station_entry->destination_register_id = load_instruction->dest_reg();
-				allocated_reservation_station_entry->src2.signed_ = (load_instruction->offset());
+				allocated_reservation_station_entry->src2.SIGNED = (load_instruction->offset());
 				allocated_reservation_station_entry->producer_tag2 = Constants::NO_PRODUCER_TAG;
 				allocated_reservation_station_entry->ready = allocated_reservation_station_entry->producer_tag1 == Constants::NO_PRODUCER_TAG && allocated_reservation_station_entry->producer_tag2 == Constants::NO_PRODUCER_TAG;
 				allocated_reservation_station_entry->self_tag = allocated_reservation_station_entry->self_tag;
@@ -446,7 +446,7 @@ namespace OoOVisual
 					allocated_reservation_station_entry->producer_tag1 = entry.producer_tag;
 					allocated_reservation_station_entry->src1 = entry.data;
 					allocated_reservation_station_entry->producer_tag2 = Constants::NO_PRODUCER_TAG;
-					allocated_reservation_station_entry->src2.signed_ = jump_instruction->offset();
+					allocated_reservation_station_entry->src2.SIGNED = jump_instruction->offset();
 					allocated_reservation_station_entry->ready = allocated_reservation_station_entry->producer_tag1 == Constants::NO_PRODUCER_TAG;
 					target_reorder_buffer_entry_index = Reorder_Buffer::allocate(
 						std::make_unique<Branch_Unconditional_Reorder_Buffer_Entry>(

@@ -1,6 +1,9 @@
-#include <Visualizer/DrawElementRegisterManager.h>
+#include "../../vendor/ImGui/imgui.h"
 #include <Core/RegisterManager/RegisterManager.h>
+#include <Core/Types/Types.h>
 #include <Frontend/Parser/Lookup.h>
+#include <Visualizer/Camera.h>
+#include <Visualizer/DrawElementRegisterManager.h>
 namespace OoOVisual
 {
 	namespace Visualizer
@@ -68,7 +71,7 @@ namespace OoOVisual
 								}
 
 								ImGui::TableSetColumnIndex(2);
-								ImGui::Text("0x%016X", entry.data.signed_);
+								ImGui::Text("0x%016X", entry.data.SIGNED);
 							}
 							ImGui::EndTable();
 						}

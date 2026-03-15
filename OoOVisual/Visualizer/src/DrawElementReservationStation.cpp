@@ -1,7 +1,13 @@
-#include <Visualizer/DrawElementReservationStation.h>
-#include <Visualizer/Constants.h>
-#include <Core/ReservationStation/ReservationStationPool.h>
+#include "../../vendor/ImGui/imgui.h"
+#include <Core/Constants/Constants.h>
+#include <Core/Execution/ExecutionUnitModes.h>
 #include <Core/ReservationStation/ReservationStationEntry.h>
+#include <Core/ReservationStation/ReservationStationPool.h>
+#include <Core/Types/Types.h>
+#include <Visualizer/Camera.h>
+#include <Visualizer/DrawElement.h>
+#include <Visualizer/DrawElementCoreUnit.h>
+#include <Visualizer/DrawElementReservationStation.h>
 
 namespace OoOVisual
 {
@@ -99,7 +105,7 @@ namespace OoOVisual
 						ImGui::TextColored(ImVec4{ 1.0f, 0.6f, 0.6f, 1.0f }, "t:%u", entry.producer_tag1);
 					}
 					else {
-						ImGui::Text("v:%d", entry.src1.signed_);
+						ImGui::Text("v:%d", entry.src1.SIGNED);
 					}
 
 					ImGui::TableSetColumnIndex(6);
@@ -107,7 +113,7 @@ namespace OoOVisual
 						ImGui::TextColored(ImVec4{ 1.0f, 0.6f, 0.6f, 1.0f }, "t:%u", entry.producer_tag2);
 					}
 					else {
-						ImGui::Text("v:%d", entry.src2.signed_);
+						ImGui::Text("v:%d", entry.src2.SIGNED);
 					}
 
 					ImGui::TableSetColumnIndex(7);

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <unordered_map>
 #include <memory>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 namespace OoOVisual
 {
@@ -15,8 +16,8 @@ namespace OoOVisual
 		struct Instruction;
 	}
 	union data_t {
-		uint32_t unsigned_;
-		int32_t  signed_;
+		uint32_t UNSIGNED;
+		int32_t  SIGNED;
 	};
 	using u64 = uint64_t;
 	using u32 = uint32_t;

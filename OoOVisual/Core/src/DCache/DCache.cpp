@@ -1,6 +1,6 @@
 #include <Core/DCache/DCache.h>
-#include <iostream>
 #include <format>
+#include <iostream>
 namespace OoOVisual
 {
 	namespace Core
@@ -9,12 +9,12 @@ namespace OoOVisual
 		std::unordered_map<memory_addr_t, u8> DCache::_memory{};
 		void DCache::write(EXECUTION_UNIT_MODE mode, memory_addr_t addr, data_t data) {
 #ifdef DEBUG_PRINTS
-			std::cout << std::format("DCache[{}] <- {}\n", addr, data.signed_);
+			std::cout << std::format("DCache[{}] <- {}\n", addr, data.SIGNED);
 #endif
-			u8 first{ static_cast<u8>(data.unsigned_ & 0xFF) };
-			u8 second{ static_cast<u8>((data.unsigned_ >> 8) & 0xFF) };
-			u8 third{ static_cast<u8>((data.unsigned_ >> 16) & 0xFF) };
-			u8 forth{ static_cast<u8>((data.unsigned_ >> 24) & 0xFF) };
+			u8 first{ static_cast<u8>(data.UNSIGNED & 0xFF) };
+			u8 second{ static_cast<u8>((data.UNSIGNED >> 8) & 0xFF) };
+			u8 third{ static_cast<u8>((data.UNSIGNED >> 16) & 0xFF) };
+			u8 forth{ static_cast<u8>((data.UNSIGNED >> 24) & 0xFF) };
 			// we work with little endian
 			switch (mode) {
 			case EXECUTION_UNIT_MODE::LOAD_STORE_STORE_WORD:
@@ -52,7 +52,7 @@ namespace OoOVisual
 					(static_cast<u32>(_memory[addr + 2]) << 16) |
 					(static_cast<u32>(_memory[addr + 3]) << 24)
 				);
-				result.signed_ = word;
+				result.SIGNED = word;
 				break;
 			}
 
@@ -60,23 +60,23 @@ namespace OoOVisual
 			{
 				i16 half((static_cast<u16>(_memory[addr])) |
 					(static_cast<u16>(_memory[addr + 1]) << 8));
-				result.signed_ = static_cast<i32>(half);
+				result.SIGNED = static_cast<i32>(half);
 			}
 			break;
 
 			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE:
 			{
 				i8 byte(static_cast<i8>(_memory[addr]));
-				result.signed_ = static_cast<i32>(byte);
+				result.SIGNED = static_cast<i32>(byte);
 			}
 			break;
 
 			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE_UNSIGNED:
-				result.unsigned_ = static_cast<u32>(_memory[addr]);
+				result.UNSIGNED = static_cast<u32>(_memory[addr]);
 				break;
 
 			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF_UNSIGNED:
-				result.unsigned_ = (static_cast<u32>(_memory[addr])) |
+				result.UNSIGNED = (static_cast<u32>(_memory[addr])) |
 					(static_cast<u32>(_memory[addr + 1]) << 8);
 				break;
 
