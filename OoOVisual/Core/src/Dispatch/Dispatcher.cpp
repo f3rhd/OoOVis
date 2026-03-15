@@ -271,10 +271,10 @@ namespace OoOVisual
                 allocated_reservation_station_entry->instruction_address = instruction_id;
                 allocated_reservation_station_entry->timestamp = fetch_element.timestamp;
                 allocated_reservation_station_entry->store_id = _last_store_id;
-                Execution_Unit_Load_Store::Buffer_Entry* allocated_entry{ Execution_Unit_Load_Store::allocate_load_buffer_entry() };
-                allocated_entry->reorder_buffer_entry_index = allocated_reservation_station_entry->reorder_buffer_entry_index;
-                allocated_entry->timestamp = allocated_reservation_station_entry->timestamp;
-                allocated_entry->instruction_address = allocated_reservation_station_entry->instruction_address;
+                Execution_Unit_Load_Store::Buffer_Entry* allocated_load_buffer_entry{ Execution_Unit_Load_Store::allocate_load_buffer_entry() };
+                allocated_load_buffer_entry->reorder_buffer_entry_index = allocated_reservation_station_entry->reorder_buffer_entry_index;
+                allocated_load_buffer_entry->timestamp = allocated_reservation_station_entry->timestamp;
+                allocated_load_buffer_entry->instruction_address = allocated_reservation_station_entry->instruction_address;
 				#ifdef DEBUG_PRINTS
                 std::cout << std::format("Dispatched Instructions[{}] timestamp : {} to ReservationStationPool[{}].\n", instruction_id,allocated_reservation_station_entry->timestamp,allocated_reservation_station_entry->self_tag);
 				#endif
