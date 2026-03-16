@@ -1,7 +1,15 @@
-#include <Core/Fetch/Fetch.h>
-#include <Core/RegisterManager/RegisterManager.h>
-#include <Core/Constants/Constants.h>
 #include <Core/Commit/ReorderBuffer.h>
+#include <Core/Constants/Constants.h>
+#include <Core/Dispatch/Dispatcher.h>
+#include <Core/Fetch/Fetch.h>
+#include <Core/Fetch/FetchElements.h>
+#include <Core/Types/Types.h>
+#include <Frontend/Parser/Instruction.h>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <array>
 namespace OoOVisual
 {
 	namespace Core
@@ -18,15 +26,13 @@ namespace OoOVisual
 		std::vector<Fetch_Element>                          Fetch_Unit::_last_fetch_group{};
 		std::vector<Fetch_Element>                          Fetch_Group::group{};
 
-		std::vector<Fetch_Element> Fetch_Unit::fetch(const std::vector<DISPATCH_FEEDBACK>& dispatch_feedback) {
+		std::vector<Fetch_Element> Fetch_Unit::fetch(const std::array<DISPATCH_FEEDBACK, Constants::FETCH_WIDTH >& dispatch_feedback) {
 			_timestamp += Constants::UNIT_TIME;
 			std::vector<Fetch_Element> fetch_group(Constants::FETCH_WIDTH);
 			if (_stalled && !Reorder_Buffer::empty()) {
 				return fetch_group;
 			}
-			else {
-				_stalled = false;
-			}
+			_stalled = false;
 			if (_program_counter >= _instruction_cache.size())
 				return fetch_group;
 			for (size_t i{}; i < Constants::FETCH_WIDTH; i++) {

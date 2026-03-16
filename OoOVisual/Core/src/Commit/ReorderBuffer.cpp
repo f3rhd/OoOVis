@@ -1,11 +1,18 @@
 #include <Core/Commit/ReorderBuffer.h>
+#include <Core/Commit/ReorderBufferEntry.h>
 #include <Core/Constants/Constants.h>
-#include <Core/RegisterManager/RegisterManager.h>
 #include <Core/Execution/ExecutionUnits.h>
-#include <Core/Fetch/Fetch.h>
+#include <Core/RegisterManager/RegisterManager.h>
+#include <Core/Types/Types.h>
+#include <Frontend/Parser/Instruction.h>
 #include <Visualizer/App.h>
-#include <format>
 #include <iostream>
+#include <memory>
+#include <utility>
+#include <array>
+#ifdef DEBUG_PRINTS
+#include <format>
+#endif
 namespace OoOVisual
 {
 	namespace Core
@@ -28,7 +35,7 @@ namespace OoOVisual
 			}                                                                            \
 			Register_Manager::restore_alias_table();                                        \
 		}
-		std::vector<std::unique_ptr<Reorder_Buffer_Entry>> Reorder_Buffer::_buffer(Constants::REORDER_BUFFER_SIZE);
+		std::array<std::unique_ptr<Reorder_Buffer_Entry>, Constants::REORDER_BUFFER_SIZE> Reorder_Buffer::_buffer{};
 		size_t Reorder_Buffer::_head{};
 		size_t Reorder_Buffer::_tail{};
 		bool Reorder_Buffer::_head_moved{ false };
@@ -186,7 +193,7 @@ namespace OoOVisual
 		bool Reorder_Buffer::flushed() {
 			return _flushed;
 		}
-		std::vector<std::unique_ptr<OoOVisual::Core::Reorder_Buffer_Entry>>& Reorder_Buffer::buffer() {
+		std::array<std::unique_ptr<Reorder_Buffer_Entry>, Constants::REORDER_BUFFER_SIZE>& Reorder_Buffer::buffer() {
 			return _buffer;
 		}
 

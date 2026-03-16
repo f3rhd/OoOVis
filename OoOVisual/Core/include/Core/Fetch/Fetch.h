@@ -1,13 +1,17 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <unordered_map>
-#include <string>
-
-#include <Frontend/Parser/Instruction.h>
-#include <Core/Fetch/FetchElements.h>
 #include <Core/Dispatch/Dispatcher.h>
+#include <Core/Fetch/FetchElements.h>
+#include <Core/Types/Types.h>
+#include <Frontend/Parser/Instruction.h>
+#include <Core/Constants/Constants.h>
+
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <array>
+#include <utility>
 
 namespace OoOVisual
 {
@@ -17,7 +21,7 @@ namespace OoOVisual
 
 		public:
 			static void                                                                             init(std::vector<std::unique_ptr<FrontEnd::Instruction>>&& instructions, std::vector<std::pair<std::string, size_t>>&& instruction_stream);
-			static std::vector<Fetch_Element>                                                       fetch(const std::vector<DISPATCH_FEEDBACK>& dispatch_feedback);
+			static std::vector<Fetch_Element>                                                       fetch(const std::array<DISPATCH_FEEDBACK, Constants::FETCH_WIDTH>& dispatch_feedback);
 			static void                                                                             adjust_program_counter_based_on_successful_dispatches(memory_addr_t amount);
 			static bool                                                                             get_prediction(memory_addr_t branch_instruction_id);
 			static void                                                                             set_program_counter(memory_addr_t next_pc);
@@ -36,7 +40,7 @@ namespace OoOVisual
 		private:
 			static bool                                                                             _next_fetch_is_set;
 			static std::vector<std::unique_ptr<FrontEnd::Instruction>>                              _instruction_cache;
-			static std::vector<std::pair<std::string, size_t>>                                        _instruction_stream;
+			static std::vector<std::pair<std::string, size_t>>                                       _instruction_stream;
 			static std::unordered_map<memory_addr_t, memory_addr_t>                                 _branch_target_buffer;
 			static std::unordered_map<u32, u32>                                                     _pattern_history_table;
 			static memory_addr_t                                                                    _program_counter;

@@ -1,14 +1,25 @@
 #include <Core/Commit/ReorderBuffer.h>
+#include <Core/Commit/ReorderBufferEntry.h>
 #include <Core/Constants/Constants.h>
 #include <Core/Constants/Constants.h>
 #include <Core/Dispatch/Dispatcher.h>
+#include <Core/Execution/ExecutionUnitModes.h>
 #include <Core/Execution/ExecutionUnits.h>
+#include <Core/Fetch/FetchElements.h>
 #include <Core/RegisterManager/RegisterManager.h>
+#include <Core/ReservationStation/ReservationStation.h>
+#include <Core/ReservationStation/ReservationStationEntry.h>
 #include <Core/ReservationStation/ReservationStationPool.h>
-#include <format>
-#include <iostream>
-#include <unordered_map>
+#include <Core/Types/Types.h>
+#include <Frontend/Parser/Instruction.h>
 #include <Visualizer/App.h>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <array>
+#ifdef DEBUG_PRINTS
+#include <format>
+#endif
 namespace OoOVisual
 {
 	namespace Core
@@ -492,10 +503,9 @@ namespace OoOVisual
 
 		}
 
-		std::vector<DISPATCH_FEEDBACK>
-			Dispatcher::_last_dispatch_feedback{ std::vector<DISPATCH_FEEDBACK>(Constants::FETCH_WIDTH,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH) };
+		std::array<DISPATCH_FEEDBACK, Constants::FETCH_WIDTH> Dispatcher::_last_dispatch_feedback{};
 
-		const std::vector<DISPATCH_FEEDBACK>& Dispatcher::last_dispatch_feedback() {
+		const std::array<DISPATCH_FEEDBACK, Constants::FETCH_WIDTH>& Dispatcher::last_dispatch_feedback() {
 			return _last_dispatch_feedback;
 		}
 
@@ -504,7 +514,7 @@ namespace OoOVisual
 		}
 
 		void Dispatcher::reset() {
-			_last_dispatch_feedback = std::vector<DISPATCH_FEEDBACK>(Constants::FETCH_WIDTH, DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH);
+			_last_dispatch_feedback = std::array<DISPATCH_FEEDBACK, Constants::FETCH_WIDTH>{};
 			_last_store_id = 0;
 			for (auto& [key, val] : _station_dispatch_map) {
 				val = DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
@@ -520,8 +530,8 @@ namespace OoOVisual
 			{RESERVATION_STATION_ID::LOAD_STORE,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
 			{RESERVATION_STATION_ID::BRANCH,DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH},
 		};
-		std::vector<DISPATCH_FEEDBACK> Dispatcher::dispatch_fetch_group() {
-			std::vector<DISPATCH_FEEDBACK> feedback(Constants::FETCH_WIDTH, DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH);
+		std::array<DISPATCH_FEEDBACK, Constants::FETCH_WIDTH> Dispatcher::dispatch_fetch_group() {
+			std::array<DISPATCH_FEEDBACK, Constants::FETCH_WIDTH> feedback{};
 			for (auto& [key, val] : _station_dispatch_map) {
 				val = DISPATCH_FEEDBACK::NO_INSTRUCTION_TO_DISPATCH;
 			}

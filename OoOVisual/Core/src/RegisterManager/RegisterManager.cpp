@@ -1,13 +1,14 @@
 #include <Core/Constants/Constants.h>
 #include <Core/RegisterManager/RegisterManager.h>
-#include <format>
-#include <format>
+#include <Core/Types/Types.h>
 #include <Frontend/Parser/Lookup.h>
-#include <iomanip>
-#include <iostream>
-#include <stdexcept>
-#include <string>
 #include <Visualizer/App.h>
+
+#include <iostream>
+#include <map>
+#ifdef DEBUG_PRINTS
+#include <format>
+#endif
 namespace OoOVisual
 {
 	namespace Core
@@ -125,15 +126,15 @@ namespace OoOVisual
 		}
 
 
-		const std::map<OoOVisual::reg_id_t, OoOVisual::Core::Physical_Register_File_Entry>& Register_Manager::phyical_register_file() {
+		const std::map<reg_id_t, Physical_Register_File_Entry>& Register_Manager::phyical_register_file() {
 			return _physical_register_file;
 		}
 
-		const std::map<OoOVisual::reg_id_t, OoOVisual::reg_id_t>& Register_Manager::frontend_alias_table() {
+		const std::map<reg_id_t, reg_id_t>& Register_Manager::frontend_alias_table() {
 			return _frontend_register_alias_table;
 		}
 
-		const std::map<OoOVisual::reg_id_t, OoOVisual::reg_id_t>& Register_Manager::retirement_alias_table() {
+		const std::map<reg_id_t, reg_id_t>& Register_Manager::retirement_alias_table() {
 			return _retirement_alias_table;
 
 		}

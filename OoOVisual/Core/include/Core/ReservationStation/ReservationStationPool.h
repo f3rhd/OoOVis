@@ -1,8 +1,9 @@
 #pragma once
-#include <Core/Types/Types.h>
 #include <Core/ReservationStation/ReservationStation.h>
-#include <Frontend/Parser/Instruction.h>
-#include <memory>
+#include <Core/Types/Types.h>
+#include <Core/ReservationStation/ReservationStationEntry.h>
+#include <Core/Constants/Constants.h>
+#include <array>
 namespace OoOVisual
 {
 	namespace Core
@@ -15,7 +16,7 @@ namespace OoOVisual
 			static Reservation_Station& get_reservation_station(RESERVATION_STATION_ID id);
 			static void reset();
 		private:
-			static std::vector<Core::Reservation_Station> _pool;
+			static std::array<Core::Reservation_Station, Constants::RESERVATION_STATION_AMOUNT> _pool;
 		};
 
 	} // namespace Core

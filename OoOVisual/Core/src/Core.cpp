@@ -9,8 +9,11 @@
 #include <Core/ReservationStation/ReservationStationPool.h>
 #include <Core/Constants/Constants.h>
 #include <Core/MMIO/ScreenMMIO.h>
+#include <Core/Execution/ExecutionUnits.h>
+#include <Core/Fetch/FetchElements.h>
+
 #include <chrono>
-#include <imgui_internal.h>
+#include <utility>
 
 namespace OoOVisual
 {

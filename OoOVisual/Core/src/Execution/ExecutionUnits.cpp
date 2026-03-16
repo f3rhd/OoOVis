@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <Core/Commit/ReorderBuffer.h>
 #include <Core/Constants/Constants.h>
 #include <Core/DCache/DCache.h>
@@ -15,6 +14,11 @@
 #include <cstdint>
 #include <utility>
 #include <vector>
+#include <algorithm>
+#ifdef DEBUG_PRINTS
+#include <iostream>
+#include <format>
+#endif
 
 namespace OoOVisual
 {

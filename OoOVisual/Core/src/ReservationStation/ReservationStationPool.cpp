@@ -1,22 +1,28 @@
-#include <algorithm>
+#include <array>
 #include <Core/Constants/Constants.h>
 #include <Core/RegisterManager/RegisterManager.h>
+#include <Core/ReservationStation/ReservationStation.h>
+#include <Core/ReservationStation/ReservationStationEntry.h>
 #include <Core/ReservationStation/ReservationStationPool.h>
-#include <format>
+#include <Core/Types/Types.h>
+#ifdef DEBUG_PRINTS
 #include <iostream>
-#include <ranges>
+#include <format>
+#endif
+#include <algorithm>
+#include <vector>
 namespace OoOVisual
 {
 	namespace Core
 	{
-		std::vector<Reservation_Station> Reservation_Station_Pool::_pool{
-				{RESERVATION_STATION_ID::ADD_SUB},
-				{RESERVATION_STATION_ID::BITWISE},
-				{RESERVATION_STATION_ID::SET_LESS},
-				{RESERVATION_STATION_ID::MULTIPLIER},
-				{RESERVATION_STATION_ID::DIVIDER},
-				{RESERVATION_STATION_ID::LOAD_STORE},
-				{RESERVATION_STATION_ID::BRANCH}
+		std::array<Reservation_Station, Constants::RESERVATION_STATION_AMOUNT> Reservation_Station_Pool::_pool{
+				RESERVATION_STATION_ID::ADD_SUB,
+				RESERVATION_STATION_ID::BITWISE,
+				RESERVATION_STATION_ID::SET_LESS,
+				RESERVATION_STATION_ID::MULTIPLIER,
+				RESERVATION_STATION_ID::DIVIDER,
+				RESERVATION_STATION_ID::LOAD_STORE,
+				RESERVATION_STATION_ID::BRANCH
 		};
 
 		time_t Reservation_Station_Pool::flush_mispredicted(u32 flusher_tag, time_t flusher_timestamp) {

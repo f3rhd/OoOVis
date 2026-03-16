@@ -1,8 +1,9 @@
+#include <Core/Constants/Constants.h>
 #include <Core/ReservationStation/ReservationStation.h>
-#include <Core/Execution/ExecutionUnits.h>
-#include <algorithm>
-#include <ranges>
+#include <Core/ReservationStation/ReservationStationEntry.h>
+#include <Core/Types/Types.h>
 
+#include <array>
 namespace OoOVisual
 {
 	namespace Core
@@ -11,8 +12,7 @@ namespace OoOVisual
 			static u32 tag_counter{};
 			_id = id;
 			for (u32 i(0); i < Constants::RESERVATION_STATION_SIZE; i++) {
-				_buffer.emplace_back();
-				_buffer.back().self_tag = ++tag_counter;
+				_buffer[i].self_tag = ++tag_counter;
 			}
 		}
 		Reservation_Station_Entry* Reservation_Station::allocate_entry() {
@@ -46,11 +46,11 @@ namespace OoOVisual
 			return nullptr;
 		}
 
-		std::vector<Reservation_Station_Entry>& Reservation_Station::get() {
+		std::array<Reservation_Station_Entry, Constants::RESERVATION_STATION_SIZE>& Reservation_Station::get() {
 			return _buffer;
 		}
 
-		const std::vector<OoOVisual::Core::Reservation_Station_Entry>& Reservation_Station::getc() const {
+		const std::array<Reservation_Station_Entry, Constants::RESERVATION_STATION_SIZE>& Reservation_Station::getc() const {
 			return _buffer;
 		}
 		bool Reservation_Station::full() const {
