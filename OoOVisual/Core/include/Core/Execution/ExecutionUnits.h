@@ -47,11 +47,8 @@ namespace OoOVisual
 				memory_addr_t calculated_address{};
 				// load uses this to broadcast the tag to the common data bus for forwarding logic
 				u32			  producer_tag{ Constants::NO_PRODUCER_TAG };
-				//memory_addr_t instruction_address;
 				EXECUTION_UNIT_MODE mode{ EXECUTION_UNIT_MODE::UNKNOWN };
-				/*  store_buffer_entry : store_id is used by reorder buffer to tell the store to write to the memory
-					load_buffer_entry : last store id
-				*/
+				/* load_buffer_entry : last store id*/
 				u32 store_id{};
 				/* instruction address is used to recover from load misspeculation */
 				memory_addr_t  instruction_address = 0;
@@ -90,7 +87,8 @@ namespace OoOVisual
 			static void 						    remove_speculated_load(u64 reorder_buffer_entry_index);
 			static Execution_Result 				resolve_speculated_loads(u64 head_that_points_to_store);
 		private:
-			static std::pair<size_t, size_t>		find_load_that_is_executable(); // .first stands for executable load if it can be executed by forwarding .second will hold the store buffer entry index that is being forwarded from
+			// .first stands for executable load if it can be executed by forwarding .second will hold the store buffer entry index that is being forwarded from
+			static std::pair<size_t, size_t>		find_load_that_is_executable();
 		private:
 			static std::vector<Buffer_Entry> 	_store_buffer;
 			static std::vector<Buffer_Entry> 	_load_buffer;
