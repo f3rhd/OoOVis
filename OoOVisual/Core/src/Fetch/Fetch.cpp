@@ -42,6 +42,8 @@ namespace OoOVisual
 				case OoOVisual::Core::DISPATCH_FEEDBACK::RESERVATION_STATION_WAS_FULL:
 				case OoOVisual::Core::DISPATCH_FEEDBACK::REGISTER_FILE_WAS_FULL:
 				case OoOVisual::Core::DISPATCH_FEEDBACK::REORDER_BUFFER_WAS_FULL:
+				case OoOVisual::Core::DISPATCH_FEEDBACK::LOAD_BUFFER_WAS_FULL:
+				case OoOVisual::Core::DISPATCH_FEEDBACK::STORE_BUFFER_WAS_FULL:
 					_program_counter = _last_fetch_group[i].address;
 					goto end_of_loop;
 				case OoOVisual::Core::DISPATCH_FEEDBACK::SUCCESSFUL_DISPATCH:
