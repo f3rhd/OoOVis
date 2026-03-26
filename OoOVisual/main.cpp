@@ -3,11 +3,11 @@
 #include <Core/Core.h>
 using namespace OoOVisual;
 int main(int argc, char** argv) {
-	Visualizer::Scene scene{};
 	if (!Visualizer::App::init())
 		return -1;
 	if (!Core::init(argc, argv))
 		return -1;
+	Visualizer::Scene scene{};
 	scene.init();
 	while (!Visualizer::App::should_close()) {
 		Core::run();
