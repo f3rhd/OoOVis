@@ -316,6 +316,65 @@ namespace OoOVisual
 
 			return { Constants::EXECUTABLE_LOAD_DOES_NOT_EXIST,Constants::LOAD_DOES_NOT_USE_FORWARD_FROM_STORE };
 		}
+
+		static u8 access_size_from_mode(EXECUTION_UNIT_MODE mode) {
+			switch (mode) {
+			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_WORD:
+			case EXECUTION_UNIT_MODE::LOAD_STORE_STORE_WORD:              return 4;
+			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF:
+			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF_UNSIGNED:
+			case EXECUTION_UNIT_MODE::LOAD_STORE_STORE_HALF:              return 2;
+			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE:
+			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE_UNSIGNED:
+			case EXECUTION_UNIT_MODE::LOAD_STORE_STORE_BYTE:              return 1;
+			default:                                 return 0;
+			}
+		}
+
+		enum class STORE_FORWARD_RESULT { FULL_FORWARD, PARTIAL_OVERLAP, NO_OVERLAP };
+
+		static STORE_FORWARD_RESULT classify_overlap(const Execution_Unit_Load_Store::Buffer_Entry& load, const Execution_Unit_Load_Store::Buffer_Entry& store) {
+			memory_addr_t l_start{ load.calculated_address };
+			memory_addr_t l_end{ l_start + access_size_from_mode(load.mode) };
+			memory_addr_t s_start{ store.calculated_address };
+			memory_addr_t s_end{ s_start + access_size_from_mode(store.mode) };
+
+			if (l_end <= s_start || s_end <= l_start)
+				return STORE_FORWARD_RESULT::NO_OVERLAP;
+
+			if (s_start <= l_start && l_end <= s_end)
+				return STORE_FORWARD_RESULT::FULL_FORWARD;
+
+			return STORE_FORWARD_RESULT::PARTIAL_OVERLAP;
+		}
+		static bool mode_is_signed(EXECUTION_UNIT_MODE mode) {
+			switch (mode) {
+			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_BYTE:
+			case EXECUTION_UNIT_MODE::LOAD_STORE_LOAD_HALF:  return true;
+			default:                    return false;
+			}
+		}
+		static data_t extract_forwarded_value(const Execution_Unit_Load_Store::Buffer_Entry& load, const Execution_Unit_Load_Store::Buffer_Entry& store) {
+			u8 load_size{ access_size_from_mode(load.mode) };
+			u32 byte_offset{ static_cast<u32>(load.calculated_address - store.calculated_address) };
+
+			// Shift the store data so the byte(s) the load wants are at bit 0
+			data_t raw{ (store.register_data.UNSIGNED >> (byte_offset * 8)) };
+
+			// Mask to exactly load_size bytes
+			data_t mask = { (load_size >= 4) ? 0xFFFFFFFFu : ((1u << (load_size * 8)) - 1u) };
+			raw.UNSIGNED &= mask.UNSIGNED;
+
+			// Sign-extend if needed (LB / LH)
+			if (mode_is_signed(load.mode)) {
+				u32 sign_bit = (load_size * 8) - 1;  // bit 7 or bit 15
+				if (raw.UNSIGNED & (1u << sign_bit)) {
+					raw.UNSIGNED |= ~mask.UNSIGNED; // fill upper bits with 1s
+				}
+			}
+
+			return raw;
+		}
 		Execution_Result Execution_Unit_Load_Store::execute_load() {
 
 			auto executable_load_index(find_load_that_is_executable());
@@ -346,25 +405,37 @@ namespace OoOVisual
 				return result;
 			}
 
-			const Buffer_Entry* forwaradable_load_entry{ &_load_buffer[executable_load_index.first] };
+			const Buffer_Entry* forwardable_load_entry{ &_load_buffer[executable_load_index.first] };
 			const Buffer_Entry* store_buffer_entry_that_is_forwarded_from{ &_store_buffer[executable_load_index.second] };
-			Register_Manager::write(forwaradable_load_entry->register_id, store_buffer_entry_that_is_forwarded_from->register_data);
-			Reorder_Buffer::set_ready(forwaradable_load_entry->reorder_buffer_entry_index);
-			Execution_Result result(
-				Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD,
-				store_buffer_entry_that_is_forwarded_from->register_data, // will be needed in forwarding to reservation stations
-				forwaradable_load_entry->producer_tag // will be needed in forwarding logic 
-			);
+			switch (classify_overlap(*forwardable_load_entry, *store_buffer_entry_that_is_forwarded_from)) {
+
+			case STORE_FORWARD_RESULT::FULL_FORWARD:
+			{
+				data_t forwarded_value = extract_forwarded_value(*forwardable_load_entry, *store_buffer_entry_that_is_forwarded_from);
+
+				Register_Manager::write(forwardable_load_entry->register_id, forwarded_value);
+				Reorder_Buffer::set_ready(forwardable_load_entry->reorder_buffer_entry_index);
+
+				Execution_Result result(
+					Constants::EXECUTION_RESULT_STATION_DEALLOCATE_AND_FORWARD,
+					forwarded_value,
+					forwardable_load_entry->producer_tag
+				);
 #ifdef DEBUG_PRINTS
-			std::cout << std::format("Load instruction {} was executed using forwarding from store instruction {}.\n", forwaradable_load_entry->timestamp, store_buffer_entry_that_is_forwarded_from->timestamp);
+				std::cout << std::format("Load instruction {} was executed using forwarding from store instruction {}.\n", forwardable_load_entry->timestamp, store_buffer_entry_that_is_forwarded_from->timestamp);
 #endif
-			/* the load instruction in this buffer could be executed speculatively or earlier than a preceding store instruction
-				so we are going to push it to the speculative load buffer
-				the erasion of the speculated load buffer entry is going to happen when the reorder buffer retires the load instruction
-			*/
-			_speculative_load_buffer.emplace_back(_load_buffer[executable_load_index.first]);
-			_load_buffer.erase(_load_buffer.begin() + executable_load_index.first);
-			return result;
+				/* the load instruction in this buffer could be executed speculatively or earlier than a preceding store instruction
+					so we are going to push it to the speculative load buffer
+					the erasion of the speculated load buffer entry is going to happen when the reorder buffer retires the load instruction
+				*/
+				_speculative_load_buffer.emplace_back(_load_buffer[executable_load_index.first]);
+				_load_buffer.erase(_load_buffer.begin() + executable_load_index.first);
+				return result;
+			}
+
+			default:
+				return { Constants::EXECUTION_RESULT_INVALID };
+			}
 		}
 
 		void Execution_Unit_Load_Store::execute_store(u64 head) {
