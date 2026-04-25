@@ -202,7 +202,6 @@ namespace OoOVisual
 				};
 				allocated_reservation_station_entry->ready = allocated_reservation_station_entry->producer_tag1 == Constants::NO_PRODUCER_TAG && allocated_reservation_station_entry->producer_tag2 == Constants::NO_PRODUCER_TAG;
 				allocated_reservation_station_entry->busy = true;
-				allocated_reservation_station_entry->self_tag = allocated_reservation_station_entry->self_tag;
 				allocated_reservation_station_entry->reorder_buffer_entry_index = target_reorder_buffer_entry_index;
 				allocated_reservation_station_entry->destination_register_id = destination_physical_register_id;
 				allocated_reservation_station_entry->instruction_address = instruction_id;
